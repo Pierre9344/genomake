@@ -1,0 +1,105 @@
+import yaml
+from pathlib import Path
+from genomake.pipelines.chromake.scripts import paths as chr_paths
+
+onstart:
+    if "SEQUENCING" not in config:
+        raise RuntimeError("The configuration file is missing the 'SEQUENCING' field!")
+    if "PROJECTS" not in config:
+        raise RuntimeError("The configuration file is missing the 'PROJECTS' field!")
+    if "executor" in config:
+        print("EXECUTOR IS HERE!!!!")
+    if "JOBS" not in config:
+        print("Jobs field missing from the configuration file. Adding one with the example default value")
+        config["JOBS"] = {
+              "CORES_PER_JOBS": {
+              "FASTQC": 10
+              },
+              "QOS_INFOS": {
+                  "short": {"MaxWall": 2000},
+                  "medium": {"MaxWall": 5000},
+                  "long": {"MaxWall": 15000}
+               }
+        }
+    else:
+        if "CORES_PER_JOBS" not in config["JOBS"]:
+            print("Number of cores to use for the jobs is not indicated in the config file. Using default values")
+            config["JOBS"]["CORES_PER_JOBS"] = {
+                "FASTQC": 10
+        }
+        if "QOS_INFOS" not in config["JOBS"]:
+            print("The 'QOS_INFOS' field is missing in the config file. Using the example default values to be abble to set the ressources field of the rules. Will be ignored if executor is not set.")
+            config["JOBS"]["QOS_INFOS"] = {
+                "short": {"MaxWall": 2000},
+                "medium": {"MaxWall": 5000},
+                "long": {"MaxWall": 15000}
+            }
+        
+    for sequencing_name, sequencing_data in config["SEQUENCING"].items():
+        sample_path = Path(sequencing_data["SAMPLE_PATH"])
+        if not sample_path.exists():
+            raise RuntimeError(f"The sequencing {str(sequencing_name)} SAMPLE_PATH field is not valid. Please check your config file!")
+        (sample_path / "QC/FASTQC/RAW").mkdir(parents=True, exist_ok=True)
+        (sample_path / "QC/FASTQC/TRIMMED").mkdir(parents=True, exist_ok=True)
+        (sample_path / "QC/MULTIQC/RAW").mkdir(parents=True, exist_ok=True)
+        (sample_path / "QC/MULTIQC/TRIMMED").mkdir(parents=True, exist_ok=True)
+    for project_name, project_data in config["PROJECTS"].items():
+        if "PROJECT_PATH" not in project_data:
+            raise RuntimeError(f"The project {project_name} is missing the 'PROJECT_PATH field! Please add a valid path.")
+        elif project_data["PROJECT_PATH"] == "":
+            raise RuntimeError(f"The project {project_name} 'PROJECT_PATH field is empty! Please add a valid path.")
+        else:
+            Path(project_data["PROJECT_PATH"]).mkdir(parents=True, exist_ok=True)
+
+
+rule all:
+    input:
+        chr_paths.get_all_fastq_related_paths(config, "fastqc_raw"),
+        chr_paths.get_all_fastq_related_paths(config, "multiqc_raw")
+
+def get_qos_from_time(attempt: int, default_time: int)->str:
+    if "executor" not in config:
+        return "not_important"
+    else:
+        current_qos = str()
+        current_maxwall = 9999999999999
+        for local_name, local_value in config["JOBS"]["QOS_INFOS"].items():
+            if "MaxWall" in local_value:
+                if (local_value.get("MaxWall") < current_maxwall) and local_value.get("MaxWall") < (attempt * default_time):
+                    current_maxwall = local_value.get("MaxWall")
+                    current_qos = local_name
+        return current_qos
+
+
+for sequencing_name, sequencing_data in config["SEQUENCING"].items():
+    rule:
+        name:
+            f"fastqc_raw_{sequencing_name}"
+        input:
+            *chr_paths.get_sequencing_fastq_related_paths(config, sequencing_name, "fastq_raw"),
+        output:
+            *chr_paths.get_sequencing_fastq_related_paths(config, sequencing_name, "fastqc_raw"),
+            *chr_paths.get_sequencing_fastq_related_paths(config, sequencing_name, "multiqc_raw"),
+        params:
+            fastqc_outdir=str(Path(sequencing_data["SAMPLE_PATH"]) / "QC/FASTQC/RAW"),
+            multiqc_outdir=str(Path(sequencing_data["SAMPLE_PATH"]) / "QC/MULTIQC/RAW"),
+        threads: config["JOBS"]["CORES_PER_JOBS"]["FASTQC"]
+        retries:3
+        resources:
+            mem_mb=lambda wildcards, attempt: 2000 * attempt
+            runtime=lambda wildcards, attempt: attempt * 60
+            qos=lambda wildcards, attempt: get_qos_from_time(attempt, 60)
+        shell:
+            r"""
+            fastqc \
+                {input} \
+                -t {threads} \
+                -o {params.fastqc_outdir}
+            multiqc \
+                {params.fastqc_outdir} \
+                -o {params.multiqc_outdir}
+            """
+            
+
+
+

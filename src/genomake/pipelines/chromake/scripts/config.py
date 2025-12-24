@@ -136,7 +136,9 @@ def create_example_config(
             },
         },
         "JOBS": {
-            "CORES_PER_JOBS": 10,
+            "CORES_PER_JOBS": {
+                "FASTQC": 10
+            },
             "QOS_INFOS": {
                 "short": {"MaxWall": 24 * 60}, # 1 day
                 "medium": {"MaxWall": 3 * 24 * 60}, # 3 days
@@ -176,7 +178,9 @@ def update_jobs(config_path: str, jobs: dict) -> None:
     Example
     -------
     jobs_update = {
-        "CORES_PER_JOBS": 20,
+        "CORES_PER_JOBS": {
+            "FASTQC": 10
+        },
         "QOS_INFOS": {
             "short": {"MaxWall": 2000},
             "medium": {"MaxWall": 5000},
@@ -198,7 +202,11 @@ def update_jobs(config_path: str, jobs: dict) -> None:
         config["JOBS"] = jobs
     else:
         if "CORES_PER_JOBS" in jobs.keys():
-            config["JOBS"]["CORES_PER_JOBS"] = jobs["CORES_PER_JOBS"]
+            for job_name, job_data in jobs["CORES_PER_JOBS"].items():
+                if type(job_data) == int:
+                    if "CORES_PER_JOBS" not in config["JOBS"].keys():
+                        config["JOBS"]["CORES_PER_JOBS"] = {}
+                    config["JOBS"]["CORES_PER_JOBS"][job_name] = job_data
         if "QOS_INFOS" in jobs.keys():
             if "QOS_INFOS" in config["JOBS"].keys():
                 # override all value
