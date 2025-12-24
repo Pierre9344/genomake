@@ -588,10 +588,12 @@ def create_config_from_table(
 
         # If the sequencing project is not in the config, initialize it
         if seq_name not in config["SEQUENCING"]:
-            config["SEQUENCING"][seq_name] = {"SAMPLES": {}, "INPUT": {}, "SAMPLE_PATH": sequencing_path}
+            config["SEQUENCING"][seq_name] = {"SAMPLE_PATH": sequencing_path, "SAMPLES": {}}
 
         # Determine if the sample is an INPUT or regular SAMPLE
         if proj_name == "INPUT":
+            if "INPUT" not in config["SEQUENCING"][seq_name].keys():
+                config["SEQUENCING"][seq_name]["INPUT"] = {}
             target_dict = config["SEQUENCING"][seq_name]["INPUT"]
         else:
             target_dict = config["SEQUENCING"][seq_name]["SAMPLES"]
