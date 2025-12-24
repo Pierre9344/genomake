@@ -66,6 +66,8 @@ def create_example_config(
                     }
                 },
                 "SAMPLE_PATH": "/scratch/nautilus/projects/CR2TI_lab/SingleCell/Pierre_Solomon/MO203/",
+                "R1_ADAPTOR": "AGATCGGAAGAGCACACGTCTGAACTCCAGTCA",
+                "R2_ADAPTOR": "AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT"
             },
             "MO208": {
                 "SAMPLES": {
@@ -92,6 +94,8 @@ def create_example_config(
                     }
                 },
                 "SAMPLE_PATH": "/scratch/nautilus/projects/CR2TI_lab/SingleCell/Pierre_Solomon/MO208/",
+                "R1_ADAPTOR": "AGATCGGAAGAGCACACGTCTGAACTCCAGTCA",
+                "R2_ADAPTOR": "AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT"
             },
             "MO211": {
                 "SAMPLES": {
@@ -107,6 +111,8 @@ def create_example_config(
                     },
                 },
                 "SAMPLE_PATH": "/scratch/nautilus/projects/CR2TI_lab/SingleCell/Pierre_Solomon/MO211/",
+                "R1_ADAPTOR": "CTGTCTCTTATACACATCT",
+                "R2_ADAPTOR": "CTGTCTCTTATACACATCT"
             },
         },
         "PROJECTS": {
@@ -137,7 +143,8 @@ def create_example_config(
         },
         "JOBS": {
             "CORES_PER_JOBS": {
-                "FASTQC": 10
+                "FASTQC": 10,
+                "CUTADAPT": 10
             },
             "QOS_INFOS": {
                 "short": {"MaxWall": 24 * 60}, # 1 day
@@ -179,7 +186,8 @@ def update_jobs(config_path: str, jobs: dict) -> None:
     -------
     jobs_update = {
         "CORES_PER_JOBS": {
-            "FASTQC": 10
+            "FASTQC": 10,
+            "CUTADAPT": 10
         },
         "QOS_INFOS": {
             "short": {"MaxWall": 2000},
@@ -527,7 +535,7 @@ def create_config_from_table(
     output_path: str,
     proj_paths: dict[str, str],
     jobs: dict = None,
-    sequencing_paths: dict[str, str] = None
+    sequencings: dict[str, str] = None
 ) -> str:
     """
     Create a YAML config from a table. Supports SAMPLES and optional INPUT files.
@@ -542,8 +550,8 @@ def create_config_from_table(
         Dictionary of project_name -> project_path.
     jobs : dict, optional
         Default JOBS settings (CORES_PER_JOBS, QOS_INFOS).
-    sequencing_paths : dict
-        Dictionary of sequencing_name -> sequencing_paths, used to adjust relative paths.
+    sequencingd : dict
+        Dictionary of sequencings informations (PATH, R1_ADAPTOR, R2_ADAPTOR).
 
     Returns
     -------
@@ -583,12 +591,13 @@ def create_config_from_table(
         sample_path = row["PATH"]
 
         # Get the sequencing path for the current sequencing project
-        sequencing_path = sequencing_paths.get(seq_name, "")
+        sequencing = sequencings.get(seq_name, "")
         proj_path = proj_paths.get(proj_name, "")
 
         # If the sequencing project is not in the config, initialize it
         if seq_name not in config["SEQUENCING"]:
-            config["SEQUENCING"][seq_name] = {"SAMPLE_PATH": sequencing_path, "SAMPLES": {}}
+            config["SEQUENCING"][seq_name] = {"SAMPLES": {}}
+            config["SEQUENCING"][seq_name].update(sequencing)
 
         # Determine if the sample is an INPUT or regular SAMPLE
         if proj_name == "INPUT":
@@ -602,10 +611,10 @@ def create_config_from_table(
         try:
             if os.path.isabs(sample_path):
                 # Remove the sequencing path portion from the sample path
-                sample_path = sample_path[len(sequencing_path):]
+                sample_path = sample_path[len(sequencing["PATH"]):]
         except ValueError:
             # Path is outside project; keep absolute and warn
-            warnings.warn(f"Sample path {sample_path} does not start with the expected sequencing path {sequencing_path}, keeping absolute path")
+            warnings.warn(f"Sample path {sample_path} does not start with the expected sequencing path {sequencing['PATH']}, keeping absolute path")
 
         # Initialize sample entry
         target_dict.setdefault(sample_name, {})
