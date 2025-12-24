@@ -21,13 +21,29 @@ def get_all_fastq_related_paths(cfg: dict,
                 res.append(base / inp["R2"])
         elif mode == "fastqc_raw":
             for sample in sequencing_data.get("SAMPLES", {}).values():
-                res.append(base / "QC/FASTQC/RAW" / sample["R1"].replace(".gz", ".html"))
-                res.append(base / "QC/FASTQC/RAW" / sample["R2"].replace(".gz", ".html"))
+                res.append(base / "QC/FASTQC/RAW" / str(Path(sample["R1"]).name).replace(".gz", ".html"))
+                res.append(base / "QC/FASTQC/RAW" / str(Path(sample["R2"]).name).replace(".gz", ".html"))
             for inp in sequencing_data.get("INPUT", {}).values():
-                res.append(base / "QC/FASTQC/RAW" / inp["R1"].replace(".gz", ".html"))
-                res.append(base / "QC/FASTQC/RAW" / inp["R2"].replace(".gz", ".html"))
+                res.append(base / "QC/FASTQC/RAW" / str(Path(inp["R1"]).name).replace(".gz", ".html"))
+                res.append(base / "QC/FASTQC/RAW" / str(Path(inp["R2"]).name).replace(".gz", ".html"))
         elif mode == "multiqc_raw":
-            res.append(base / "QC/RAW/multiqc_report.html")
+            res.append(base / "QC/MULTIQC/RAW/multiqc_report.html")
+        elif mode == "cutadapt":
+            for sample in sequencing_data.get("SAMPLES", {}).values():
+                res.append(base / "TRIMMED" / Path(sample["R1"]).name)
+                res.append(base / "TRIMMED" / Path(sample["R2"]).name)
+            for inp in sequencing_data.get("INPUT", {}).values():
+                res.append(base / "TRIMMED" / Path(inp["R1"]).name)
+                res.append(base / "TRIMMED" / Path(inp["R2"]).name)
+        elif mode == "fastqc_trimmed":
+            for sample in sequencing_data.get("SAMPLES", {}).values():
+                res.append(base / "QC/FASTQC/TRIMMED" / str(Path(sample["R1"]).name).replace(".gz", ".html"))
+                res.append(base / "QC/FASTQC/TRIMMED" / str(Path(sample["R2"]).name).replace(".gz", ".html"))
+            for inp in sequencing_data.get("INPUT", {}).values():
+                res.append(base / "QC/FASTQC/TRIMMED" / str(Path(inp["R1"]).name).replace(".gz", ".html"))
+                res.append(base / "QC/FASTQC/TRIMMED" / str(Path(inp["R2"]).name).replace(".gz", ".html"))
+        elif mode == "multiqc_trimmed":
+            res.append(base / "QC/MULTIQC/TRIMMED/multiqc_report.html")
         else:
             print(f"There is an error, chromake.scripts.path.get_path dont recognize the {mode} mode!")      
     return res
@@ -59,3 +75,5 @@ def get_sequencing_fastq_related_paths(cfg: dict,
     else:
         print(f"There is an error, the configuration file don't contains a {project_name} project!")
     return res
+
+
