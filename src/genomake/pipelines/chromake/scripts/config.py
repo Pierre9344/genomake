@@ -67,7 +67,11 @@ def create_example_config(
                 },
                 "SAMPLE_PATH": "/scratch/nautilus/projects/CR2TI_lab/SingleCell/Pierre_Solomon/MO203/",
                 "R1_ADAPTOR": "AGATCGGAAGAGCACACGTCTGAACTCCAGTCA",
-                "R2_ADAPTOR": "AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT"
+                "R2_ADAPTOR": "AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT",
+                "PARAMETERS": {
+                    "CUTADAPT": "-q 20 --pair-filter=any",
+                    "BOWTIE2": "--end-to-end --very-sensitive --no-mixed --no-discordant --phred33 -I 10 -X 700"
+                }
             },
             "MO208": {
                 "SAMPLES": {
@@ -95,7 +99,11 @@ def create_example_config(
                 },
                 "SAMPLE_PATH": "/scratch/nautilus/projects/CR2TI_lab/SingleCell/Pierre_Solomon/MO208/",
                 "R1_ADAPTOR": "AGATCGGAAGAGCACACGTCTGAACTCCAGTCA",
-                "R2_ADAPTOR": "AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT"
+                "R2_ADAPTOR": "AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT",
+                "PARAMETERS": {
+                    "CUTADAPT": "-q 20 --pair-filter=any",
+                    "BOWTIE2": "--end-to-end --very-sensitive --no-mixed --no-discordant --phred33 -I 10 -X 700"
+                }
             },
             "MO211": {
                 "SAMPLES": {
@@ -112,7 +120,11 @@ def create_example_config(
                 },
                 "SAMPLE_PATH": "/scratch/nautilus/projects/CR2TI_lab/SingleCell/Pierre_Solomon/MO211/",
                 "R1_ADAPTOR": "CTGTCTCTTATACACATCT",
-                "R2_ADAPTOR": "CTGTCTCTTATACACATCT"
+                "R2_ADAPTOR": "CTGTCTCTTATACACATCT",
+                "PARAMETERS": {
+                    "CUTADAPT": "-q 20 --pair-filter=any",
+                    "BOWTIE2": "--end-to-end --very-sensitive --no-mixed --no-discordant --phred33 -I 10 -X 700"
+                }
             },
         },
         "PROJECTS": {
@@ -144,7 +156,8 @@ def create_example_config(
         "JOBS": {
             "CORES_PER_JOBS": {
                 "FASTQC": 10,
-                "CUTADAPT": 10
+                "CUTADAPT": 10,
+                "BOWTIE2": 30
             },
             "QOS_INFOS": {
                 "short": {"MaxWall": 24 * 60}, # 1 day
@@ -607,7 +620,7 @@ def create_config_from_table(
         else:
             target_dict = config["SEQUENCING"][seq_name]["SAMPLES"]
 
-        # Normalize the sample path to remove the sequencing root path and make it relative
+        # Normalize the sample path (remove the sequencing root path and make it relative to the sequencig folder)
         try:
             if os.path.isabs(sample_path):
                 # Remove the sequencing path portion from the sample path

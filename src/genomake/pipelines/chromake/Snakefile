@@ -13,7 +13,9 @@ onstart:
         print("Jobs field missing from the configuration file. Adding one with the example default value")
         config["JOBS"] = {
               "CORES_PER_JOBS": {
-              "FASTQC": 10
+              "FASTQC": 10,
+              "CUTADAPT": 10,
+              "BOWTIE2": 30
               },
               "QOS_INFOS": {
                   "short": {"MaxWall": 2000},
@@ -25,8 +27,20 @@ onstart:
         if "CORES_PER_JOBS" not in config["JOBS"]:
             print("Number of cores to use for the jobs is not indicated in the config file. Using default values")
             config["JOBS"]["CORES_PER_JOBS"] = {
-                "FASTQC": 10
-        }
+                "FASTQC": 10,
+                "CUTADAPT": 10,
+                "BOWTIE2": 30
+            }
+        else:
+            if "FASTQC" not in config["JOBS"]["CORES_PER_JOBS"]:
+                print("Number of cores not indicated for fastqc, defaulting to 10")
+                config["JOBS"]["CORES_PER_JOBS"]["FASTQC"] = 10
+            if "CUTADAPT" not in config["JOBS"]["CORES_PER_JOBS"]:
+                print("Number of cores not indicated for cutadapt, defaulting to 10")
+                config["JOBS"]["CORES_PER_JOBS"]["CUTADAPT"] = 10
+            if "BOWTIE2" not in config["JOBS"]["CORES_PER_JOBS"]:
+                print("Number of cores not indicated for bowtie2, defaulting to 30")
+                config["JOBS"]["CORES_PER_JOBS"]["BOWTIE2"] = 10
         if "QOS_INFOS" not in config["JOBS"]:
             print("The 'QOS_INFOS' field is missing in the config file. Using the example default values to be abble to set the ressources field of the rules. Will be ignored if executor is not set.")
             config["JOBS"]["QOS_INFOS"] = {
@@ -36,6 +50,24 @@ onstart:
             }
         
     for sequencing_name, sequencing_data in config["SEQUENCING"].items():
+        if "INPUT" in sequencing_data and len(sequencing_data["INPUT"]) >= 2:
+            print(f"THe {sequencing_name} sequencing list more than one input. All of them will be sequencded but only the first one '{list(sequencing_data["INPUT"].keys())[0]}' will be used for the samples pak calling.")
+        
+        if "PARAMETERS" not in sequencing_data:
+            print(f"""
+            The 'PARAMETERS' field is missing for the {sequencing_name} sequencing. Using the pipeline default. If you wish to not use those parameters, please set an empty string for the values:
+            - CUTADAPT: -q --pair-filter=any
+            
+            """)
+            config["SEQUENCING"][sequencing_name]["PARAMETERS"] = {
+                "CUTADAPT": "-q 20 --pair-filter=any"
+            }
+        else:
+            if "CUTADAPT" not in config["SEQUENCING"][sequencing_name]["PARAMETERS"]:
+                print(f"The {sequencing_name} seqencing don't list parameters for cutadapt. Using the pipeline default: '-q 20 --pair-filter=any'")
+                config["SEQUENCING"][sequencing_name]["PARAMETERS"]["CUTADAPT"] = ""
+            
+            
         sample_path = Path(sequencing_data["SAMPLE_PATH"])
         if not sample_path.exists():
             raise RuntimeError(f"The sequencing {str(sequencing_name)} SAMPLE_PATH field is not valid. Please check your config file!")
@@ -43,6 +75,7 @@ onstart:
         (sample_path / "QC/FASTQC/TRIMMED").mkdir(parents=True, exist_ok=True)
         (sample_path / "QC/MULTIQC/RAW").mkdir(parents=True, exist_ok=True)
         (sample_path / "QC/MULTIQC/TRIMMED").mkdir(parents=True, exist_ok=True)
+        (sample_path / "QC/CUTADAPT").mkdir(parents=True, exist_ok=True)
     for project_name, project_data in config["PROJECTS"].items():
         if "PROJECT_PATH" not in project_data:
             raise RuntimeError(f"The project {project_name} is missing the 'PROJECT_PATH field! Please add a valid path.")
@@ -55,7 +88,8 @@ onstart:
 rule all:
     input:
         chr_paths.get_all_fastq_related_paths(config, "fastqc_raw"),
-        chr_paths.get_all_fastq_related_paths(config, "multiqc_raw")
+        chr_paths.get_all_fastq_related_paths(config, "multiqc_raw"),
+        chr_paths.get_all_fastq_related_paths(config, "cutadapt")
 
 def get_qos_from_time(attempt: int, default_time: int)->str:
     if "executor" not in config:
@@ -72,6 +106,7 @@ def get_qos_from_time(attempt: int, default_time: int)->str:
 
 
 for sequencing_name, sequencing_data in config["SEQUENCING"].items():
+    # QUALITY CONTROL (raw files)
     rule:
         name:
             f"fastqc_raw_{sequencing_name}"
@@ -81,8 +116,8 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
             *chr_paths.get_sequencing_fastq_related_paths(config, sequencing_name, "fastqc_raw"),
             *chr_paths.get_sequencing_fastq_related_paths(config, sequencing_name, "multiqc_raw"),
         params:
-            fastqc_outdir=str(Path(sequencing_data["SAMPLE_PATH"]) / "QC/FASTQC/RAW"),
-            multiqc_outdir=str(Path(sequencing_data["SAMPLE_PATH"]) / "QC/MULTIQC/RAW"),
+            fastqc_outdir=str(Path(sequencing_data["SAMPLE_PATH"]) / "QC/FASTQC/RAW/"),
+            multiqc_outdir=str(Path(sequencing_data["SAMPLE_PATH"]) / "QC/MULTIQC/RAW/"),
         threads: config["JOBS"]["CORES_PER_JOBS"]["FASTQC"]
         retries:3
         resources:
@@ -99,7 +134,72 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                 {params.fastqc_outdir} \
                 -o {params.multiqc_outdir}
             """
+    
+    
+    if all(["R1_ADAPTOR", "R2_ADAPTOR"] in sequencing_data.keys()) and sequencing_data["R1_ADAPTOR"] != '' and sequencing_data["R2_ADAPTOR"] != '':
+        for sample_name, sample_data in sequencing_data["SAMPLES"].items():
+            rule:
+                name:
+                    f"cutadapt_{sequencing_name}_{sample_name}"
+                input:
+                    str(Path(sequencing_data["SAMPLE_PATH"]) / sample_data["R1"]),
+                    str(Path(sequencing_data["SAMPLE_PATH"]) / sample_data["R2"])
+                output:
+                    str(Path(sequencing_data["SAMPLE_PATH"]) / "TRIMMED/" / Path(sample_data["R1"]).name),
+                    str(Path(sequencing_data["SAMPLE_PATH"]) / "TRIMMED/" / Path(sample_data["R2"]).name)
+                threads:
+                    config["JOBS"]["CORES_PER_JOBS"]["CUTADAPT"]
+                retries: 3
+                params:
+                    r1_adaptor: sequencing_data["R1_ADAPTOR"]
+                    r2_adaptor: sequencing_data["R2_ADAPTOR"]
+                    cutadapt_options: sequencing_data["PARAMETERS"]["CUTADAPT"]
+                    cutadapt_log: str(Path(sequencing_data["SAMPLE_PATH"]) / "QC/CUTADAPT/" / sample_name) + ".txt"
+                resources:
+                    mem_mb=lambda wildcards, attempt: 2000 * attempt
+                    runtime=lambda wildcards, attempt: attempt * 60
+                    qos=lambda wildcards, attempt: get_qos_from_time(attempt, 60)
+                shell:
+                    r"""
+                    cutadapt -a {params.r1_adaptor} -A {params.r2_adaptor} \
+                        -o {output[0]} -p {output[1]} \
+                        {params.cutadapt_options} -j {threads} \
+                        {input[0]} {input[1]} > {params.cutadapt_log}
+                    """
+            # bowtie2 rule for sample here
             
-
-
-
+        if "INPUT" in sequencing_data.keys():        
+            for input_name, input_data in sequencing_data["SAMPLES"].items():
+                rule:
+                    name:
+                        f"cutadapt_{sequencing_name}_{input_name}"
+                    input:
+                        str(Path(sequencing_data["SAMPLE_PATH"]) / input_data["R1"]),
+                        str(Path(sequencing_data["SAMPLE_PATH"]) / input_data["R2"])
+                    output:
+                        str(Path(sequencing_data["SAMPLE_PATH"]) / "TRIMMED/" / Path(input_data["R1"]).name),
+                        str(Path(sequencing_data["SAMPLE_PATH"]) / "TRIMMED/" / Path(input_data["R2"]).name)
+                    threads:
+                        config["JOBS"]["CORES_PER_JOBS"]["CUTADAPT"]
+                    retries: 3
+                    params:
+                        r1_adaptor: sequencing_data["R1_ADAPTOR"]
+                        r2_adaptor: sequencing_data["R2_ADAPTOR"]
+                        cutadapt_options: sequencing_data["PARAMETERS"]["CUTADAPT"]
+                        cutadapt_log: str(Path(sequencing_data["SAMPLE_PATH"]) / "QC/CUTADAPT/" / input_name) + ".txt"
+                    resources:
+                        mem_mb=lambda wildcards, attempt: 2000 * attempt
+                        runtime=lambda wildcards, attempt: attempt * 60
+                        qos=lambda wildcards, attempt: get_qos_from_time(attempt, 60)
+                    shell:
+                        r"""
+                        cutadapt -a {params.r1_adaptor} -A {params.r2_adaptor} \
+                            -o {output[0]} -p {output[1]} \
+                            {params.cutadapt_options} -j {threads} \
+                            {input[0]} {input[1]} > {params.cutadapt_log}
+                        """
+                # bowtie2 rule for input here
+                
+    #else:
+        # If there no adaptor for trimming we use BWA on the original fastq (samples and input)
+        

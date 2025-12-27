@@ -5,8 +5,7 @@ def load_config(path):
     with open(path) as f:
         return yaml.safe_load(f)
 
-def get_all_fastq_related_paths(cfg: dict,
-                            mode: str):
+def get_all_fastq_related_paths(cfg: dict, mode: str):
     res = []
     for sequencing_name, sequencing_data in cfg["SEQUENCING"].items():
         base = Path(sequencing_data["SAMPLE_PATH"])
