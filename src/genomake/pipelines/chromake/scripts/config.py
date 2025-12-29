@@ -69,8 +69,7 @@ def create_example_config(
                 "R1_ADAPTOR": "AGATCGGAAGAGCACACGTCTGAACTCCAGTCA",
                 "R2_ADAPTOR": "AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT",
                 "PARAMETERS": {
-                    "CUTADAPT": "-q 20 --pair-filter=any",
-                    "BOWTIE2": "--end-to-end --very-sensitive --no-mixed --no-discordant --phred33 -I 10 -X 700"
+                    "CUTADAPT": "-q 20 --pair-filter=any"
                 }
             },
             "MO208": {
@@ -101,8 +100,7 @@ def create_example_config(
                 "R1_ADAPTOR": "AGATCGGAAGAGCACACGTCTGAACTCCAGTCA",
                 "R2_ADAPTOR": "AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT",
                 "PARAMETERS": {
-                    "CUTADAPT": "-q 20 --pair-filter=any",
-                    "BOWTIE2": "--end-to-end --very-sensitive --no-mixed --no-discordant --phred33 -I 10 -X 700"
+                    "CUTADAPT": "-q 20 --pair-filter=any"
                 }
             },
             "MO211": {
@@ -122,8 +120,7 @@ def create_example_config(
                 "R1_ADAPTOR": "CTGTCTCTTATACACATCT",
                 "R2_ADAPTOR": "CTGTCTCTTATACACATCT",
                 "PARAMETERS": {
-                    "CUTADAPT": "-q 20 --pair-filter=any",
-                    "BOWTIE2": "--end-to-end --very-sensitive --no-mixed --no-discordant --phred33 -I 10 -X 700"
+                    "CUTADAPT": "-q 20 --pair-filter=any"
                 }
             },
         },
