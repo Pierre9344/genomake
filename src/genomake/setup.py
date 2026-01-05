@@ -3,9 +3,10 @@ from setuptools import setup, find_packages
 setup(
     name="genomake",
     version="1.0.0",
-    packages=find_packages(),
+    packages=find_packages(where="src"),
+    package_dir={"", "src"},
     install_requires=[
-        # Your dependencies here
+        "argparse", "openpyxl", "pandas", "pathlib", "setuptools", "snakemake"
     ],
     entry_points={
         'console_scripts': [

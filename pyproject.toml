@@ -1,9 +1,9 @@
 [project]
 name = "genomake"
 version = "0.1.0"
-description = ""
+description = "Scripts for analysis of genomic data."
 authors = [
-    {name = "Your Name",email = "you@example.com"}
+    {name = "Pierre Solomon",email = ""}
 ]
 readme = "README.md"
 requires-python = ">=3.12,<4"
