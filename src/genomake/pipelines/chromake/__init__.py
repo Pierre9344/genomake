@@ -11,4 +11,7 @@ from . import  scripts
 #from .scripts.get_inputs import *
 #from .scripts.get_outputs import *
 
-__all_ = ["scripts"]
+__all__ = ["scripts"]
+
+
+version = "1.0.0"
