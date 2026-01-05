@@ -10,7 +10,7 @@ def _cmd_chromake_pipeline(args):
         "snakemake",
         "--snakefile", str(pipeline_dir / "Snakefile"),
         "--configfile", args.config_path,
-        "--retries ", 3 #♥ try to retry 3 time in case there an error
+        "--retries 3" # try to retry 3 time in case there an error
     ]
     if args.cores <= 0:
         print("--cores was set to a value inferior or equal to 0. Defaulting to 1")
@@ -22,8 +22,8 @@ def _cmd_chromake_pipeline(args):
         cmd.append("--jobs 1")
     else:
         cmd.append(f"--jobs {args.jobs}")
-    if args.other_snakemake != "":
-        cmd.append(args.other_snakemake)
+    if args.others_snakemake != "":
+        cmd.append(args.others_snakemake)
     if args.print_only:
         print(f"Final snakemake command is: {' '.join(cmd)}")
     else:

@@ -21,10 +21,9 @@ requires = ["setuptools>=80.9.0"]
 build-backend = "setuptools.build_meta"
 
 [project.scripts]
-genomake-cli = "genomake:cli"
+genomake = "genomake.cli:main"
 
-[project.gui-scripts]
-genomake-cli = "genomake:cli"
+
 # pip / setuptools config
 [tool.setuptools]
 package-dir = {"" = "src"}
@@ -34,7 +33,6 @@ where = ["src"]
 
 [tool.poetry]
 packages = [{include = "genomake", from = "src"}]
-
-#[build-system]
-#requires = ["poetry-core>=2.0.0,<3.0.0"]
-#build-backend = "poetry.core.masonry.api"
+include = [
+    "pipelines/chromake/Snakefile"
+]
