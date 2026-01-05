@@ -32,7 +32,6 @@ def _cmd_chromake_pipeline(args):
 # --- CLI setup ---
 
 def main():
-    print("cli main print")
     parser = argparse.ArgumentParser(
         description="genomake CLI: pipelines to analyze genomic sequencing data"
     )
