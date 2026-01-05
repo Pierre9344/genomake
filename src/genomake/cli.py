@@ -61,7 +61,7 @@ def main():
     )
     # --executor slurm --default-resources --slurm-delete-logfiles-older-than 0 --slurm-logdir "logs"
     parser_chromake.add_argument(
-        "--print-only", "-p", type="store_true", default=False,
+        "--print-only", "-p", action="store_true", default=False,
         help="Only print the final snakemake command. Default to 5"
     )
     parser_chromake.set_defaults(func=_cmd_chromake_pipeline)
