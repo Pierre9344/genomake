@@ -22,6 +22,11 @@ def _cmd_chromake_pipeline(args):
         cmd.append("--jobs 1")
     else:
         cmd.append(f"--jobs {args.jobs}")
+    if args.local_cores <= 0:
+        print("--local-cores was set to a value inferior or equal to 0. Defaulting to 1")
+        cmd.append("--local-cores 1")
+    else:
+        cmd.append(f"--local-cores {args.local_cores}")
     if args.others_snakemake != "":
         cmd.append(args.others_snakemake)
     if args.print_only:
@@ -52,8 +57,12 @@ def main():
         help="Maximum number of jobs to run concurrently. Default to 5."
     )
     parser_chromake.add_argument(
-        "--cores", type=int, default=1,
-        help="Number of cores used by snakemake (set the argument with the same name). Not relevant if we use an executor like slurm. Default to 1."
+        "--cores", type=int, default=150,
+        help="Same as the '--cores' option of snakemake. Maximum number of CPU cores used in parallel. Default to 150."
+    )
+    parser_chromake.add_argument(
+        "--local-cores", type=int, default=1,
+        help="Same as the '--local-cores' option of snakemake. Default to 1."
     )
     parser_chromake.add_argument(
         "--others-snakemake", type=str, default="",
