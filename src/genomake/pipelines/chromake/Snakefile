@@ -119,7 +119,7 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
             fastqc_outdir=str(Path(sequencing_data["SAMPLE_PATH"]) / "QC/FASTQC/RAW/"),
             multiqc_outdir=str(Path(sequencing_data["SAMPLE_PATH"]) / "QC/MULTIQC/RAW/"),
         threads: config["JOBS"]["CORES_PER_JOBS"]["FASTQC"]
-        retries:3
+        retries: 3
         resources:
             mem_mb=lambda wildcards, attempt: 2000 * attempt
             runtime=lambda wildcards, attempt: attempt * 60
