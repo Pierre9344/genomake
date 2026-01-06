@@ -8,7 +8,7 @@ def load_config(path):
 def get_all_fastq_related_paths(cfg: dict, mode: str):
     res = []
     for sequencing_name, sequencing_data in cfg["SEQUENCING"].items():
-        base = Path(sequencing_data["SAMPLE_PATH"])
+        base = Path(sequencing_data["PATH"])
         if mode == "sequencing":
             res.append(base)
         elif mode == "fastq_raw":
@@ -52,7 +52,7 @@ def get_sequencing_fastq_related_paths(cfg: dict,
                                        mode: str):
     res = []
     if project_name in cfg["SEQUENCING"].keys():
-        base = Path(cfg["SEQUENCING"][project_name]["SAMPLE_PATH"])
+        base = Path(cfg["SEQUENCING"][project_name]["PATH"])
         if mode == "sequencing":
             res.append(base)
         elif mode == "fastq_raw":
