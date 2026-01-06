@@ -175,7 +175,7 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
             # bowtie2 rule for sample here
             
         if "INPUT" in sequencing_data.keys():        
-            for input_name, input_data in sequencing_data["SAMPLES"].items():
+            for input_name, input_data in sequencing_data["INPUT"].items():
                 rule:
                     name:
                         f"cutadapt_{sequencing_name}_{input_name}"
