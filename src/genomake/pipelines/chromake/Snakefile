@@ -92,14 +92,23 @@ rule all:
         *chr_paths.get_all_fastq_related_paths(config, "cutadapt"),
 
 def get_qos_from_time(attempt: int, default_time: int)->str:
-    current_qos = str()
-    current_maxwall = 9999999999999
-    for local_name, local_value in config["JOBS"]["QOS_INFOS"].items():
-        if "MaxWall" in local_value:
-            if (local_value.get("MaxWall") < current_maxwall) and local_value.get("MaxWall") < (attempt * default_time):
-                current_maxwall = local_value.get("MaxWall")
-                current_qos = local_name
-    return current_qos
+
+    if "JOBS" not in config or "QOS_INFOS" not in config["JOBS"]:
+        return "long"
+
+    runtime_minutes = attempt * default_time
+    suitable_qos = None
+
+    for qos_name, qos_info in config["JOBS"]["QOS_INFOS"].items():
+        maxwall = qos_info.get("MaxWall")
+        if maxwall is None:
+            continue
+        if maxwall >= runtime_minutes:
+            if suitable_qos is None or maxwall < config["JOBS"]["QOS_INFOS"][suitable_qos]["MaxWall"]:
+                suitable_qos = qos_name
+
+    # fallback to 'long' if none found
+    return suitable_qos or "long"
 
 
 for sequencing_name, sequencing_data in config["SEQUENCING"].items():
