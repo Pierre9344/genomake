@@ -70,7 +70,7 @@ def get_sequencing_fastq_related_paths(cfg: dict,
                 res.append(base / "QC/FASTQC/RAW" / inp["R1"].replace(".gz", ".html"))
                 res.append(base / "QC/FASTQC/RAW" / inp["R2"].replace(".gz", ".html"))
         elif mode == "multiqc_raw":
-            res.append(base / "QC/RAW/multiqc_report.html")
+            res.append(base / "QC/MULTIQC/RAW/multiqc_report.html")
     else:
         print(f"There is an error, the configuration file don't contains a {project_name} project!")
     return res
