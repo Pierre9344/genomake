@@ -65,7 +65,7 @@ def create_example_config(
                         "R2": "FASTQ/Input_Batch1_R2_001.fastq.gz",
                     }
                 },
-                "SAMPLE_PATH": "/scratch/nautilus/projects/CR2TI_lab/SingleCell/Pierre_Solomon/MO203/",
+                "PATH": "/scratch/nautilus/projects/CR2TI_lab/SingleCell/Pierre_Solomon/MO203/",
                 "R1_ADAPTOR": "AGATCGGAAGAGCACACGTCTGAACTCCAGTCA",
                 "R2_ADAPTOR": "AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT",
                 "PARAMETERS": {
@@ -96,7 +96,7 @@ def create_example_config(
                         "R2": "FASTQ/Input_BATCH2_S2_R2_001.fastq.gz",
                     }
                 },
-                "SAMPLE_PATH": "/scratch/nautilus/projects/CR2TI_lab/SingleCell/Pierre_Solomon/MO208/",
+                "PATH": "/scratch/nautilus/projects/CR2TI_lab/SingleCell/Pierre_Solomon/MO208/",
                 "R1_ADAPTOR": "AGATCGGAAGAGCACACGTCTGAACTCCAGTCA",
                 "R2_ADAPTOR": "AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT",
                 "PARAMETERS": {
@@ -116,7 +116,7 @@ def create_example_config(
                         "TYPE": "ATAC",
                     },
                 },
-                "SAMPLE_PATH": "/scratch/nautilus/projects/CR2TI_lab/SingleCell/Pierre_Solomon/MO211/",
+                "PATH": "/scratch/nautilus/projects/CR2TI_lab/SingleCell/Pierre_Solomon/MO211/",
                 "R1_ADAPTOR": "CTGTCTCTTATACACATCT",
                 "R2_ADAPTOR": "CTGTCTCTTATACACATCT",
                 "PARAMETERS": {
@@ -425,7 +425,7 @@ def create_samplesheet_from_config(
 
     # Iterate over sequencing projects
     for seq_name, seq_data in sequencing.items():
-        proj_path = seq_data.get("SAMPLE_PATH", "")  # Get project root path
+        proj_path = seq_data.get("PATH", "")  # Get project root path
         samples = seq_data.get("SAMPLES", {})
         inputs = seq_data.get("INPUT", {})
 
@@ -684,7 +684,7 @@ def check_sample_files_exist(config_path: str) -> bool:
 
     for seq_name, seq_data in sequencing_data.items():
         samples = seq_data.get("SAMPLES", {})
-        sample_path = seq_data.get("SAMPLE_PATH", "")
+        sample_path = seq_data.get("PATH", "")
 
         for sample_name, sample_data in samples.items():
             # R1 and R2 paths

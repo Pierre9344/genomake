@@ -68,9 +68,9 @@ onstart:
                 config["SEQUENCING"][sequencing_name]["PARAMETERS"]["CUTADAPT"] = ""
             
             
-        sample_path = Path(sequencing_data["SAMPLE_PATH"])
+        sample_path = Path(sequencing_data["PATH"])
         if not sample_path.exists():
-            raise RuntimeError(f"The sequencing {str(sequencing_name)} SAMPLE_PATH field is not valid. Please check your config file!")
+            raise RuntimeError(f"The sequencing {str(sequencing_name)} PATH field is not valid. Please check your config file!")
         (sample_path / "QC/FASTQC/RAW").mkdir(parents=True, exist_ok=True)
         (sample_path / "QC/FASTQC/TRIMMED").mkdir(parents=True, exist_ok=True)
         (sample_path / "QC/MULTIQC/RAW").mkdir(parents=True, exist_ok=True)
@@ -116,8 +116,8 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
             *chr_paths.get_sequencing_fastq_related_paths(config, sequencing_name, "fastqc_raw"),
             *chr_paths.get_sequencing_fastq_related_paths(config, sequencing_name, "multiqc_raw"),
         params:
-            fastqc_outdir=str(Path(sequencing_data["SAMPLE_PATH"]) / "QC/FASTQC/RAW/"),
-            multiqc_outdir=str(Path(sequencing_data["SAMPLE_PATH"]) / "QC/MULTIQC/RAW/"),
+            fastqc_outdir=str(Path(sequencing_data["PATH"]) / "QC/FASTQC/RAW/"),
+            multiqc_outdir=str(Path(sequencing_data["PATH"]) / "QC/MULTIQC/RAW/"),
         
         threads: config["JOBS"]["CORES_PER_JOBS"]["FASTQC"]
 
@@ -148,11 +148,11 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                 name:
                     f"cutadapt_{sequencing_name}_{sample_name}"
                 input:
-                    str(Path(sequencing_data["SAMPLE_PATH"]) / sample_data["R1"]),
-                    str(Path(sequencing_data["SAMPLE_PATH"]) / sample_data["R2"]),
+                    str(Path(sequencing_data["PATH"]) / sample_data["R1"]),
+                    str(Path(sequencing_data["PATH"]) / sample_data["R2"]),
                 output:
-                    str(Path(sequencing_data["SAMPLE_PATH"]) / "TRIMMED/" / Path(sample_data["R1"]).name),
-                    str(Path(sequencing_data["SAMPLE_PATH"]) / "TRIMMED/" / Path(sample_data["R2"]).name),
+                    str(Path(sequencing_data["PATH"]) / "TRIMMED/" / Path(sample_data["R1"]).name),
+                    str(Path(sequencing_data["PATH"]) / "TRIMMED/" / Path(sample_data["R2"]).name),
                 threads:
                     config["JOBS"]["CORES_PER_JOBS"]["CUTADAPT"]
 
@@ -160,7 +160,7 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                     r1_adaptor=sequencing_data["R1_ADAPTOR"],
                     r2_adaptor=sequencing_data["R2_ADAPTOR"],
                     cutadapt_options=sequencing_data["PARAMETERS"]["CUTADAPT"],
-                    cutadapt_log=str(Path(sequencing_data["SAMPLE_PATH"]) / "QC/CUTADAPT/" / sample_name) + ".txt",
+                    cutadapt_log=str(Path(sequencing_data["PATH"]) / "QC/CUTADAPT/" / sample_name) + ".txt",
                 resources:
                     mem_mb=lambda wildcards, attempt: 2000 * attempt,
                     runtime=lambda wildcards, attempt: attempt * 60,
@@ -180,11 +180,11 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                     name:
                         f"cutadapt_{sequencing_name}_{input_name}"
                     input:
-                        str(Path(sequencing_data["SAMPLE_PATH"]) / input_data["R1"]),
-                        str(Path(sequencing_data["SAMPLE_PATH"]) / input_data["R2"]),
+                        str(Path(sequencing_data["PATH"]) / input_data["R1"]),
+                        str(Path(sequencing_data["PATH"]) / input_data["R2"]),
                     output:
-                        str(Path(sequencing_data["SAMPLE_PATH"]) / "TRIMMED/" / Path(input_data["R1"]).name),
-                        str(Path(sequencing_data["SAMPLE_PATH"]) / "TRIMMED/" / Path(input_data["R2"]).name),
+                        str(Path(sequencing_data["PATH"]) / "TRIMMED/" / Path(input_data["R1"]).name),
+                        str(Path(sequencing_data["PATH"]) / "TRIMMED/" / Path(input_data["R2"]).name),
                     threads:
                         config["JOBS"]["CORES_PER_JOBS"]["CUTADAPT"]
 
@@ -192,7 +192,7 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                         r1_adaptor=sequencing_data["R1_ADAPTOR"],
                         r2_adaptor=sequencing_data["R2_ADAPTOR"],
                         cutadapt_options=sequencing_data["PARAMETERS"]["CUTADAPT"],
-                        cutadapt_log=str(Path(sequencing_data["SAMPLE_PATH"]) / "QC/CUTADAPT/" / input_name) + ".txt",
+                        cutadapt_log=str(Path(sequencing_data["PATH"]) / "QC/CUTADAPT/" / input_name) + ".txt",
                     resources:
                         mem_mb=lambda wildcards, attempt: 2000 * attempt,
                         runtime=lambda wildcards, attempt: attempt * 60,
