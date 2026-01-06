@@ -76,6 +76,7 @@ onstart:
         (sample_path / "QC/MULTIQC/RAW").mkdir(parents=True, exist_ok=True)
         (sample_path / "QC/MULTIQC/TRIMMED").mkdir(parents=True, exist_ok=True)
         (sample_path / "QC/CUTADAPT").mkdir(parents=True, exist_ok=True)
+        (sample_path / "TRIMMED").mkdir(parents=True, exist_ok=True)
     for project_name, project_data in config["PROJECTS"].items():
         if "PROJECT_PATH" not in project_data:
             raise RuntimeError(f"The project {project_name} is missing the 'PROJECT_PATH field! Please add a valid path.")
@@ -128,7 +129,7 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
         threads: config["JOBS"]["CORES_PER_JOBS"]["FASTQC"]
 
         resources:
-            mem_mb=lambda wildcards, attempt: 2000 * attempt,
+            mem_mb=lambda wildcards, attempt: 20000 * attempt,
             runtime=lambda wildcards, attempt: attempt * 60,
             qos=lambda wildcards, attempt: get_qos_from_time(attempt, 60),
         shell:
