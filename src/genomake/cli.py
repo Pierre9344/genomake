@@ -1,6 +1,7 @@
 import argparse # used to parse the cmd
 import subprocess
 from pathlib import Path
+import shlex
 
 # --- Command handler functions ---
 
@@ -10,25 +11,25 @@ def _cmd_chromake_pipeline(args):
         "snakemake",
         "--snakefile", str(pipeline_dir / "Snakefile"),
         "--configfile", args.config_path,
-        "--retries 3" # try to retry 3 time in case there an error
+        "--retries", "3" # try to retry 3 time in case there an error
     ]
     if args.cores <= 0:
         print("--cores was set to a value inferior or equal to 0. Defaulting to 1")
-        cmd.append("--cores 1")
+        cmd.extend(shlex.split("--cores 1"))
     else:
-        cmd.append(f"--cores {args.cores}")
+        cmd.extend(shlex.split(f"--cores {args.cores}"))
     if args.jobs <= 0:
         print("--jobs was set to a value inferior or equal to 0. Defaulting to 1")
-        cmd.append("--jobs 1")
+        cmd.extend(shlex.split("--jobs 1"))
     else:
-        cmd.append(f"--jobs {args.jobs}")
+        cmd.extend(shlex.split(f"--jobs {args.jobs}"))
     if args.local_cores <= 0:
         print("--local-cores was set to a value inferior or equal to 0. Defaulting to 1")
-        cmd.append("--local-cores 1")
+        cmd.extend(shlex.split("--local-cores 1"))
     else:
-        cmd.append(f"--local-cores {args.local_cores}")
+        cmd.extend(shlex.split(f"--local-cores {args.local_cores}"))
     if args.others_snakemake != "":
-        cmd.append(args.others_snakemake)
+        cmd.extend(shlex.split(args.others_snakemake))
     if args.print_only:
         print(f"Final snakemake command is: {' '.join(cmd)}")
     else:
