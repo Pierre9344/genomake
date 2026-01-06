@@ -137,7 +137,12 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
             """
     
     
-    if all(["R1_ADAPTOR", "R2_ADAPTOR"] in sequencing_data.keys()) and sequencing_data["R1_ADAPTOR"] != '' and sequencing_data["R2_ADAPTOR"] != '':
+    if (
+        "R1_ADAPTOR" in sequencing_data
+        and "R2_ADAPTOR" in sequencing_data
+        and sequencing_data["R1_ADAPTOR"] != ''
+        and sequencing_data["R2_ADAPTOR"] != ''
+    ):
         for sample_name, sample_data in sequencing_data["SAMPLES"].items():
             rule:
                 name:
@@ -152,14 +157,14 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                     config["JOBS"]["CORES_PER_JOBS"]["CUTADAPT"]
 
                 params:
-                    r1_adaptor: sequencing_data["R1_ADAPTOR"],
-                    r2_adaptor: sequencing_data["R2_ADAPTOR"],
-                    cutadapt_options: sequencing_data["PARAMETERS"]["CUTADAPT"],
-                    cutadapt_log: str(Path(sequencing_data["SAMPLE_PATH"]) / "QC/CUTADAPT/" / sample_name) + ".txt",
+                    r1_adaptor=sequencing_data["R1_ADAPTOR"],
+                    r2_adaptor=sequencing_data["R2_ADAPTOR"],
+                    cutadapt_options=sequencing_data["PARAMETERS"]["CUTADAPT"],
+                    cutadapt_log=str(Path(sequencing_data["SAMPLE_PATH"]) / "QC/CUTADAPT/" / sample_name) + ".txt",
                 resources:
-                    mem_mb=lambda wildcards, attempt: 2000 * attempt
-                    runtime=lambda wildcards, attempt: attempt * 60
-                    qos=lambda wildcards, attempt: get_qos_from_time(attempt, 60)
+                    mem_mb=lambda wildcards, attempt: 2000 * attempt,
+                    runtime=lambda wildcards, attempt: attempt * 60,
+                    qos=lambda wildcards, attempt: get_qos_from_time(attempt, 60),
                 shell:
                     r"""
                     cutadapt -a {params.r1_adaptor} -A {params.r2_adaptor} \
