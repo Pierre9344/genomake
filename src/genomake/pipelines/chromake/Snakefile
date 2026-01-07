@@ -195,8 +195,7 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                     """
             if "PARAMETERS" in sequencing_data and "BOWTIE2_REF" in sequencing_data["PARAMETERS"]:
                 rule:
-                    name:
-                        f"bowtie2_{sequencing_name}_{sample_name}"
+                    name: f"bowtie2_{sequencing_name}_{sample_name}"
                     input:
                         str(Path(sequencing_data["PATH"]) / "TRIMMED/" / Path(sample_data["R1"]).name),
                         str(Path(sequencing_data["PATH"]) / "TRIMMED/" / Path(sample_data["R2"]).name),
@@ -274,8 +273,7 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                 
                 if "PARAMETERS" in sequencing_data and "BOWTIE2_REF" in sequencing_data["PARAMETERS"]:
                     rule:
-                        name:
-                            f"bowtie2_{sequencing_name}_{input_name}"
+                        name: f"bowtie2_{sequencing_name}_{input_name}"
                         input:
                             str(Path(sequencing_data["PATH"]) / "TRIMMED/" / Path(input_data["R1"]).name),
                             str(Path(sequencing_data["PATH"]) / "TRIMMED/" / Path(input_data["R2"]).name),
