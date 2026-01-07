@@ -168,6 +168,8 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                     r2_adaptor=sequencing_data["R2_ADAPTOR"],
                     cutadapt_options=sequencing_data["PARAMETERS"]["CUTADAPT"],
                     cutadapt_log=str(Path(sequencing_data["PATH"]) / "QC/CUTADAPT/" / sample_name) + ".txt",
+                    fastqc_outdir=str(Path(sequencing_data["PATH"]) / "QC/FASTQC/TRIMMED/"),
+                    multiqc_outdir=str(Path(sequencing_data["PATH"]) / "QC/MULTIQC/TRIMMED/"),
                 resources:
                     mem_mb=lambda wildcards, attempt: 2000 * attempt,
                     runtime=lambda wildcards, attempt: attempt * 60,
@@ -178,6 +180,13 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                         -o {output[0]} -p {output[1]} \
                         {params.cutadapt_options} -j {threads} \
                         {input[0]} {input[1]} > {params.cutadapt_log}
+                    fastqc \
+                        {output[0]} {output[1]} \
+                        -t {threads} \
+                        -o {params.fastqc_outdir}
+                    multiqc \
+                        {params.fastqc_outdir} \
+                        -o {params.multiqc_outdir}
                     """
             # bowtie2 rule for sample here
             
@@ -192,6 +201,8 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                     output:
                         str(Path(sequencing_data["PATH"]) / "TRIMMED/" / Path(input_data["R1"]).name),
                         str(Path(sequencing_data["PATH"]) / "TRIMMED/" / Path(input_data["R2"]).name),
+                        fastqc_outdir=str(Path(sequencing_data["PATH"]) / "QC/FASTQC/TRIMMED/"),
+                        multiqc_outdir=str(Path(sequencing_data["PATH"]) / "QC/MULTIQC/TRIMMED/"),
                     threads:
                         config["JOBS"]["CORES_PER_JOBS"]["CUTADAPT"]
 
@@ -210,6 +221,13 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                             -o {output[0]} -p {output[1]} \
                             {params.cutadapt_options} -j {threads} \
                             {input[0]} {input[1]} > {params.cutadapt_log}
+                        fastqc \
+                            {output[0]} {output[1]} \
+                            -t {threads} \
+                            -o {params.fastqc_outdir}
+                        multiqc \
+                            {params.fastqc_outdir} \
+                            -o {params.multiqc_outdir}
                         """
                 # bowtie2 rule for input here
                 
