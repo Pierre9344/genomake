@@ -225,9 +225,9 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                             -S {params.sam_output} &> {params.bowtie_log}
                         
                         samtools view -F 0x04 {params.sam_output} | \
-                            awk -F'\t' 'function abs(x){return ((x < 0.0) ? -x : x)} {print abs($9)}' | \
+                            awk -F'\t' 'function abs(x){{return ((x < 0.0) ? -x : x)}} {{print abs($9)}}' | \
                             sort | uniq -c | \
-                            awk -v OFS="\t" '{print $2, $1/2}' > {output[0]}
+                            awk -v OFS="\t" '{{print $2, $1/2}}' > {output[0]}
                         picard SortSam -I {params.sam_output} -o {output[1]} -SORT_ORDER coordinate
                         picard MarkDuplicate -I {output[1]} -o {output[2]} -REMOVE_DUPLICATES=true \
                             -METRICS_FILE {params.picard_log}
@@ -302,9 +302,9 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                               -S {params.sam_output} &> {params.bowtie_log}
                         
                             samtools view -F 0x04 {params.sam_output} | \
-                              awk -F'\t' 'function abs(x){return ((x < 0.0) ? -x : x)} {print abs($9)}' | \
+                              awk -F'\t' 'function abs(x){{return ((x < 0.0) ? -x : x)}} {{print abs($9)}}' | \
                               sort | uniq -c | \
-                              awk -v OFS="\t" '{print $2, $1/2}' > {output[0]}
+                              awk -v OFS="\t" '{{print $2, $1/2}}' > {output[0]}
                             
                             picard SortSam -I {params.sam_output} -o {output[1]} -SORT_ORDER coordinate
                             picard MarkDuplicate -I {output[1]} -o {output[2]} -REMOVE_DUPLICATES=true \
