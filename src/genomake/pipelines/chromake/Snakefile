@@ -213,6 +213,8 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                         bowtie_log=str(Path(sequencing_data["PATH"]) / "QC/BOWTIE2/" / (sample_name + ".log")),
                         sam_output=str(Path(sequencing_data["PATH"]) / "SAM/" / (sample_name + ".sam")),
                         picard_log=str(Path(sequencing_data["PATH"]) / "QC/PICARD/" / (sample_name + "_picard.rmDup.txt")),
+                        sample=sample_name,
+                        optional_sam=str(Path(sequencing_data["PATH"]) / "SAM/" / (sample_name + "_sorted2.sam")),
                     resources:
                         mem_mb=lambda wildcards, attempt: 10000 * attempt,
                         runtime=lambda wildcards, attempt: attempt * 180,
@@ -229,8 +231,16 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                             sort | uniq -c | \
                             awk -v OFS="\t" '{{print $2, $1/2}}' > {output[0]}
                         picard SortSam -I {params.sam_output} -O {output[1]} -SORT_ORDER coordinate
-                        picard MarkDuplicates -I {output[1]} -O {output[2]} -REMOVE_DUPLICATES true \
-                            -METRICS_FILE {params.picard_log}
+                        
+                        if [ "$(samtools view -H {output[1] | grep '@RG')" != "" ]
+                        then
+                           samtools addreplacerg -r "@RG\tID:ReadGroup1\tSM:{params.sample}\tPL:Illumina\tLB:Library.fa" -o {params.optional_sam} {output[1]}
+                           picard MarkDuplicates -I {params.optional_sam} -O {output[2]} -REMOVE_DUPLICATES true \
+                             -METRICS_FILE {params.picard_log}
+                        else
+                           picard MarkDuplicates -I {output[1]} -O {output[2]} -REMOVE_DUPLICATES true \
+                             -METRICS_FILE {params.picard_log}
+                        fi
                         samtools view -bS -F 0x04 {output[2]} -o {output[3]}
                         """
                         
@@ -290,6 +300,8 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                             bowtie_log=str(Path(sequencing_data["PATH"]) / "QC/BOWTIE2/" / (input_name + ".log")),
                             sam_output=str(Path(sequencing_data["PATH"]) / "SAM/" / (input_name + ".sam")),
                             picard_log=str(Path(sequencing_data["PATH"]) / "QC/PICARD/" / (input_name + "_picard.rmDup.txt")),
+                            sample=input_name,
+                            optional_sam=str(Path(sequencing_data["PATH"]) / "SAM/" / (input_name + "_sorted2.sam")),
                         resources:
                             mem_mb=lambda wildcards, attempt: 10000 * attempt,
                             runtime=lambda wildcards, attempt: attempt * 180,
@@ -307,9 +319,16 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                               awk -v OFS="\t" '{{print $2, $1/2}}' > {output[0]}
                             
                             picard SortSam -I {params.sam_output} -O {output[1]} -SORT_ORDER coordinate
-                            picard MarkDuplicates -I {output[1]} -O {output[2]} -REMOVE_DUPLICATES true \
-                              -METRICS_FILE {params.picard_log}
                             
+                            if [ "$(samtools view -H {output[1] | grep '@RG')" != "" ]
+                            then
+                               samtools addreplacerg -r "@RG\tID:ReadGroup1\tSM:{params.sample}\tPL:Illumina\tLB:Library.fa" -o {params.optional_sam} {output[1]}
+                               picard MarkDuplicates -I {params.optional_sam} -O {output[2]} -REMOVE_DUPLICATES true \
+                                 -METRICS_FILE {params.picard_log}
+                            else
+                               picard MarkDuplicates -I {output[1]} -O {output[2]} -REMOVE_DUPLICATES true \
+                                 -METRICS_FILE {params.picard_log}
+                            fi
                             samtools view -bS -F 0x04 {output[2]} -o {output[3]}
                             """
         
