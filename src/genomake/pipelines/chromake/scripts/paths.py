@@ -21,11 +21,11 @@ def get_all_fastq_related_paths(cfg: dict, mode: str):
                 res.append(base / inp["R2"])
         elif mode == "fastqc_raw":
             for sample in sequencing_data.get("SAMPLES", {}).values():
-                res.append(base / "QC/FASTQC/RAW" / str(Path(sample["R1"]).name).replace("fastq.gz", "fastqc.html"))
-                res.append(base / "QC/FASTQC/RAW" / str(Path(sample["R2"]).name).replace("fastq.gz", "fastqc.html"))
+                res.append(base / "QC/FASTQC/RAW" / re.sub(r"\.fastq(\.gz)?$", "_fastqc.html", Path(sample["R1"]).name))
+                res.append(base / "QC/FASTQC/RAW" / re.sub(r"\.fastq(\.gz)?$", "_fastqc.html", Path(sample["R2"]).name))
             for inp in sequencing_data.get("INPUT", {}).values():
-                res.append(base / "QC/FASTQC/RAW" / str(Path(inp["R1"]).name).replace("fastq.gz", "fastqc.html"))
-                res.append(base / "QC/FASTQC/RAW" / str(Path(inp["R2"]).name).replace("fastq.gz", "fastqc.html"))
+                res.append(base / "QC/FASTQC/RAW" / re.sub(r"\.fastq(\.gz)?$", "_fastqc.html", Path(inp["R1"]).name))
+                res.append(base / "QC/FASTQC/RAW" / re.sub(r"\.fastq(\.gz)?$", "_fastqc.html", Path(inp["R2"]).name))
         elif mode == "multiqc_raw":
             res.append(base / "QC/MULTIQC/RAW/multiqc_report.html")
         elif mode == "cutadapt":
@@ -37,11 +37,11 @@ def get_all_fastq_related_paths(cfg: dict, mode: str):
                 res.append(base / "TRIMMED" / Path(inp["R2"]).name)
         elif mode == "fastqc_trimmed":
             for sample in sequencing_data.get("SAMPLES", {}).values():
-                res.append(base / "QC/FASTQC/TRIMMED" / str(Path(sample["R1"]).name).replace("fastq.gz", "fastqc.html"))
-                res.append(base / "QC/FASTQC/TRIMMED" / str(Path(sample["R2"]).name).replace("fastq.gz", "fastqc.html"))
+                res.append(base / "QC/FASTQC/TRIMMED" / re.sub(r"\.fastq(\.gz)?$", "_fastqc.html", Path(sample["R1"]).name))
+                res.append(base / "QC/FASTQC/TRIMMED" / re.sub(r"\.fastq(\.gz)?$", "_fastqc.html", Path(sample["R2"]).name))
             for inp in sequencing_data.get("INPUT", {}).values():
-                res.append(base / "QC/FASTQC/TRIMMED" / str(Path(inp["R1"]).name).replace("fastq.gz", "fastqc.html"))
-                res.append(base / "QC/FASTQC/TRIMMED" / str(Path(inp["R2"]).name).replace("fastq.gz", "fastqc.html"))
+                res.append(base / "QC/FASTQC/TRIMMED" / re.sub(r"\.fastq(\.gz)?$", "_fastqc.html", Path(inp["R1"]).name))
+                res.append(base / "QC/FASTQC/TRIMMED" / re.sub(r"\.fastq(\.gz)?$", "_fastqc.html", Path(inp["R2"]).name))
         elif mode == "multiqc_trimmed":
             res.append(base / "QC/MULTIQC/TRIMMED/multiqc_report.html")
         else:
