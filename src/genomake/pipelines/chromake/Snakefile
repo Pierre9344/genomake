@@ -147,7 +147,7 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                 -o {params.fastqc_outdir}
             multiqc \
                 {params.fastqc_outdir} \
-                -o {params.multiqc_outdir}
+                -o {params.multiqc_outdir} --force
             """
     
     
@@ -345,7 +345,7 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                 r"""
                 multiqc \
                     {params.fastqc_outdir} \
-                    -o {params.multiqc_outdir}
+                    -o {params.multiqc_outdir} --force
                 """
                 
     #else:
