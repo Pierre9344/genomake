@@ -239,7 +239,7 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
             params:
                 fastqc_outdir=str(Path(sequencing_data["PATH"]) / "QC/FASTQC/TRIMMED/"),
                 multiqc_outdir=str(Path(sequencing_data["PATH"]) / "QC/MULTIQC/TRIMMED/"),
-            ressources:
+            resources:
                 mem_mb=lambda wildcards, attempt: 20000 * attempt,
                 runtime=lambda wildcards, attempt: attempt * 60,
                 qos=lambda wildcards, attempt: get_qos_from_time(attempt, 60),
