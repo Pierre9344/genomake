@@ -271,6 +271,7 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                             -t {threads} \
                             -o {params.fastqc_outdir}
                         """
+                
                 if "PARAMETERS" in sequencing_data and "BOWTIE2_REF" in sequencing_data["PARAMETERS"]:
                     rule:
                         name:
@@ -279,7 +280,7 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                             str(Path(sequencing_data["PATH"]) / "TRIMMED/" / Path(input_data["R1"]).name),
                             str(Path(sequencing_data["PATH"]) / "TRIMMED/" / Path(input_data["R2"]).name),
                         output:
-                            fragLen_output=str(Path(sequencing_data["PATH"]) / "SAM/fragmentLen" / (input_name + "_fragmentLen.txt")),
+                            str(Path(sequencing_data["PATH"]) / "SAM/fragmentLen" / (input_name + "_fragmentLen.txt")),
                             str(Path(sequencing_data["PATH"]) / "SAM/" / (input_name + "_sorted.sam")),
                             str(Path(sequencing_data["PATH"]) / "SAM/" / (input_name + "_rmDup.sam")),
                             str(Path(sequencing_data["PATH"]) / "BAM/" / (input_name + ".bam")),
