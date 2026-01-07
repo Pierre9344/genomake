@@ -44,6 +44,9 @@ def get_all_fastq_related_paths(cfg: dict, mode: str):
                 res.append(base / "QC/FASTQC/TRIMMED" / re.sub(r"\.fastq(\.gz)?$", "_fastqc.html", Path(inp["R2"]).name))
         elif mode == "multiqc_trimmed":
             res.append(base / "QC/MULTIQC/TRIMMED/multiqc_report.html")
+        elif mode == "bam":
+            for sample_name, sample_data in sequencing_data["SAMPLES"].items():
+                res.append(base / "BAM" / (sample_name + ".bam"))
         else:
             print(f"There is an error, chromake.scripts.path.get_path dont recognize the {mode} mode!")      
     return res
@@ -89,7 +92,9 @@ def get_sequencing_fastq_related_paths(cfg: dict,
                 res.append(base / "QC/FASTQC/TRIMMED" / re.sub(r"\.fastq(\.gz)?$", "_fastqc.html", Path(inp["R2"]).name))
         elif mode == "multiqc_trimmed":
             res.append(base / "QC/MULTIQC/TRIMMED/multiqc_report.html")
-        
+        elif mode == "bam":
+            for sample_name, sample_data in cfg["SEQUENCING"][project_name]["SAMPLES"].items():
+                res.append(base / "BAM" / (sample_name + ".bam"))
     else:
         print(f"There is an error, the configuration file don't contains a {project_name} project!")
     return res

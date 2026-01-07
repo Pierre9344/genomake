@@ -78,6 +78,10 @@ onstart:
         (sample_path / "QC/MULTIQC/TRIMMED").mkdir(parents=True, exist_ok=True)
         (sample_path / "QC/CUTADAPT").mkdir(parents=True, exist_ok=True)
         (sample_path / "TRIMMED").mkdir(parents=True, exist_ok=True)
+        (sample_path / "QC/BOWTIE2").mkdir(parents=True, exist_ok=True)
+        (sample_path / "QC/PICARD").mkdir(parents=True, exist_ok=True)
+        (sample_path / "SAM/fragmentLen").mkdir(parents=True, exist_ok=True)
+        (sample_path / "BAM").mkdir(parents=True, exist_ok=True)
     for project_name, project_data in config["PROJECTS"].items():
         if "PROJECT_PATH" not in project_data:
             raise RuntimeError(f"The project {project_name} is missing the 'PROJECT_PATH field! Please add a valid path.")
@@ -94,6 +98,7 @@ rule all:
         *chr_paths.get_all_fastq_related_paths(config, "cutadapt"),
         *chr_paths.get_all_fastq_related_paths(config, "fastqc_trimmed"),
         *chr_paths.get_all_fastq_related_paths(config, "multiqc_trimmed"),
+        *chr_paths.get_all_fastq_related_paths(config, "bam"),
 
 def get_qos_from_time(attempt: int, default_time: int)->str:
 
@@ -116,7 +121,6 @@ def get_qos_from_time(attempt: int, default_time: int)->str:
 
 
 for sequencing_name, sequencing_data in config["SEQUENCING"].items():
-    # QUALITY CONTROL (raw files)
     rule:
         name:
             f"fastqc_raw_{sequencing_name}"
@@ -189,8 +193,48 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                         -t {threads} \
                         -o {params.fastqc_outdir}
                     """
-            # bowtie2 rule for sample here
-            
+            if "PARAMETERS" in sequencing_data and "BOWTIE2_REF" in sequencing_data["PARAMETERS"]:
+                rule:
+                    name:
+                        f"bowtie2_{sequencing_name}_{sample_name}"
+                    input:
+                        str(Path(sequencing_data["PATH"]) / "TRIMMED/" / Path(sample_data["R1"]).name),
+                        str(Path(sequencing_data["PATH"]) / "TRIMMED/" / Path(sample_data["R2"]).name),
+                    output:
+                        fragLen_output=str(Path(sequencing_data["PATH"]) / "SAM/fragmentLen" / (sample_name + "_fragmentLen.txt")),
+                        str(Path(sequencing_data["PATH"]) / "SAM/" / (sample_name + "_sorted.sam")),
+                        str(Path(sequencing_data["PATH"]) / "SAM/" / (sample_name + "_rmDup.sam")),
+                        str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + ".bam")),
+                    threads:
+                        config["JOBS"]["CORES_PER_JOBS"]["BOWTIE2"]
+                    params:
+                        bowtie_ref=sequencing_data["PARAMETERS"]["BOWTIE2_REF"],
+                        bowtie_log=str(Path(sequencing_data["PATH"]) / "QC/BOWTIE2/" / (sample_name + ".log")),
+                        sam_output=str(Path(sequencing_data["PATH"]) / "SAM/" / (sample_name + ".sam")),
+                        picard_log=str(Path(sequencing_data["PATH"]) / "QC/PICARD/" / (sample_name + "_picard.rmDup.txt")),
+                    resources:
+                        mem_mb=lambda wildcards, attempt: 10000 * attempt,
+                        runtime=lambda wildcards, attempt: attempt * 180,
+                        qos=lambda wildcards, attempt: get_qos_from_time(attempt, 180),
+                shell:
+                    r"""
+                    bowtie2 -p {threads} --local --very-sensitive-local \
+                    --no-mixed --no-discordant --phred33 -I 10 -X 700 \
+                        -x "{params.bowtie_ref}" -1 {input[0]} -2 {input[1]} \
+                        -S {params.sam_output} &> {params.bowtie_log}
+                    
+                    samtools view -F 0x04 {params.sam_output} | \
+                      awk -F'\t' 'function abs(x){return ((x < 0.0) ? -x : x)} {print abs($9)}' | \
+                      sort | uniq -c | \
+                      awk -v OFS="\t" '{print $2, $1/2}' > {output[0]}
+                      
+                    picard SortSam -I {params.sam_output} -o {output[1]} -SORT_ORDER coordinate
+                    picard MarkDuplicate -I {output[1]} -o {output[2]} -REMOVE_DUPLICATES=true \
+                      -METRICS_FILE {params.picard_log}
+                      
+                    samtools view -bS -F 0x04 {output[2]} -o {output[3]}
+                    """
+                        
         if "INPUT" in sequencing_data.keys():        
             for input_name, input_data in sequencing_data["INPUT"].items():
                 rule:
@@ -227,7 +271,47 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                             -t {threads} \
                             -o {params.fastqc_outdir}
                         """
-                # bowtie2 rule for input here
+                if "PARAMETERS" in sequencing_data and "BOWTIE2_REF" in sequencing_data["PARAMETERS"]:
+                    rule:
+                        name:
+                            f"bowtie2_{sequencing_name}_{input_name}"
+                        input:
+                            str(Path(sequencing_data["PATH"]) / "TRIMMED/" / Path(input_data["R1"]).name),
+                            str(Path(sequencing_data["PATH"]) / "TRIMMED/" / Path(input_data["R2"]).name),
+                        output:
+                            fragLen_output=str(Path(sequencing_data["PATH"]) / "SAM/fragmentLen" / (input_name + "_fragmentLen.txt")),
+                            str(Path(sequencing_data["PATH"]) / "SAM/" / (input_name + "_sorted.sam")),
+                            str(Path(sequencing_data["PATH"]) / "SAM/" / (input_name + "_rmDup.sam")),
+                            str(Path(sequencing_data["PATH"]) / "BAM/" / (input_name + ".bam")),
+                        threads:
+                            config["JOBS"]["CORES_PER_JOBS"]["BOWTIE2"]
+                        params:
+                            bowtie_ref=sequencing_data["PARAMETERS"]["BOWTIE2_REF"],
+                            bowtie_log=str(Path(sequencing_data["PATH"]) / "QC/BOWTIE2/" / (input_name + ".log")),
+                            sam_output=str(Path(sequencing_data["PATH"]) / "SAM/" / (input_name + ".sam")),
+                            picard_log=str(Path(sequencing_data["PATH"]) / "QC/PICARD/" / (input_name + "_picard.rmDup.txt")),
+                        resources:
+                            mem_mb=lambda wildcards, attempt: 10000 * attempt,
+                            runtime=lambda wildcards, attempt: attempt * 180,
+                            qos=lambda wildcards, attempt: get_qos_from_time(attempt, 180),
+                    shell:
+                        r"""
+                        bowtie2 -p {threads} --local --very-sensitive-local \
+                        --no-mixed --no-discordant --phred33 -I 10 -X 700 \
+                            -x "{params.bowtie_ref}" -1 {input[0]} -2 {input[1]} \
+                            -S {params.sam_output} &> {params.bowtie_log}
+                        
+                        samtools view -F 0x04 {params.sam_output} | \
+                          awk -F'\t' 'function abs(x){return ((x < 0.0) ? -x : x)} {print abs($9)}' | \
+                          sort | uniq -c | \
+                          awk -v OFS="\t" '{print $2, $1/2}' > {output[0]}
+                          
+                        picard SortSam -I {params.sam_output} -o {output[1]} -SORT_ORDER coordinate
+                        picard MarkDuplicate -I {output[1]} -o {output[2]} -REMOVE_DUPLICATES=true \
+                          -METRICS_FILE {params.picard_log}
+                          
+                        samtools view -bS -F 0x04 {output[2]} -o {output[3]}
+                        """
         
         rule:
             name:
@@ -253,5 +337,5 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                 """
                 
     #else:
-        # If there no adaptor for trimming we use BWA on the original fastq (samples and input)
+        # If there no adaptor for trimming we use BWA on the original fastq (samples and input) do add later (same rules but not trimming)
         
