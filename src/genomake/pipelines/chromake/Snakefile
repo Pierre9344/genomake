@@ -229,7 +229,7 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                             sort | uniq -c | \
                             awk -v OFS="\t" '{{print $2, $1/2}}' > {output[0]}
                         picard SortSam -I {params.sam_output} -O {output[1]} -SORT_ORDER coordinate
-                        picard MarkDuplicate -I {output[1]} -O {output[2]} -REMOVE_DUPLICATES=true \
+                        picard MarkDuplicates -I {output[1]} -O {output[2]} -REMOVE_DUPLICATES=true \
                             -METRICS_FILE {params.picard_log}
                         samtools view -bS -F 0x04 {output[2]} -o {output[3]}
                         """
@@ -307,7 +307,7 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                               awk -v OFS="\t" '{{print $2, $1/2}}' > {output[0]}
                             
                             picard SortSam -I {params.sam_output} -O {output[1]} -SORT_ORDER coordinate
-                            picard MarkDuplicate -I {output[1]} -O {output[2]} -REMOVE_DUPLICATES=true \
+                            picard MarkDuplicates -I {output[1]} -O {output[2]} -REMOVE_DUPLICATES=true \
                               -METRICS_FILE {params.picard_log}
                             
                             samtools view -bS -F 0x04 {output[2]} -o {output[3]}
