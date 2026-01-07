@@ -1,5 +1,6 @@
 from pathlib import Path
 import yaml
+import re
 
 def load_config(path):
     with open(path) as f:
@@ -64,11 +65,11 @@ def get_sequencing_fastq_related_paths(cfg: dict,
                 res.append(base / inp["R2"])
         elif mode == "fastqc_raw":
             for sample in cfg["SEQUENCING"][project_name].get("SAMPLES", {}).values():
-                res.append(base / "QC/FASTQC/RAW" / str(Path(sample["R1"]).name).replace("fastq.gz", "fastqc.html"))
-                res.append(base / "QC/FASTQC/RAW" / str(Path(sample["R2"]).name).replace("fastq.gz", "fastqc.html"))
+                res.append(base / "QC/FASTQC/RAW" / re.sub(r"\.fastq(\.gz)?$", "_fastqc.html", Path(sample["R1"]).name))
+                res.append(base / "QC/FASTQC/RAW" / re.sub(r"\.fastq(\.gz)?$", "_fastqc.html", Path(sample["R2"]).name))
             for inp in cfg["SEQUENCING"][project_name].get("INPUT", {}).values():
-                res.append(base / "QC/FASTQC/RAW" / str(Path(inp["R1"]).name).replace("fastq.gz", "fastqc.html"))
-                res.append(base / "QC/FASTQC/RAW" / str(Path(inp["R2"]).name).replace("fastq.gz", "fastqc.html"))
+                res.append(base / "QC/FASTQC/RAW" / re.sub(r"\.fastq(\.gz)?$", "_fastqc.html", Path(inp["R1"]).name))
+                res.append(base / "QC/FASTQC/RAW" / re.sub(r"\.fastq(\.gz)?$", "_fastqc.html", Path(inp["R2"]).name))
         elif mode == "multiqc_raw":
             res.append(base / "QC/MULTIQC/RAW/multiqc_report.html")
         
@@ -81,11 +82,11 @@ def get_sequencing_fastq_related_paths(cfg: dict,
                 res.append(base / "TRIMMED" / Path(inp["R2"]).name)
         elif mode == "fastqc_trimmed":
             for sample in cfg["SEQUENCING"][project_name].get("SAMPLES", {}).values():
-                res.append(base / "QC/FASTQC/TRIMMED" / str(Path(sample["R1"]).name).replace(".gz", ".html"))
-                res.append(base / "QC/FASTQC/TRIMMED" / str(Path(sample["R2"]).name).replace(".gz", ".html"))
+                res.append(base / "QC/FASTQC/TRIMMED" / re.sub(r"\.fastq(\.gz)?$", "_fastqc.html", Path(sample["R1"]).name))
+                res.append(base / "QC/FASTQC/TRIMMED" / re.sub(r"\.fastq(\.gz)?$", "_fastqc.html", Path(sample["R2"]).name))
             for inp in cfg["SEQUENCING"][project_name].get("SAMPLES", {}).values():
-                res.append(base / "QC/FASTQC/TRIMMED" / str(Path(inp["R1"]).name).replace(".gz", ".html"))
-                res.append(base / "QC/FASTQC/TRIMMED" / str(Path(inp["R2"]).name).replace(".gz", ".html"))
+                res.append(base / "QC/FASTQC/TRIMMED" / re.sub(r"\.fastq(\.gz)?$", "_fastqc.html", Path(inp["R1"]).name))
+                res.append(base / "QC/FASTQC/TRIMMED" / re.sub(r"\.fastq(\.gz)?$", "_fastqc.html", Path(inp["R2"]).name))
         elif mode == "multiqc_trimmed":
             res.append(base / "QC/MULTIQC/TRIMMED/multiqc_report.html")
         

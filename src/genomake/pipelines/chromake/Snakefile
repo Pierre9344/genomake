@@ -1,6 +1,7 @@
 import yaml
 from pathlib import Path
 from genomake.pipelines.chromake.scripts import paths as chr_paths
+import re
 
 onstart:
     if "SEQUENCING" not in config:
@@ -160,6 +161,8 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                 output:
                     str(Path(sequencing_data["PATH"]) / "TRIMMED/" / Path(sample_data["R1"]).name),
                     str(Path(sequencing_data["PATH"]) / "TRIMMED/" / Path(sample_data["R2"]).name),
+                    str(Path(sequencing_data["PATH"]) / "QC/FASTQC/TRIMMED/" / re.sub(r"\.fastq(\.gz)?$", "_fastqc.html", Path(sample_data["R1"]).name)),
+                    str(Path(sequencing_data["PATH"]) / "QC/FASTQC/TRIMMED/" / re.sub(r"\.fastq(\.gz)?$", "_fastqc.html", Path(sample_data["R2"]).name)),
                 threads:
                     config["JOBS"]["CORES_PER_JOBS"]["CUTADAPT"]
 
@@ -169,7 +172,6 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                     cutadapt_options=sequencing_data["PARAMETERS"]["CUTADAPT"],
                     cutadapt_log=str(Path(sequencing_data["PATH"]) / "QC/CUTADAPT/" / sample_name) + ".txt",
                     fastqc_outdir=str(Path(sequencing_data["PATH"]) / "QC/FASTQC/TRIMMED/"),
-                    multiqc_outdir=str(Path(sequencing_data["PATH"]) / "QC/MULTIQC/TRIMMED/"),
                 resources:
                     mem_mb=lambda wildcards, attempt: 2000 * attempt,
                     runtime=lambda wildcards, attempt: attempt * 60,
@@ -184,9 +186,6 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                         {output[0]} {output[1]} \
                         -t {threads} \
                         -o {params.fastqc_outdir}
-                    multiqc \
-                        {params.fastqc_outdir} \
-                        -o {params.multiqc_outdir}
                     """
             # bowtie2 rule for sample here
             
@@ -201,16 +200,16 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                     output:
                         str(Path(sequencing_data["PATH"]) / "TRIMMED/" / Path(input_data["R1"]).name),
                         str(Path(sequencing_data["PATH"]) / "TRIMMED/" / Path(input_data["R2"]).name),
-                        fastqc_outdir=str(Path(sequencing_data["PATH"]) / "QC/FASTQC/TRIMMED/"),
-                        multiqc_outdir=str(Path(sequencing_data["PATH"]) / "QC/MULTIQC/TRIMMED/"),
+                        str(Path(sequencing_data["PATH"]) / "QC/FASTQC/TRIMMED/" / re.sub(r"\.fastq(\.gz)?$", "_fastqc.html", Path(input_data["R1"]).name)),
+                        str(Path(sequencing_data["PATH"]) / "QC/FASTQC/TRIMMED/" / re.sub(r"\.fastq(\.gz)?$", "_fastqc.html", Path(input_data["R2"]).name)),
                     threads:
                         config["JOBS"]["CORES_PER_JOBS"]["CUTADAPT"]
-
                     params:
                         r1_adaptor=sequencing_data["R1_ADAPTOR"],
                         r2_adaptor=sequencing_data["R2_ADAPTOR"],
                         cutadapt_options=sequencing_data["PARAMETERS"]["CUTADAPT"],
                         cutadapt_log=str(Path(sequencing_data["PATH"]) / "QC/CUTADAPT/" / input_name) + ".txt",
+                        fastqc_outdir=str(Path(sequencing_data["PATH"]) / "QC/FASTQC/TRIMMED/"),
                     resources:
                         mem_mb=lambda wildcards, attempt: 2000 * attempt,
                         runtime=lambda wildcards, attempt: attempt * 60,
@@ -225,11 +224,31 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                             {output[0]} {output[1]} \
                             -t {threads} \
                             -o {params.fastqc_outdir}
-                        multiqc \
-                            {params.fastqc_outdir} \
-                            -o {params.multiqc_outdir}
                         """
                 # bowtie2 rule for input here
+        
+        rule:
+            name:
+                f"multiqc_trimmed_{sequencing_name}"
+            input:
+                *chr_paths.get_sequencing_fastq_related_paths(config, sequencing_name, "fastqc_trimmed"),
+            output:
+                *chr_paths.get_sequencing_fastq_related_paths(config, sequencing_name, "multiqc_trimmed"),
+            threads:
+                1,
+            params:
+                fastqc_outdir=str(Path(sequencing_data["PATH"]) / "QC/FASTQC/TRIMMED/"),
+                multiqc_outdir=str(Path(sequencing_data["PATH"]) / "QC/MULTIQC/TRIMMED/"),
+            ressources:
+                mem_mb=lambda wildcards, attempt: 20000 * attempt,
+                runtime=lambda wildcards, attempt: attempt * 60,
+                qos=lambda wildcards, attempt: get_qos_from_time(attempt, 60),
+            shell:
+                r"""
+                multiqc \
+                    {params.fastqc_outdir} \
+                    -o {params.multiqc_outdir}
+                """
                 
     #else:
         # If there no adaptor for trimming we use BWA on the original fastq (samples and input)
