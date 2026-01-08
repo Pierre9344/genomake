@@ -52,7 +52,7 @@ def get_all_fastq_related_paths(cfg: dict, mode: str):
             for sample_name, sample_data in sequencing_data["SAMPLES"].items():
                 res.append(base / "BAM" / (sample_name + ".bam"))
         elif mode == "bedgraph":
-            res.append(base / "HOMER" / (sequencing_name + ".bedgraph"))
+            res.append(base / "HOMER" / (sequencing_name + ".bedGraph"))
         else:
             print(f"There is an error, chromake.scripts.path.get_path dont recognize the {mode} mode!")      
     return res
