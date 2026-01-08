@@ -102,7 +102,7 @@ rule all:
         *chr_paths.get_all_fastq_related_paths(config, "cutadapt"),
         *chr_paths.get_all_fastq_related_paths(config, "fastqc_trimmed"),
         *chr_paths.get_all_fastq_related_paths(config, "multiqc_trimmed"),
-        *chr_paths.get_all_fastq_related_paths(config, "bam"),
+        *chr_paths.get_all_fastq_related_paths(config, "bam_filtered"),
         *chr_paths.get_all_fastq_related_paths(config, "bedgraph"),
 
 def get_qos_from_time(attempt: int, default_time_min: int)->str:
@@ -207,12 +207,9 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                         str(Path(sequencing_data["PATH"]) / "TRIMMED/" / Path(sample_data["R1"]).name),
                         str(Path(sequencing_data["PATH"]) / "TRIMMED/" / Path(sample_data["R2"]).name),
                     output:
-                        str(Path(sequencing_data["PATH"]) / "SAM/" / (sample_name + ".sam")),
                         str(Path(sequencing_data["PATH"]) / "SAM/fragmentLen" / (sample_name + "_fragmentLen.txt")),
-                        str(Path(sequencing_data["PATH"]) / "SAM/" / (sample_name + "_sorted.sam")),
-                        str(Path(sequencing_data["PATH"]) / "SAM/" / (sample_name + "_rmDup.sam")),
-                        str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + ".bam")),
-                        str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + "_chr.bam")),
+                        str(Path(sequencing_data["PATH"]) / "SAM/" / (sample_name + ".bam")),
+                        str(Path(sequencing_data["PATH"]) / "SAM/" / (sample_name + "_filtered.bam")),
                     threads:
                         config["JOBS"]["CORES_PER_JOBS"]["BOWTIE2"]
                     params:
@@ -223,6 +220,10 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                         sample=sample_name,
                         sequencing=sequencing_name,
                         optional_sam=str(Path(sequencing_data["PATH"]) / "SAM/" / (sample_name + "_sorted2.sam")),
+                        sam=str(Path(sequencing_data["PATH"]) / "SAM/" / (sample_name + ".sam")),
+                        sam_sorted=str(Path(sequencing_data["PATH"]) / "SAM/" / (sample_name + "_sorted.sam")),
+                        sam_rmDup=str(Path(sequencing_data["PATH"]) / "SAM/" / (sample_name + "_rmDup.sam")),
+                        bam_chr=str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + "_chr.bam")),
                     resources:
                         mem_mb=lambda wildcards, attempt: 10000 * attempt,
                         runtime=lambda wildcards, attempt: attempt * 180,
@@ -234,30 +235,33 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                             -x "{params.bowtie_ref}" -1 {input[0]} -2 {input[1]} \
                             --rg-id {params.sample} --rg SM:{params.sample} \
                             --rg LB:{params.sequencing} --rg PU:{params.sample}_{params.sequencing} \
-                            --rg PL:ILLUMINA -S {output[0]} &> {params.bowtie_log}
+                            --rg PL:ILLUMINA -S {params.sam} &> {params.bowtie_log}
                         
-                        samtools view -F 0x04 {output[0]} | \
+                        samtools view -F 0x04 {params.sam} | \
                             awk -F'\t' 'function abs(x){{return ((x < 0.0) ? -x : x)}} {{print abs($9)}}' | \
                             sort | uniq -c | \
-                            awk -v OFS="\t" '{{print $2, $1/2}}' > {output[1]}
-                        picard SortSam -I {output[0]} -O {output[2]} -SORT_ORDER coordinate
+                            awk -v OFS="\t" '{{print $2, $1/2}}' > {output[0]}
+                        picard SortSam -I {params.sam} -O {params.sam_sorted} -SORT_ORDER coordinate
                         
-                        picard MarkDuplicates -I {output[2]} -O {output[3]} \
+                        picard MarkDuplicates -I {params.sam_sorted} -O {params.sam_rmDup} \
                              -REMOVE_DUPLICATES true \
                              -METRICS_FILE {params.picard_log}
                              
-                        samtools view -bS -F 0x04 {output[3]} -o {output[4]}
+                        samtools view -bS -F 0x04 {params.sam_rmDup} -o {output[1]}
                         
                         # add "chr" to the header and keep only standard chromosomes
-                        samtools view -H {output[4]} | \
-                        sed -e 's/SN:\([0-9XY]\)/SN:chr\1/' -e 's/SN:MT/SN:chrM/' | \
-                        samtools reheader - {output[4]} |
-                        samtools view -b - \
-                        chr1 chr2 chr3 chr4 chr5 chr6 chr7 chr8 chr9 chr10 \
-                        chr11 chr12 chr13 chr14 chr15 chr16 chr17 chr18 chr19 chr20 \
-                        chr21 chr22 chrX chrY > {output[5]}
+                        samtools view -H {output[1]} | \
+                            sed -e 's/SN:\([0-9XY]\)/SN:chr\1/' -e 's/SN:MT/SN:chrM/' | \
                         
-                        samtools index {output[5]}
+                        samtools reheader - {output[1]} > {params.bam_chr}
+                        
+                        samtools index {params.bam_chr}
+                        
+                        samtools view -b {params.bam_chr} > {output[2]}
+                        
+                        samtools index {output[2]}
+                        
+                        rm {params.sam} {params.sam_sorted} {params.sam_rmDup} {params.bam_chr}
                         """
         
         if "INPUT" in sequencing_data.keys():        
@@ -378,7 +382,7 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
         name:
             f"homer_{sequencing_name}"
         input:
-            *chr_paths.get_sequencing_fastq_related_paths(config, sequencing_name, "bam"),
+            *chr_paths.get_sequencing_fastq_related_paths(config, sequencing_name, "bam_filtered"),
         output:
             directory(str(Path(sequencing_data["PATH"]) / ("HOMER/" + sequencing_name))),
             str(Path(sequencing_data["PATH"]) / ("HOMER/" + sequencing_name + ".bedGraph.gz")),
