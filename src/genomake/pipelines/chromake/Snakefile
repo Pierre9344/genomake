@@ -247,7 +247,7 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                              
                         samtools view -bS -F 0x04 {output[3]} -o {output[4]}
                         """
-                        
+        
         if "INPUT" in sequencing_data.keys():        
             for input_name, input_data in sequencing_data["INPUT"].items():
                 rule:
@@ -369,8 +369,8 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
             *chr_paths.get_sequencing_fastq_related_paths(config, sequencing_name, "bam"),
         output:
             directory(str(Path(sequencing_data["PATH"]) / ("HOMER/" + sequencing_name))),
-            str(Path(sequencing_data["PATH"]) / ("HOMER/" + sequencing_name + ".bedGraph"),
-            str(Path(sequencing_data["PATH"]) / ("HOMER/" + sequencing_name + "_sorted.bedGraph"),
+            str(Path(sequencing_data["PATH"]) / ("HOMER/" + sequencing_name + ".bedGraph")),
+            str(Path(sequencing_data["PATH"]) / ("HOMER/" + sequencing_name + "_sorted.bedGraph")),
         threads: 2
         params:
             sequencing=sequencing_name,
