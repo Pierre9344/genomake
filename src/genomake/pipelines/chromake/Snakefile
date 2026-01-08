@@ -381,7 +381,10 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
             qos=lambda wildcards, attempt: get_qos_from_time(attempt, 60),
         shell:
             r"""
-            makeTagDirectory {output[0]} {input} -genome {params.genome} -checkGC
+            # can't install genome on glicid (need to do a ticket) so impossible to use checkGC
+            #makeTagDirectory {output[0]} {input} -genome {params.genome} -checkGC
+            
+            makeTagDirectory {output[0]} {input}
             makeUCSCfile {output[0]} -o {output[1]} -norm 1e7
             sort -k1,1 -k2,2n {output[1]} > {output[2]}
             """
