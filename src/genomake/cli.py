@@ -33,6 +33,7 @@ def _cmd_chromake_pipeline(args):
     if args.print_only:
         print(f"Final snakemake command is: {' '.join(cmd)}")
     else:
+        Path("./logs").mkdir(parents=True, exist_ok=True)
         subprocess.run(cmd, check=True)
 
 # --- CLI setup ---

@@ -104,7 +104,6 @@ rule all:
         *chr_paths.get_all_fastq_related_paths(config, "multiqc_trimmed"),
         *chr_paths.get_all_fastq_related_paths(config, "bam"),
         *chr_paths.get_all_fastq_related_paths(config, "bedgraph"),
-        *chr_paths.get_all_fastq_related_paths(config, "bedgraph_sorted"),
 
 def get_qos_from_time(attempt: int, default_time_min: int)->str:
 
@@ -383,13 +382,11 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
         output:
             directory(str(Path(sequencing_data["PATH"]) / ("HOMER/" + sequencing_name))),
             str(Path(sequencing_data["PATH"]) / ("HOMER/" + sequencing_name + ".bedGraph.gz")),
-            str(Path(sequencing_data["PATH"]) / ("HOMER/" + sequencing_name + "_sorted.bedGraph.gz")),
         threads: 2
         params:
             sequencing=sequencing_name,
             genome=sequencing_data["PARAMETERS"]["GENOME"],
             bedgraph1=str(Path(sequencing_data["PATH"]) / ("HOMER/" + sequencing_name + ".bedGraph")),
-            bedgraph2=str(Path(sequencing_data["PATH"]) / ("HOMER/" + sequencing_name + "_sorted.bedGraph")),
         resources:
             mem_mb=lambda wildcards, attempt: 20000 * attempt,
             runtime=lambda wildcards, attempt: attempt * 60,
@@ -401,7 +398,6 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
             
             makeTagDirectory {output[0]} {input}
             makeUCSCfile {output[0]} -o {params.bedgraph1} -norm 1e7
-            sort -k1,1 -k2,2n {output[1]} > {params.bedgraph2}
             """
     
     
