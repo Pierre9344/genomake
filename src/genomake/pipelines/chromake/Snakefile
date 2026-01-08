@@ -52,22 +52,25 @@ onstart:
         
     for sequencing_name, sequencing_data in config["SEQUENCING"].items():
         if "INPUT" in sequencing_data and len(sequencing_data["INPUT"]) >= 2:
-            print(f"THe {sequencing_name} sequencing list more than one input. All of them will be sequencded but only the first one '{list(sequencing_data["INPUT"].keys())[0]}' will be used for the samples pak calling.")
+            first_input = list(sequencing_data["INPUT"].keys())[0]
+            print(
+                f"The {sequencing_name} sequencing list more than one input. ",
+                f"All of them will be sequencded but only the first one '{first_input}' ",
+                "will be used for the samples peak calling."
+            )
         
         if "PARAMETERS" not in sequencing_data:
-            print(f"""
-            The 'PARAMETERS' field is missing for the {sequencing_name} sequencing. Using the pipeline default. If you wish to not use those parameters, please set an empty string for the values:
-            - CUTADAPT: -q --pair-filter=any
-            
-            """)
-            config["SEQUENCING"][sequencing_name]["PARAMETERS"] = {
-                "CUTADAPT": "-q 20 --pair-filter=any"
-            }
+            raise RuntimeError("Each sequencing must have a parameters field to indicates at least the genome reference for bowtie2, and the genome used (hg38, mm10, ...)!")
         else:
             if "CUTADAPT" not in config["SEQUENCING"][sequencing_name]["PARAMETERS"]:
                 print(f"The {sequencing_name} seqencing don't list parameters for cutadapt. Using the pipeline default: '-q 20 --pair-filter=any'")
                 config["SEQUENCING"][sequencing_name]["PARAMETERS"]["CUTADAPT"] = ""
-            
+            if "BOWTIE2_REF" not in config["SEQUENCING"][sequencing_name]["PARAMETERS"]:
+                raise RuntimeError("Each sequencing must have a parameters field to indicates at least the genome reference for bowtie2, a bed of blacklisted regions, and the genome used (hg38, mm10, ...)!")
+            if "GENOME" not in config["SEQUENCING"][sequencing_name]["PARAMETERS"]:
+                raise RuntimeError("Each sequencing must have a parameters field to indicates at least the genome reference for bowtie2, a bed of blacklisted regions, and the genome used (hg38, mm10, ...)!")
+            if "BLACKLIST_BED" not in config["SEQUENCING"][sequencing_name]["PARAMETERS"]:
+                raise RuntimeError("Each sequencing must have a parameters field to indicates at least the genome reference for bowtie2, a bed of blacklisted regions, and the genome used (hg38, mm10, ...)!")
             
         sample_path = Path(sequencing_data["PATH"])
         if not sample_path.exists():
@@ -82,6 +85,7 @@ onstart:
         (sample_path / "QC/PICARD").mkdir(parents=True, exist_ok=True)
         (sample_path / "SAM/fragmentLen").mkdir(parents=True, exist_ok=True)
         (sample_path / "BAM").mkdir(parents=True, exist_ok=True)
+        (sample_path / "HOMER/").mkdir(parents=True, exist_ok=True)
     for project_name, project_data in config["PROJECTS"].items():
         if "PROJECT_PATH" not in project_data:
             raise RuntimeError(f"The project {project_name} is missing the 'PROJECT_PATH field! Please add a valid path.")
@@ -99,6 +103,7 @@ rule all:
         *chr_paths.get_all_fastq_related_paths(config, "fastqc_trimmed"),
         *chr_paths.get_all_fastq_related_paths(config, "multiqc_trimmed"),
         *chr_paths.get_all_fastq_related_paths(config, "bam"),
+        *chr_paths.get_all_fastq_related_paths(config, "bedgraph"),
 
 def get_qos_from_time(attempt: int, default_time_min: int)->str:
 
@@ -202,6 +207,7 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                         str(Path(sequencing_data["PATH"]) / "TRIMMED/" / Path(sample_data["R1"]).name),
                         str(Path(sequencing_data["PATH"]) / "TRIMMED/" / Path(sample_data["R2"]).name),
                     output:
+                        str(Path(sequencing_data["PATH"]) / "SAM/" / (sample_name + ".sam")),
                         str(Path(sequencing_data["PATH"]) / "SAM/fragmentLen" / (sample_name + "_fragmentLen.txt")),
                         str(Path(sequencing_data["PATH"]) / "SAM/" / (sample_name + "_sorted.sam")),
                         str(Path(sequencing_data["PATH"]) / "SAM/" / (sample_name + "_rmDup.sam")),
@@ -214,6 +220,7 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                         sam_output=str(Path(sequencing_data["PATH"]) / "SAM/" / (sample_name + ".sam")),
                         picard_log=str(Path(sequencing_data["PATH"]) / "QC/PICARD/" / (sample_name + "_picard.rmDup.txt")),
                         sample=sample_name,
+                        sequencing=sequencing_name,
                         optional_sam=str(Path(sequencing_data["PATH"]) / "SAM/" / (sample_name + "_sorted2.sam")),
                     resources:
                         mem_mb=lambda wildcards, attempt: 10000 * attempt,
@@ -224,17 +231,21 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                         bowtie2 -p {threads} --local --very-sensitive-local \
                             --no-mixed --no-discordant --phred33 -I 10 -X 700 \
                             -x "{params.bowtie_ref}" -1 {input[0]} -2 {input[1]} \
-                            -S {params.sam_output} &> {params.bowtie_log}
+                            --rg-id {params.sample} --rg SM:{params.sample} \
+                            --rg LB:{params.sequencing} --rg PU:{params.sample}_{params.sequencing} \
+                            --rg PL:ILLUMINA -S {output[0]} &> {params.bowtie_log}
                         
-                        samtools view -F 0x04 {params.sam_output} | \
+                        samtools view -F 0x04 {output[0]} | \
                             awk -F'\t' 'function abs(x){{return ((x < 0.0) ? -x : x)}} {{print abs($9)}}' | \
                             sort | uniq -c | \
-                            awk -v OFS="\t" '{{print $2, $1/2}}' > {output[0]}
-                        picard SortSam -I {params.sam_output} -O {output[1]} -SORT_ORDER coordinate
+                            awk -v OFS="\t" '{{print $2, $1/2}}' > {output[1]}
+                        picard SortSam -I {output[0]} -O {output[2]} -SORT_ORDER coordinate
                         
-                        picard MarkDuplicates -I {output[1]} -O {output[2]} -REMOVE_DUPLICATES true \
+                        picard MarkDuplicates -I {output[2]} -O {output[3]} \
+                             -REMOVE_DUPLICATES true \
                              -METRICS_FILE {params.picard_log}
-                        samtools view -bS -F 0x04 {output[2]} -o {output[3]}
+                             
+                        samtools view -bS -F 0x04 {output[3]} -o {output[4]}
                         """
                         
         if "INPUT" in sequencing_data.keys():        
@@ -282,19 +293,21 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                             str(Path(sequencing_data["PATH"]) / "TRIMMED/" / Path(input_data["R1"]).name),
                             str(Path(sequencing_data["PATH"]) / "TRIMMED/" / Path(input_data["R2"]).name),
                         output:
-                            str(Path(sequencing_data["PATH"]) / "SAM/fragmentLen" / (input_name + "_fragmentLen.txt")),
-                            str(Path(sequencing_data["PATH"]) / "SAM/" / (input_name + "_sorted.sam")),
-                            str(Path(sequencing_data["PATH"]) / "SAM/" / (input_name + "_rmDup.sam")),
-                            str(Path(sequencing_data["PATH"]) / "BAM/" / (input_name + ".bam")),
+                            str(Path(sequencing_data["PATH"]) / "SAM/" / (sample_name + ".sam")),
+                            str(Path(sequencing_data["PATH"]) / "SAM/fragmentLen" / (sample_name + "_fragmentLen.txt")),
+                            str(Path(sequencing_data["PATH"]) / "SAM/" / (sample_name + "_sorted.sam")),
+                            str(Path(sequencing_data["PATH"]) / "SAM/" / (sample_name + "_rmDup.sam")),
+                            str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + ".bam")),
                         threads:
                             config["JOBS"]["CORES_PER_JOBS"]["BOWTIE2"]
                         params:
                             bowtie_ref=sequencing_data["PARAMETERS"]["BOWTIE2_REF"],
-                            bowtie_log=str(Path(sequencing_data["PATH"]) / "QC/BOWTIE2/" / (input_name + ".log")),
-                            sam_output=str(Path(sequencing_data["PATH"]) / "SAM/" / (input_name + ".sam")),
-                            picard_log=str(Path(sequencing_data["PATH"]) / "QC/PICARD/" / (input_name + "_picard.rmDup.txt")),
-                            sample=input_name,
-                            optional_sam=str(Path(sequencing_data["PATH"]) / "SAM/" / (input_name + "_sorted2.sam")),
+                            bowtie_log=str(Path(sequencing_data["PATH"]) / "QC/BOWTIE2/" / (sample_name + ".log")),
+                            sam_output=str(Path(sequencing_data["PATH"]) / "SAM/" / (sample_name + ".sam")),
+                            picard_log=str(Path(sequencing_data["PATH"]) / "QC/PICARD/" / (sample_name + "_picard.rmDup.txt")),
+                            sample=sample_name,
+                            sequencing=sequencing_name,
+                            optional_sam=str(Path(sequencing_data["PATH"]) / "SAM/" / (sample_name + "_sorted2.sam")),
                         resources:
                             mem_mb=lambda wildcards, attempt: 10000 * attempt,
                             runtime=lambda wildcards, attempt: attempt * 180,
@@ -302,27 +315,23 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                         shell:
                             r"""
                             bowtie2 -p {threads} --local --very-sensitive-local \
-                              --no-mixed --no-discordant --phred33 -I 10 -X 700 \
-                              -x "{params.bowtie_ref}" -1 {input[0]} -2 {input[1]} \
-                              -S {params.sam_output} &> {params.bowtie_log}
-                        
-                            samtools view -F 0x04 {params.sam_output} | \
-                              awk -F'\t' 'function abs(x){{return ((x < 0.0) ? -x : x)}} {{print abs($9)}}' | \
-                              sort | uniq -c | \
-                              awk -v OFS="\t" '{{print $2, $1/2}}' > {output[0]}
+                                --no-mixed --no-discordant --phred33 -I 10 -X 700 \
+                                -x "{params.bowtie_ref}" -1 {input[0]} -2 {input[1]} \
+                                --rg-id {params.sample} --rg SM:{params.sample} \
+                                --rg LB:{params.sequencing} --rg PU:{params.sample}_{params.sequencing} \
+                                --rg PL:ILLUMINA -S {output[0]} &> {params.bowtie_log}
                             
-                            picard SortSam -I {params.sam_output} -O {output[1]} -SORT_ORDER coordinate
+                            samtools view -F 0x04 {output[0]} | \
+                                awk -F'\t' 'function abs(x){{return ((x < 0.0) ? -x : x)}} {{print abs($9)}}' | \
+                                sort | uniq -c | \
+                                awk -v OFS="\t" '{{print $2, $1/2}}' > {output[1]}
+                            picard SortSam -I {output[0]} -O {output[2]} -SORT_ORDER coordinate
                             
-                            if [ "$(samtools view -H {output[1]} | grep '@RG')" != "" ]
-                            then
-                               samtools addreplacerg -r "@RG\tID:ReadGroup1\tSM:{params.sample}\tPL:Illumina\tLB:Library.fa" -o {params.optional_sam} {output[1]}
-                               picard MarkDuplicates -I {params.optional_sam} -O {output[2]} -REMOVE_DUPLICATES true \
+                            picard MarkDuplicates -I {output[2]} -O {output[3]} \
+                                 -REMOVE_DUPLICATES true \
                                  -METRICS_FILE {params.picard_log}
-                            else
-                               picard MarkDuplicates -I {output[1]} -O {output[2]} -REMOVE_DUPLICATES true \
-                                 -METRICS_FILE {params.picard_log}
-                            fi
-                            samtools view -bS -F 0x04 {output[2]} -o {output[3]}
+                                 
+                            samtools view -@ {threads} -bS -F 0x04 {output[3]} -o {output[4]}
                             """
         
         rule:
@@ -350,4 +359,34 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                 
     #else:
         # If there no adaptor for trimming we use BWA on the original fastq (samples and input) do add later (same rules but not trimming)
-        
+    
+    
+    # HOMER RULE for track
+    rule:
+        name:
+            f"homer_{sequencing_name}"
+        input:
+            *chr_paths.get_sequencing_fastq_related_paths(config, sequencing_name, "bam"),
+        output:
+            directory(str(Path(sequencing_data["PATH"]) / ("HOMER/" + sequencing_name))),
+            str(Path(sequencing_data["PATH"]) / ("HOMER/" + sequencing_name + ".bedGraph"),
+            str(Path(sequencing_data["PATH"]) / ("HOMER/" + sequencing_name + "_sorted.bedGraph"),
+        threads: 2
+        params:
+            sequencing=sequencing_name,
+            genome=sequencing_data["PARAMETERS"]["GENOME"]
+        resources:
+            mem_mb=lambda wildcards, attempt: 20000 * attempt,
+            runtime=lambda wildcards, attempt: attempt * 60,
+            qos=lambda wildcards, attempt: get_qos_from_time(attempt, 60),
+        shell:
+            r"""
+            makeTagDirectory {output[0]} {input} -genome {params.genome} -checkGC
+            makeUCSCfile {output[0]} -o {output[1]} -norm 1e7
+            sort -k1,1 -k2,2n {output[1]} > {output[2]}
+            """
+    
+    
+    
+    
+    
