@@ -369,8 +369,8 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
             *chr_paths.get_sequencing_fastq_related_paths(config, sequencing_name, "bam"),
         output:
             directory(str(Path(sequencing_data["PATH"]) / ("HOMER/" + sequencing_name))),
-            str(Path(sequencing_data["PATH"]) / ("HOMER/" + sequencing_name + ".bedGraph")),
-            str(Path(sequencing_data["PATH"]) / ("HOMER/" + sequencing_name + "_sorted.bedGraph")),
+            str(Path(sequencing_data["PATH"]) / ("HOMER/" + sequencing_name + ".bedGraph.gz")),
+            str(Path(sequencing_data["PATH"]) / ("HOMER/" + sequencing_name + "_sorted.bedGraph.gz")),
         threads: 2
         params:
             sequencing=sequencing_name,
