@@ -176,7 +176,6 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                     str(Path(sequencing_data["PATH"]) / "QC/FASTQC/TRIMMED/" / re.sub(r"\.fastq(\.gz)?$", "_fastqc.html", Path(sample_data["R2"]).name)),
                 threads:
                     config["JOBS"]["CORES_PER_JOBS"]["CUTADAPT"]
-
                 params:
                     r1_adaptor=sequencing_data["R1_ADAPTOR"],
                     r2_adaptor=sequencing_data["R2_ADAPTOR"],
@@ -410,10 +409,4 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                   
     #else:
         # If there no adaptor for trimming we use BWA on the original fastq (samples and input) do add later (same rules but not trimming)
-    
-    
-    
-    
-    
-    
     
