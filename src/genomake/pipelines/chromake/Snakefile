@@ -100,7 +100,7 @@ onstart:
         (sample_path / "TRIMMED").mkdir(parents=True, exist_ok=True)
         (sample_path / "QC/BOWTIE2").mkdir(parents=True, exist_ok=True)
         (sample_path / "QC/PICARD").mkdir(parents=True, exist_ok=True)
-        (sample_path / "SAM/fragmentLen").mkdir(parents=True, exist_ok=True)
+        (sample_path / "QC/fragmentLen").mkdir(parents=True, exist_ok=True)
         (sample_path / "BAM").mkdir(parents=True, exist_ok=True)
         (sample_path / "HOMER/").mkdir(parents=True, exist_ok=True)
     for project_name, project_data in config["PROJECTS"].items():
@@ -223,7 +223,7 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                         str(Path(sequencing_data["PATH"]) / "TRIMMED/" / Path(sample_data["R1"]).name),
                         str(Path(sequencing_data["PATH"]) / "TRIMMED/" / Path(sample_data["R2"]).name),
                     output:
-                        str(Path(sequencing_data["PATH"]) / "SAM/fragmentLen" / (sample_name + "_fragmentLen.txt")),
+                        str(Path(sequencing_data["PATH"]) / "QC/fragmentLen" / (sample_name + "_fragmentLen.txt")),
                         str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + "._chrheader.bam")),
                         str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + "_filtered.bam")),
                         directory(str(Path(sequencing_data["PATH"]) / ("HOMER/" + sample_name))),
@@ -236,9 +236,9 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                         picard_log=str(Path(sequencing_data["PATH"]) / "QC/PICARD/" / (sample_name + "_picard.rmDup.txt")),
                         sample=sample_name,
                         sequencing=sequencing_name,
-                        sam_output=str(Path(sequencing_data["PATH"]) / "SAM/" / (sample_name + ".sam")),
-                        filtered_sam=str(Path(sequencing_data["PATH"]) / "SAM/" / (sample_name + "_sorted.sam")),
-                        filtered2_sam=str(Path(sequencing_data["PATH"]) / "SAM/" / (sample_name + "_rmDup.sam")),
+                        sam_output=str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + ".sam")),
+                        filtered_sam=str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + "_sorted.sam")),
+                        filtered2_sam=str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + "_rmDup.sam")),
                         bowtie_bam=str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + "_bowtie.bam")),
                         genome=sequencing_data["PARAMETERS"]["GENOME"],
                         homer_output=str(Path(sequencing_data["PATH"]) / ("HOMER/" + sample_name + ".bedGraph")),
@@ -334,7 +334,7 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                             str(Path(sequencing_data["PATH"]) / "TRIMMED/" / Path(sample_data["R1"]).name),
                             str(Path(sequencing_data["PATH"]) / "TRIMMED/" / Path(sample_data["R2"]).name),
                         output:
-                            str(Path(sequencing_data["PATH"]) / "SAM/fragmentLen" / (sample_name + "_fragmentLen.txt")),
+                            str(Path(sequencing_data["PATH"]) / "QC/fragmentLen" / (sample_name + "_fragmentLen.txt")),
                             str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + "._chrheader.bam")),
                             str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + "_filtered.bam")),
                             directory(str(Path(sequencing_data["PATH"]) / ("HOMER/" + sample_name))),
@@ -347,9 +347,9 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                             picard_log=str(Path(sequencing_data["PATH"]) / "QC/PICARD/" / (sample_name + "_picard.rmDup.txt")),
                             sample=sample_name,
                             sequencing=sequencing_name,
-                            sam_output=str(Path(sequencing_data["PATH"]) / "SAM/" / (sample_name + ".sam")),
-                            filtered_sam=str(Path(sequencing_data["PATH"]) / "SAM/" / (sample_name + "_sorted.sam")),
-                            filtered2_sam=str(Path(sequencing_data["PATH"]) / "SAM/" / (sample_name + "_rmDup.sam")),
+                            sam_output=str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + ".sam")),
+                            filtered_sam=str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + "_sorted.sam")),
+                            filtered2_sam=str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + "_rmDup.sam")),
                             bowtie_bam=str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + "_bowtie.bam")),
                             genome=sequencing_data["PARAMETERS"]["GENOME"],
                             homer_output=str(Path(sequencing_data["PATH"]) / ("HOMER/" + sample_name + ".bedGraph")),
