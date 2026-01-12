@@ -254,7 +254,7 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                             sed -e 's/SN:\([0-9XY]\)/SN:chr\1/' -e 's/SN:MT/SN:chrM/' | \
                             samtools reheader - {params.bowtie_bam} > {output[1]}
                         samtools index {output[1]}
-                        samtools view -b {output[1]} chr{1..22} chrX chrY > {output[2]}
+                        samtools view -b {output[1]} chr{{1..22}} chrX chrY > {output[2]}
                         samtools index {output[2]}
                         rm {params.sam_output} {params.filtered_sam} {params.filtered2_sam} {params.bowtie_bam}
                         
@@ -365,7 +365,7 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                                 sed -e 's/SN:\([0-9XY]\)/SN:chr\1/' -e 's/SN:MT/SN:chrM/' | \
                                 samtools reheader - {params.bowtie_bam} > {output[1]}
                             samtools index {output[1]}
-                            samtools view -b {output[1]} chr{1..22} chrX chrY > {output[2]}
+                            samtools view -b {output[1]} chr{{1..22}} chrX chrY > {output[2]}
                             samtools index {output[2]}
                             rm {params.sam_output} {params.filtered_sam} {params.filtered2_sam} {params.bowtie_bam}
                             
