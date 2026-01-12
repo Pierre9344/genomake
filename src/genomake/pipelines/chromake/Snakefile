@@ -407,7 +407,7 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                     {params.fastqc_outdir} \
                     -o {params.multiqc_outdir} --force
                 """
-                
+                  
     #else:
         # If there no adaptor for trimming we use BWA on the original fastq (samples and input) do add later (same rules but not trimming)
     
