@@ -211,7 +211,7 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                         str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + "._chrheader.bam")),
                         str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + "_filtered.bam")),
                         directory(str(Path(sequencing_data["PATH"]) / ("HOMER/" + sample_name))),
-                        directory(str(Path(sequencing_data["PATH"]) / ("HOMER/" + sample_name + "_UCSC_track.bedGraph")),
+                        str(Path(sequencing_data["PATH"]) / ("HOMER/" + sample_name + "_UCSC_track.bedGraph"),
                     threads:
                         config["JOBS"]["CORES_PER_JOBS"]["BOWTIE2"]
                     params:
@@ -225,7 +225,7 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                         filtered2_sam=str(Path(sequencing_data["PATH"]) / "SAM/" / (sample_name + "_rmDup.sam")),
                         bowtie_bam=str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + "_bowtie.bam")),
                         genome=sequencing_data["PARAMETERS"]["GENOME"],
-                        homer_output=directory(str(Path(sequencing_data["PATH"]) / ("HOMER/" + sample_name + ".bedGraph.gz")),
+                        homer_output=str(Path(sequencing_data["PATH"]) / ("HOMER/" + sample_name + ".bedGraph.gz")),
                         homer_output2=str(Path(sequencing_data["PATH"]) / ("HOMER/" + sample_name + ".bedGraph")),
                     resources:
                         mem_mb=lambda wildcards, attempt: 10000 * attempt,
@@ -322,7 +322,7 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                             str(Path(sequencing_data["PATH"]) / "BAM/" / (input_name + "._chrheader.bam")),
                             str(Path(sequencing_data["PATH"]) / "BAM/" / (input_name + "_filtered.bam")),
                             directory(str(Path(sequencing_data["PATH"]) / ("HOMER/" + input_name))),
-                            directory(str(Path(sequencing_data["PATH"]) / ("HOMER/" + input_name + "_UCSC_track.bedGraph")),
+                            (str(Path(sequencing_data["PATH"]) / ("HOMER/" + input_name + "_UCSC_track.bedGraph"),
                         threads:
                             config["JOBS"]["CORES_PER_JOBS"]["BOWTIE2"]
                         params:
@@ -336,7 +336,7 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                             filtered2_sam=str(Path(sequencing_data["PATH"]) / "SAM/" / (input_name + "_rmDup.sam")),
                             bowtie_bam=str(Path(sequencing_data["PATH"]) / "BAM/" / (input_name + "_bowtie.bam")),
                             genome=sequencing_data["PARAMETERS"]["GENOME"],
-                            homer_output=directory(str(Path(sequencing_data["PATH"]) / ("HOMER/" + input_name + ".bedGraph.gz")),
+                            homer_output=str(Path(sequencing_data["PATH"]) / ("HOMER/" + input_name + ".bedGraph.gz")),
                             homer_output2=str(Path(sequencing_data["PATH"]) / ("HOMER/" + input_name + ".bedGraph")),
                         resources:
                             mem_mb=lambda wildcards, attempt: 10000 * attempt,
