@@ -66,12 +66,29 @@ onstart:
                 print(f"The {sequencing_name} seqencing don't list parameters for cutadapt. Using the pipeline default: '-q 20 --pair-filter=any'")
                 config["SEQUENCING"][sequencing_name]["PARAMETERS"]["CUTADAPT"] = ""
             if "BOWTIE2_REF" not in config["SEQUENCING"][sequencing_name]["PARAMETERS"]:
-                raise RuntimeError("Each sequencing must have a parameters field to indicates at least the genome reference for bowtie2, a bed of blacklisted regions, and the genome used (hg38, mm10, ...)!")
+                raise RuntimeError(
+                """Each sequencing must have a parameters field to indicates at least:
+                  - the genome reference for bowtie2
+                  - a bed of blacklisted regions
+                  - the genome used (either the .fa file of the reference (toplevel.fa for ensembl) or a string such as hg38 or mm10 if the genome was configured in homer with configureHomer.pl
+                """
+                )
             if "GENOME" not in config["SEQUENCING"][sequencing_name]["PARAMETERS"]:
-                raise RuntimeError("Each sequencing must have a parameters field to indicates at least the genome reference for bowtie2, a bed of blacklisted regions, and the genome used (hg38, mm10, ...)!")
+                raise RuntimeError(
+                """Each sequencing must have a parameters field to indicates at least:
+                  - the genome reference for bowtie2
+                  - a bed of blacklisted regions
+                  - the genome used (either the .fa file of the reference (toplevel.fa for ensembl) or a string such as hg38 or mm10 if the genome was configured in homer with configureHomer.pl
+                """
+                )
             if "BLACKLIST_BED" not in config["SEQUENCING"][sequencing_name]["PARAMETERS"]:
-                raise RuntimeError("Each sequencing must have a parameters field to indicates at least the genome reference for bowtie2, a bed of blacklisted regions, and the genome used (hg38, mm10, ...)!")
-            
+                raise RuntimeError(
+                """Each sequencing must have a parameters field to indicates at least:
+                  - the genome reference for bowtie2
+                  - a bed of blacklisted regions
+                  - the genome used (either the .fa file of the reference (toplevel.fa for ensembl) or a string such as hg38 or mm10 if the genome was configured in homer with configureHomer.pl
+                """
+                )            
         sample_path = Path(sequencing_data["PATH"])
         if not sample_path.exists():
             raise RuntimeError(f"The sequencing {str(sequencing_name)} PATH field is not valid. Please check your config file!")
