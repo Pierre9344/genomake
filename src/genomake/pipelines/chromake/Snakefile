@@ -210,8 +210,8 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                         str(Path(sequencing_data["PATH"]) / "SAM/fragmentLen" / (sample_name + "_fragmentLen.txt")),
                         str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + "._chrheader.bam")),
                         str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + "_filtered.bam")),
-                        directory(str(Path(sequencing_data["PATH"]) / ("HOMER/" + sample_name)),
-                        directory(str(Path(sequencing_data["PATH"]) / ("HOMER/" + sample_name + ".bedGraph")),
+                        directory(str(Path(sequencing_data["PATH"]) / ("HOMER/" + sample_name))),
+                        directory(str(Path(sequencing_data["PATH"]) / ("HOMER/" + sample_name + ".bedGraph"))),
                         homer_output=directory(str(Path(sequencing_data["PATH"]) / ("HOMER/" + sample_name + "_UCSC_track.bedGraph")),
                     threads:
                         config["JOBS"]["CORES_PER_JOBS"]["BOWTIE2"]
@@ -322,8 +322,8 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                             str(Path(sequencing_data["PATH"]) / "SAM/fragmentLen" / (input_name + "_fragmentLen.txt")),
                             str(Path(sequencing_data["PATH"]) / "BAM/" / (input_name + "._chrheader.bam")),
                             str(Path(sequencing_data["PATH"]) / "BAM/" / (input_name + "_filtered.bam")),
-                            directory(str(Path(sequencing_data["PATH"]) / ("HOMER/" + input_name)),
-                            directory(str(Path(sequencing_data["PATH"]) / ("HOMER/" + input_name + ".bedGraph")),
+                            directory(str(Path(sequencing_data["PATH"]) / ("HOMER/" + input_name))),
+                            directory(str(Path(sequencing_data["PATH"]) / ("HOMER/" + input_name + ".bedGraph"))),
                             homer_output=directory(str(Path(sequencing_data["PATH"]) / ("HOMER/" + input_name + "_UCSC_track.bedGraph")),
                         threads:
                             config["JOBS"]["CORES_PER_JOBS"]["BOWTIE2"]
