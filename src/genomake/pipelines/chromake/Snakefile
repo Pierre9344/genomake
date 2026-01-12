@@ -211,7 +211,7 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                         str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + "._chrheader.bam")),
                         str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + "_filtered.bam")),
                         directory(str(Path(sequencing_data["PATH"]) / ("HOMER/" + sample_name))),
-                        str(Path(sequencing_data["PATH"]) / ("HOMER/" + sample_name + "_UCSC_track.bedGraph"),
+                        str(Path(sequencing_data["PATH"]) / ("HOMER/" + sample_name + "_UCSC_track.bedGraph")),
                     threads:
                         config["JOBS"]["CORES_PER_JOBS"]["BOWTIE2"]
                     params:
@@ -322,7 +322,7 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                             str(Path(sequencing_data["PATH"]) / "BAM/" / (input_name + "._chrheader.bam")),
                             str(Path(sequencing_data["PATH"]) / "BAM/" / (input_name + "_filtered.bam")),
                             directory(str(Path(sequencing_data["PATH"]) / ("HOMER/" + input_name))),
-                            (str(Path(sequencing_data["PATH"]) / ("HOMER/" + input_name + "_UCSC_track.bedGraph"),
+                            str(Path(sequencing_data["PATH"]) / ("HOMER/" + input_name + "_UCSC_track.bedGraph")),
                         threads:
                             config["JOBS"]["CORES_PER_JOBS"]["BOWTIE2"]
                         params:
@@ -411,32 +411,6 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
         # If there no adaptor for trimming we use BWA on the original fastq (samples and input) do add later (same rules but not trimming)
     
     
-    # HOMER RULE for track
-    rule:
-        name:
-            f"homer_{sequencing_name}"
-        input:
-            *chr_paths.get_sequencing_fastq_related_paths(config, sequencing_name, "bam"),
-        output:
-            directory(str(Path(sequencing_data["PATH"]) / ("HOMER/" + sequencing_name))),
-            str(Path(sequencing_data["PATH"]) / ("HOMER/" + sequencing_name + ".bedGraph.gz")),
-        threads: 2
-        params:
-            sequencing=sequencing_name,
-            genome=sequencing_data["PARAMETERS"]["GENOME"],
-            bedgraph1=str(Path(sequencing_data["PATH"]) / ("HOMER/" + sequencing_name + ".bedGraph")),
-        resources:
-            mem_mb=lambda wildcards, attempt: 20000 * attempt,
-            runtime=lambda wildcards, attempt: attempt * 60,
-            qos=lambda wildcards, attempt: get_qos_from_time(attempt, 60),
-        shell:
-            r"""
-            # can't install genome on glicid (need to do a ticket) so impossible to use checkGC
-            #makeTagDirectory {output[0]} {input} -genome {params.genome} -checkGC
-            
-            makeTagDirectory {output[0]} {input}
-            makeUCSCfile {output[0]} -o {params.bedgraph1} -norm 1e7
-            """
     
     
     
