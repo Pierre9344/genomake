@@ -154,9 +154,7 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
         params:
             fastqc_outdir=str(Path(sequencing_data["PATH"]) / "QC/FASTQC/RAW/"),
             multiqc_outdir=str(Path(sequencing_data["PATH"]) / "QC/MULTIQC/RAW/"),
-        
         threads: config["JOBS"]["CORES_PER_JOBS"]["FASTQC"]
-
         resources:
             mem_mb=lambda wildcards, attempt: 10000 * attempt,
             runtime=lambda wildcards, attempt: attempt * 60,
@@ -200,7 +198,7 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                     cutadapt_log=str(Path(sequencing_data["PATH"]) / "QC/CUTADAPT/" / sample_name) + ".txt",
                     fastqc_outdir=str(Path(sequencing_data["PATH"]) / "QC/FASTQC/TRIMMED/"),
                 resources:
-                    mem_mb=lambda wildcards, attempt: 10000 * attempt,
+                    mem_mb=lambda wildcards, attempt: 2000 * attempt,
                     runtime=lambda wildcards, attempt: attempt * 60,
                     qos=lambda wildcards, attempt: get_qos_from_time(attempt, 60),
                 shell:
@@ -244,7 +242,7 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                         homer_output=str(Path(sequencing_data["PATH"]) / ("HOMER/" + sample_name + ".bedGraph")),
                         homer_output2=str(Path(sequencing_data["PATH"]) / ("HOMER/" + sample_name + ".bedGraph.gz")),
                     resources:
-                        mem_mb=lambda wildcards, attempt: 20000 * attempt,
+                        mem_mb=lambda wildcards, attempt: 40000 * attempt,
                         runtime=lambda wildcards, attempt: attempt * 180,
                         qos=lambda wildcards, attempt: get_qos_from_time(attempt, 180),
                     shell:
@@ -355,7 +353,7 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                             homer_output=str(Path(sequencing_data["PATH"]) / ("HOMER/" + sample_name + ".bedGraph")),
                             homer_output2=str(Path(sequencing_data["PATH"]) / ("HOMER/" + sample_name + ".bedGraph.gz")),
                         resources:
-                            mem_mb=lambda wildcards, attempt: 20000 * attempt,
+                            mem_mb=lambda wildcards, attempt: 40000 * attempt,
                             runtime=lambda wildcards, attempt: attempt * 180,
                             qos=lambda wildcards, attempt: get_qos_from_time(attempt, 180),
                         shell:
