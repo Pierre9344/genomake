@@ -268,7 +268,7 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                           chr["chrX"] = chr["chrY"] = 1
                         }}
                         NR == 1 {{ print; next }}
-                        ($1 in chr) {{ print }
+                        ($1 in chr) {{ print }}
                         ' {params.homer_output} > {output[4]}
                         """
         
