@@ -51,6 +51,15 @@ def get_all_fastq_related_paths(cfg: dict, mode: str):
         elif mode == "bam":
             for sample_name, sample_data in sequencing_data["SAMPLES"].items():
                 res.append(base / "BAM" / (sample_name + ".bam"))
+            if "INPUT" in sequencing_data:
+                for input_name, input_data in sequencing_data["INPUT"].items():
+                    res.append(base / "BAM" / (input_name + ".bam"))
+        elif mode == "bam_filtered":
+            for sample_name, sample_data in sequencing_data["SAMPLES"].items():
+                res.append(base / "BAM" / (sample_name + "_filtered.bam"))
+            if "INPUT" in sequencing_data:
+                for input_name, input_data in sequencing_data["INPUT"].items():
+                    res.append(base / "BAM" / (input_name + "_filtered.bam"))
         elif mode == "bedgraph":
             res.append(base / "HOMER" / (sequencing_name + ".bedGraph.gz"))
         elif mode == "bedgraph_sorted":
@@ -110,6 +119,12 @@ def get_sequencing_fastq_related_paths(cfg: dict,
             if "INPUT" in cfg["SEQUENCING"][project_name]:
                 for input_name, sample_data in cfg["SEQUENCING"][project_name]["INPUT"].items():
                     res.append(base / "BAM" / (input_name + ".bam"))
+        elif mode == "bam_filtered":
+            for sample_name, sample_data in cfg["SEQUENCING"][project_name]["SAMPLES"].items():
+                res.append(base / "BAM" / (sample_name + "_filtered.bam"))
+            if "INPUT" in cfg["SEQUENCING"][project_name]:
+                for input_name, input_data in cfg["SEQUENCING"][project_name]["SAMPLES"].items():
+                    res.append(base / "BAM" / (input_name + "_filtered.bam"))
     else:
         print(f"There is an error, the configuration file don't contains a {project_name} project!")
     return res
