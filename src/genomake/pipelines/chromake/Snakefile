@@ -204,8 +204,8 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                     name:
                         f"bowtie2_{sequencing_name}_{sample_name}"
                     input:
-                        str(Path(sequencing_data["PATH"]) / "TRIMMED/" / Path(input_data["R1"]).name),
-                        str(Path(sequencing_data["PATH"]) / "TRIMMED/" / Path(input_data["R2"]).name),
+                        str(Path(sequencing_data["PATH"]) / "TRIMMED/" / Path(sample_data["R1"]).name),
+                        str(Path(sequencing_data["PATH"]) / "TRIMMED/" / Path(sample_data["R2"]).name),
                     output:
                         str(Path(sequencing_data["PATH"]) / "SAM/fragmentLen" / (sample_name + "_fragmentLen.txt")),
                         str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + "._chrheader.bam")),
