@@ -61,9 +61,11 @@ def get_all_fastq_related_paths(cfg: dict, mode: str):
                 for input_name, input_data in sequencing_data["INPUT"].items():
                     res.append(base / "BAM" / (input_name + "_filtered.bam"))
         elif mode == "bedgraph":
-            res.append(base / "HOMER" / (sequencing_name + ".bedGraph.gz"))
-        elif mode == "bedgraph_sorted":
-            res.append(base / "HOMER" / (sequencing_name + "_sorted.bedGraph.gz"))    
+            for sample_name, sample_data in sequencing_data["SAMPLES"].items():
+                res.append(base / "HOMER" / (sample_name + "_UCSC_track.bedGraph"))
+            if "INPUT" in sequencing_data:
+                for input_name, input_data in sequencing_data["INPUT"].items():
+                    res.append(base / "HOMER" / (input_name + "_UCSC_track.bedGraph"))  
         else:
             print(f"There is an error, chromake.scripts.path.get_path dont recognize the {mode} mode!")      
     return res
