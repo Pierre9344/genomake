@@ -28,7 +28,7 @@ def get_all_fastq_related_paths(cfg: dict, mode: str) -> list:
     
     Returns
     -------
-    list
+    :
         A list of file paths.
     """
     res = []
@@ -120,7 +120,7 @@ def get_sequencing_fastq_related_paths(cfg: dict,
     
     Returns
     -------
-    list
+    :
         A list of all file paths.
     """
     res = []
