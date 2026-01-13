@@ -213,79 +213,78 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                         -o {params.fastqc_outdir}
                     """
             
-            if "PARAMETERS" in sequencing_data and "BOWTIE2_REF" in sequencing_data["PARAMETERS"]:
-                rule:
-                    name:
-                        f"bowtie2_{sequencing_name}_{sample_name}"
-                    input:
-                        str(Path(sequencing_data["PATH"]) / "TRIMMED/" / Path(sample_data["R1"]).name),
-                        str(Path(sequencing_data["PATH"]) / "TRIMMED/" / Path(sample_data["R2"]).name),
-                    output:
-                        str(Path(sequencing_data["PATH"]) / "QC/fragmentLen" / (sample_name + "_fragmentLen.txt")),
-                        str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + "._chrheader.bam")),
-                        str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + "_filtered.bam")),
-                        directory(str(Path(sequencing_data["PATH"]) / ("HOMER/" + sample_name))),
-                        str(Path(sequencing_data["PATH"]) / ("HOMER/" + sample_name + "_UCSC_track.bedGraph")),
-                    threads:
-                        config["JOBS"]["CORES_PER_JOBS"]["BOWTIE2"]
-                    params:
-                        bowtie_ref=sequencing_data["PARAMETERS"]["BOWTIE2_REF"],
-                        bowtie_log=str(Path(sequencing_data["PATH"]) / "QC/BOWTIE2/" / (sample_name + ".log")),
-                        picard_log=str(Path(sequencing_data["PATH"]) / "QC/PICARD/" / (sample_name + "_picard.rmDup.txt")),
-                        sample=sample_name,
-                        sequencing=sequencing_name,
-                        sam_output=str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + ".sam")),
-                        filtered_sam=str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + "_sorted.sam")),
-                        filtered2_sam=str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + "_rmDup.sam")),
-                        bowtie_bam=str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + "_bowtie.bam")),
-                        genome=sequencing_data["PARAMETERS"]["GENOME"],
-                        homer_output=str(Path(sequencing_data["PATH"]) / ("HOMER/" + sample_name + ".bedGraph")),
-                        homer_output2=str(Path(sequencing_data["PATH"]) / ("HOMER/" + sample_name + ".bedGraph.gz")),
-                    resources:
-                        mem_mb=lambda wildcards, attempt: 40000 * attempt,
-                        runtime=lambda wildcards, attempt: attempt * 180,
-                        qos=lambda wildcards, attempt: get_qos_from_time(attempt, 180),
-                    shell:
-                        r"""
-                        bowtie2 -p {threads} --local --very-sensitive-local \
-                            --no-mixed --no-discordant --phred33 -I 10 -X 700 \
-                            -x "{params.bowtie_ref}" -1 {input[0]} -2 {input[1]} \
-                            --rg-id {params.sample} --rg SM:{params.sample} \
-                            --rg LB:{params.sequencing} --rg PU:{params.sample}_{params.sequencing} \
-                            --rg PL:ILLUMINA -S {params.sam_output} &> {params.bowtie_log}
-                        # Check fragment length of mark duplicates
-                        samtools view -F 0x04 {params.sam_output} | \
-                            awk -F'\t' 'function abs(x){{return ((x < 0.0) ? -x : x)}} {{print abs($9)}}' | \
-                            sort | uniq -c | \
-                            awk -v OFS="\t" '{{print $2, $1/2}}' > {output[0]}
-                        picard SortSam -I {params.sam_output} -O {params.filtered_sam} -SORT_ORDER coordinate
-                        picard MarkDuplicates -I {params.filtered_sam} -O {params.filtered2_sam} \
-                             -REMOVE_DUPLICATES true \
-                             -METRICS_FILE {params.picard_log}
-                        # .sam to .bam
-                        samtools view -@ {threads} -bS -F 0x04 {params.filtered2_sam} -o {params.bowtie_bam}
-                        # add "chr" on the chromosome section and remone non-standard regions
-                        samtools view -H {params.bowtie_bam} | \
-                            sed -e 's/SN:\([0-9XY]\)/SN:chr\1/' -e 's/SN:MT/SN:chrM/' | \
-                            samtools reheader - {params.bowtie_bam} > {output[1]}
-                        samtools index {output[1]}
-                        samtools view -b {output[1]} chr{{1..22}} chrX chrY > {output[2]}
-                        samtools index {output[2]}
-                        rm {params.sam_output} {params.filtered_sam} {params.filtered2_sam} {params.bowtie_bam}
-                        
-                        # HOMER track for UCSC
-                        makeTagDirectory {output[3]} {output[2]} -genome {params.genome} -checkGC
-                        makeUCSCfile {output[3]} -o {params.homer_output} -norm 1e7
-                        gunzip {params.homer_output2}
-                        awk '
-                        BEGIN {{
-                          for (i = 1; i <= 22; i++) chr["chr"i] = 1
-                          chr["chrX"] = chr["chrY"] = 1
-                        }}
-                        NR == 1 {{ print; next }}
-                        ($1 in chr) {{ print }}
-                        ' {params.homer_output} > {output[4]}
-                        """
+            rule:
+                name:
+                    f"bowtie2_{sequencing_name}_{sample_name}"
+                input:
+                    str(Path(sequencing_data["PATH"]) / "TRIMMED/" / Path(sample_data["R1"]).name),
+                    str(Path(sequencing_data["PATH"]) / "TRIMMED/" / Path(sample_data["R2"]).name),
+                output:
+                    str(Path(sequencing_data["PATH"]) / "QC/fragmentLen" / (sample_name + "_fragmentLen.txt")),
+                    str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + "._chrheader.bam")),
+                    str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + "_filtered.bam")),
+                    directory(str(Path(sequencing_data["PATH"]) / ("HOMER/" + sample_name))),
+                    str(Path(sequencing_data["PATH"]) / ("HOMER/" + sample_name + "_UCSC_track.bedGraph")),
+                threads:
+                    config["JOBS"]["CORES_PER_JOBS"]["BOWTIE2"]
+                params:
+                    bowtie_ref=sequencing_data["PARAMETERS"]["BOWTIE2_REF"],
+                    bowtie_log=str(Path(sequencing_data["PATH"]) / "QC/BOWTIE2/" / (sample_name + ".log")),
+                    picard_log=str(Path(sequencing_data["PATH"]) / "QC/PICARD/" / (sample_name + "_picard.rmDup.txt")),
+                    sample=sample_name,
+                    sequencing=sequencing_name,
+                    sam_output=str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + ".sam")),
+                    filtered_sam=str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + "_sorted.sam")),
+                    filtered2_sam=str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + "_rmDup.sam")),
+                    bowtie_bam=str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + "_bowtie.bam")),
+                    genome=sequencing_data["PARAMETERS"]["GENOME"],
+                    homer_output=str(Path(sequencing_data["PATH"]) / ("HOMER/" + sample_name + ".bedGraph")),
+                    homer_output2=str(Path(sequencing_data["PATH"]) / ("HOMER/" + sample_name + ".bedGraph.gz")),
+                resources:
+                    mem_mb=lambda wildcards, attempt: 40000 * attempt,
+                    runtime=lambda wildcards, attempt: attempt * 180,
+                    qos=lambda wildcards, attempt: get_qos_from_time(attempt, 180),
+                shell:
+                    r"""
+                    bowtie2 -p {threads} --local --very-sensitive-local \
+                        --no-mixed --no-discordant --phred33 -I 10 -X 700 \
+                        -x "{params.bowtie_ref}" -1 {input[0]} -2 {input[1]} \
+                        --rg-id {params.sample} --rg SM:{params.sample} \
+                        --rg LB:{params.sequencing} --rg PU:{params.sample}_{params.sequencing} \
+                        --rg PL:ILLUMINA -S {params.sam_output} &> {params.bowtie_log}
+                    # Check fragment length of mark duplicates
+                    samtools view -F 0x04 {params.sam_output} | \
+                        awk -F'\t' 'function abs(x){{return ((x < 0.0) ? -x : x)}} {{print abs($9)}}' | \
+                        sort | uniq -c | \
+                        awk -v OFS="\t" '{{print $2, $1/2}}' > {output[0]}
+                    picard SortSam -I {params.sam_output} -O {params.filtered_sam} -SORT_ORDER coordinate
+                    picard MarkDuplicates -I {params.filtered_sam} -O {params.filtered2_sam} \
+                         -REMOVE_DUPLICATES true \
+                         -METRICS_FILE {params.picard_log}
+                    # .sam to .bam
+                    samtools view -@ {threads} -bS -F 0x04 {params.filtered2_sam} -o {params.bowtie_bam}
+                    # add "chr" on the chromosome section and remone non-standard regions
+                    samtools view -H {params.bowtie_bam} | \
+                        sed -e 's/SN:\([0-9XY]\)/SN:chr\1/' -e 's/SN:MT/SN:chrM/' | \
+                        samtools reheader - {params.bowtie_bam} > {output[1]}
+                    samtools index {output[1]}
+                    samtools view -b {output[1]} chr{{1..22}} chrX chrY > {output[2]}
+                    samtools index {output[2]}
+                    rm {params.sam_output} {params.filtered_sam} {params.filtered2_sam} {params.bowtie_bam}
+                    
+                    # HOMER track for UCSC
+                    makeTagDirectory {output[3]} {output[2]} -genome {params.genome} -checkGC
+                    makeUCSCfile {output[3]} -o {params.homer_output} -norm 1e7
+                    gunzip {params.homer_output2}
+                    awk '
+                    BEGIN {{
+                      for (i = 1; i <= 22; i++) chr["chr"i] = 1
+                      chr["chrX"] = chr["chrY"] = 1
+                    }}
+                    NR == 1 {{ print; next }}
+                    ($1 in chr) {{ print }}
+                    ' {params.homer_output} > {output[4]}
+                    """
         
         if "INPUT" in sequencing_data.keys():        
             for sample_name, sample_data in sequencing_data["INPUT"].items():
@@ -324,79 +323,78 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                             -o {params.fastqc_outdir}
                         """
                 
-                if "PARAMETERS" in sequencing_data and "BOWTIE2_REF" in sequencing_data["PARAMETERS"]:
-                    rule:
-                        name:
-                            f"bowtie2_{sequencing_name}_{sample_name}"
-                        input:
-                            str(Path(sequencing_data["PATH"]) / "TRIMMED/" / Path(sample_data["R1"]).name),
-                            str(Path(sequencing_data["PATH"]) / "TRIMMED/" / Path(sample_data["R2"]).name),
-                        output:
-                            str(Path(sequencing_data["PATH"]) / "QC/fragmentLen" / (sample_name + "_fragmentLen.txt")),
-                            str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + "._chrheader.bam")),
-                            str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + "_filtered.bam")),
-                            directory(str(Path(sequencing_data["PATH"]) / ("HOMER/" + sample_name))),
-                            str(Path(sequencing_data["PATH"]) / ("HOMER/" + sample_name + "_UCSC_track.bedGraph")),
-                        threads:
-                            config["JOBS"]["CORES_PER_JOBS"]["BOWTIE2"]
-                        params:
-                            bowtie_ref=sequencing_data["PARAMETERS"]["BOWTIE2_REF"],
-                            bowtie_log=str(Path(sequencing_data["PATH"]) / "QC/BOWTIE2/" / (sample_name + ".log")),
-                            picard_log=str(Path(sequencing_data["PATH"]) / "QC/PICARD/" / (sample_name + "_picard.rmDup.txt")),
-                            sample=sample_name,
-                            sequencing=sequencing_name,
-                            sam_output=str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + ".sam")),
-                            filtered_sam=str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + "_sorted.sam")),
-                            filtered2_sam=str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + "_rmDup.sam")),
-                            bowtie_bam=str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + "_bowtie.bam")),
-                            genome=sequencing_data["PARAMETERS"]["GENOME"],
-                            homer_output=str(Path(sequencing_data["PATH"]) / ("HOMER/" + sample_name + ".bedGraph")),
-                            homer_output2=str(Path(sequencing_data["PATH"]) / ("HOMER/" + sample_name + ".bedGraph.gz")),
-                        resources:
-                            mem_mb=lambda wildcards, attempt: 40000 * attempt,
-                            runtime=lambda wildcards, attempt: attempt * 180,
-                            qos=lambda wildcards, attempt: get_qos_from_time(attempt, 180),
-                        shell:
-                            r"""
-                            bowtie2 -p {threads} --local --very-sensitive-local \
-                                 --no-mixed --no-discordant --phred33 -I 10 -X 700 \
-                                 -x "{params.bowtie_ref}" -1 {input[0]} -2 {input[1]} \
-                                 --rg-id {params.sample} --rg SM:{params.sample} \
-                                 --rg LB:{params.sequencing} --rg PU:{params.sample}_{params.sequencing} \
-                                 --rg PL:ILLUMINA -S {params.sam_output} &> {params.bowtie_log}
-                            # Check fragment length of mark duplicates
-                            samtools view -F 0x04 {params.sam_output} | \
-                                 awk -F'\t' 'function abs(x){{return ((x < 0.0) ? -x : x)}} {{print abs($9)}}' | \
-                                 sort | uniq -c | \
-                                 awk -v OFS="\t" '{{print $2, $1/2}}' > {output[0]}
-                            picard SortSam -I {params.sam_output} -O {params.filtered_sam} -SORT_ORDER coordinate
-                            picard MarkDuplicates -I {params.filtered_sam} -O {params.filtered2_sam} \
-                                 -REMOVE_DUPLICATES true \
-                                 -METRICS_FILE {params.picard_log}
-                            # .sam to .bam
-                            samtools view -@ {threads} -bS -F 0x04 {params.filtered2_sam} -o {params.bowtie_bam}
-                            # add "chr" on the chromosome section and remone non-standard regions
-                            samtools view -H {params.bowtie_bam} | \
-                                sed -e 's/SN:\([0-9XY]\)/SN:chr\1/' -e 's/SN:MT/SN:chrM/' | \
-                                samtools reheader - {params.bowtie_bam} > {output[1]}
-                            samtools index {output[1]}
-                            samtools view -b {output[1]} chr{{1..22}} chrX chrY > {output[2]}
-                            samtools index {output[2]}
-                            rm {params.sam_output} {params.filtered_sam} {params.filtered2_sam} {params.bowtie_bam}
-                            
-                            # HOMER track for UCSC
-                            makeTagDirectory {output[3]} {output[2]} -genome {params.genome} -checkGC
-                            makeUCSCfile {output[3]} -o {params.homer_output} -norm 1e7
-                            gunzip {params.homer_output2}
-                            awk '
-                            BEGIN {{
-                              for (i = 1; i <= 22; i++) chr["chr"i] = 1
-                              chr["chrX"] = chr["chrY"] = 1
-                            }}
-                            NR == 1 {{ print; next }}
-                            ($1 in chr) {{ print }}
-                            ' {params.homer_output} > {output[4]}
-                            """
+                rule:
+                    name:
+                        f"bowtie2_{sequencing_name}_{sample_name}"
+                    input:
+                        str(Path(sequencing_data["PATH"]) / "TRIMMED/" / Path(sample_data["R1"]).name),
+                        str(Path(sequencing_data["PATH"]) / "TRIMMED/" / Path(sample_data["R2"]).name),
+                    output:
+                        str(Path(sequencing_data["PATH"]) / "QC/fragmentLen" / (sample_name + "_fragmentLen.txt")),
+                        str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + "._chrheader.bam")),
+                        str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + "_filtered.bam")),
+                        directory(str(Path(sequencing_data["PATH"]) / ("HOMER/" + sample_name))),
+                        str(Path(sequencing_data["PATH"]) / ("HOMER/" + sample_name + "_UCSC_track.bedGraph")),
+                    threads:
+                        config["JOBS"]["CORES_PER_JOBS"]["BOWTIE2"]
+                    params:
+                        bowtie_ref=sequencing_data["PARAMETERS"]["BOWTIE2_REF"],
+                        bowtie_log=str(Path(sequencing_data["PATH"]) / "QC/BOWTIE2/" / (sample_name + ".log")),
+                        picard_log=str(Path(sequencing_data["PATH"]) / "QC/PICARD/" / (sample_name + "_picard.rmDup.txt")),
+                        sample=sample_name,
+                        sequencing=sequencing_name,
+                        sam_output=str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + ".sam")),
+                        filtered_sam=str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + "_sorted.sam")),
+                        filtered2_sam=str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + "_rmDup.sam")),
+                        bowtie_bam=str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + "_bowtie.bam")),
+                        genome=sequencing_data["PARAMETERS"]["GENOME"],
+                        homer_output=str(Path(sequencing_data["PATH"]) / ("HOMER/" + sample_name + ".bedGraph")),
+                        homer_output2=str(Path(sequencing_data["PATH"]) / ("HOMER/" + sample_name + ".bedGraph.gz")),
+                    resources:
+                        mem_mb=lambda wildcards, attempt: 40000 * attempt,
+                        runtime=lambda wildcards, attempt: attempt * 180,
+                        qos=lambda wildcards, attempt: get_qos_from_time(attempt, 180),
+                    shell:
+                        r"""
+                        bowtie2 -p {threads} --local --very-sensitive-local \
+                             --no-mixed --no-discordant --phred33 -I 10 -X 700 \
+                             -x "{params.bowtie_ref}" -1 {input[0]} -2 {input[1]} \
+                             --rg-id {params.sample} --rg SM:{params.sample} \
+                             --rg LB:{params.sequencing} --rg PU:{params.sample}_{params.sequencing} \
+                             --rg PL:ILLUMINA -S {params.sam_output} &> {params.bowtie_log}
+                        # Check fragment length of mark duplicates
+                        samtools view -F 0x04 {params.sam_output} | \
+                             awk -F'\t' 'function abs(x){{return ((x < 0.0) ? -x : x)}} {{print abs($9)}}' | \
+                             sort | uniq -c | \
+                             awk -v OFS="\t" '{{print $2, $1/2}}' > {output[0]}
+                        picard SortSam -I {params.sam_output} -O {params.filtered_sam} -SORT_ORDER coordinate
+                        picard MarkDuplicates -I {params.filtered_sam} -O {params.filtered2_sam} \
+                             -REMOVE_DUPLICATES true \
+                             -METRICS_FILE {params.picard_log}
+                        # .sam to .bam
+                        samtools view -@ {threads} -bS -F 0x04 {params.filtered2_sam} -o {params.bowtie_bam}
+                        # add "chr" on the chromosome section and remone non-standard regions
+                        samtools view -H {params.bowtie_bam} | \
+                            sed -e 's/SN:\([0-9XY]\)/SN:chr\1/' -e 's/SN:MT/SN:chrM/' | \
+                            samtools reheader - {params.bowtie_bam} > {output[1]}
+                        samtools index {output[1]}
+                        samtools view -b {output[1]} chr{{1..22}} chrX chrY > {output[2]}
+                        samtools index {output[2]}
+                        rm {params.sam_output} {params.filtered_sam} {params.filtered2_sam} {params.bowtie_bam}
+                        
+                        # HOMER track for UCSC
+                        makeTagDirectory {output[3]} {output[2]} -genome {params.genome} -checkGC
+                        makeUCSCfile {output[3]} -o {params.homer_output} -norm 1e7
+                        gunzip {params.homer_output2}
+                        awk '
+                        BEGIN {{
+                          for (i = 1; i <= 22; i++) chr["chr"i] = 1
+                          chr["chrX"] = chr["chrY"] = 1
+                        }}
+                        NR == 1 {{ print; next }}
+                        ($1 in chr) {{ print }}
+                        ' {params.homer_output} > {output[4]}
+                        """
         
         # multiqc of all trimmed fastq
         rule:
