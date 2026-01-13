@@ -248,7 +248,7 @@ def check_project_and_sequencing(config: dict) -> dict:
         Loaded YAML config (as a dictionary).
 
     Returns
-    -------
+    ------- 
     dict
         Updated config dictionary.
     """
