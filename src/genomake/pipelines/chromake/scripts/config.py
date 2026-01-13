@@ -195,11 +195,22 @@ def update_jobs(config_path: str, jobs: dict) -> None:
     
     Example
     -------
-    >>> jobs_update = {
-    ...     "CORES_PER_JOBS": { "FASTQC": 10, "CUTADAPT": 10, "BOWTIE2": 30 },
-    ...     "QOS_INFOS": { "short": {"MaxWall": 2000}, "medium": {"MaxWall": 5000}, "long": {"MaxWall": 15000} }
-    ... }
-    >>> update_jobs("config.yaml", jobs_update)
+    
+    ```{.python}
+    jobs_update = {
+        "CORES_PER_JOBS": {
+            "FASTQC": 10,
+            "CUTADAPT": 10,
+            "BOWTIE2": 30
+        },
+        "QOS_INFOS": {
+            "short": {"MaxWall": 2000},
+            "medium": {"MaxWall": 5000},
+            "long": {"MaxWall": 15000} 
+        }
+    }
+    update_jobs("config.yaml", jobs_update)
+    ```
     """
     
     with open(config_path) as stream:

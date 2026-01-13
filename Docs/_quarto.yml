@@ -24,29 +24,12 @@ website:
     contents:
       - section: chromake
         contents:
-          # config.py
-          - text: "`create_example_config`"
-            href: reference/pipelines.chromake.scripts.config.create_example_config.qmd
-          - text: "`create_samplesheet_from_config`"
-            href:  reference/pipelines.chromake.scripts.config.create_samplesheet_from_config.qmd
-          - text: "`create_config_from_table`"
-            href:  reference/pipelines.chromake.scripts.config.create_config_from_table.qmd
-          - text: "`update_jobs`"
-            href:  reference/pipelines.chromake.scripts.config.update_jobs.qmd
-          - text: "`remove_sequencing`"
-            href: reference/pipelines.chromake.scripts.config.remove_sequencing.qmd
-          - text: "`remove_samples`"
-            href:  reference/pipelines.chromake.scripts.config.remove_samples.qmd
-          - text: "`check_project_and_sequencing`"
-            href:  reference/pipelines.chromake.scripts.config.check_project_and_sequencing.qmd
-          - text: "`check_sample_files_exist`"
-            href:  reference/pipelines.chromake.scripts.config.check_sample_files_exist.qmd
-          
-          # Paths.py
-          - text: "`get_all_fastq_related_paths`"
-            href: reference/pipelines.chromake.scripts.paths.get_all_fastq_related_paths.qmd
-          - text: "`get_sequencing_fastq_related_paths`"
-            href: reference/pipelines.chromake.scripts.paths.get_sequencing_fastq_related_paths.qmd
+          - text: "`chromake`"
+            href: reference/pipelines.chromake.qmd
+          - text: "`chromake.config`"
+            href: reference/pipelines.chromake.scripts.config.qmd
+          - text: "`chromake.paths`"
+            href: reference/pipelines.chromake.scripts.paths.qmd
 
 # tell quarto to read the generated styles
 format:
@@ -70,6 +53,9 @@ quartodoc:
       contents:
         # the functions being documented in the package.
         # you can refer to anything: class methods, modules, etc..
+        - pipelines.chromake
+        - pipelines.chromake.scripts.config
+        - pipelines.chromake.scripts.paths
         - pipelines.chromake.scripts.config.create_example_config
         - pipelines.chromake.scripts.config.update_jobs
         - pipelines.chromake.scripts.config.check_project_and_sequencing

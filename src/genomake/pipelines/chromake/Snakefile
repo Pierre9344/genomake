@@ -241,7 +241,7 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                     homer_output=str(Path(sequencing_data["PATH"]) / ("HOMER/" + sample_name + ".bedGraph")),
                     homer_output2=str(Path(sequencing_data["PATH"]) / ("HOMER/" + sample_name + ".bedGraph.gz")),
                 resources:
-                    mem_mb=lambda wildcards, attempt: 40000 * attempt,
+                    mem_mb=lambda wildcards, attempt: 60000 * attempt,
                     runtime=lambda wildcards, attempt: attempt * 180,
                     qos=lambda wildcards, attempt: get_qos_from_time(attempt, 180),
                 shell:
@@ -351,7 +351,7 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                         homer_output=str(Path(sequencing_data["PATH"]) / ("HOMER/" + sample_name + ".bedGraph")),
                         homer_output2=str(Path(sequencing_data["PATH"]) / ("HOMER/" + sample_name + ".bedGraph.gz")),
                     resources:
-                        mem_mb=lambda wildcards, attempt: 40000 * attempt,
+                        mem_mb=lambda wildcards, attempt: 60000 * attempt,
                         runtime=lambda wildcards, attempt: attempt * 180,
                         qos=lambda wildcards, attempt: get_qos_from_time(attempt, 180),
                     shell:
