@@ -8,15 +8,37 @@ This package is a WIP.
 
 # Installation
 
-Genomeka can be installed via conda using 
+Genomeka can be installed via conda using the yml file next:
+
 ```{.yaml}
-test
-test2:
-  - azerty
-  - querty:
-    - psolomon
-    - xyz
-test3
+name: genomake
+channels:
+  - bioconda
+  - conda-forge
+  - anaconda
+dependencies:
+  - bedtools
+  - bowtie2
+  - cutadapt
+  - deeptools
+  - fastqc
+  - homer
+  - multiqc
+  - picard
+  - ucsc-bedgraphtobigwig
+  - ucsc-bedtobigbed
+  - samtools
+  - python
+  - openssl
+  - pip:
+      - git+https://github.com/Pierre9344/genomake
+      - macs3
+      - snakemake-executor-plugin-slurm
+
+```
+
+```{.bash}
+conda create -f genomake.yml -y
 ```
 
 # Chromake
