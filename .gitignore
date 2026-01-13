@@ -212,4 +212,6 @@ Docs/.quarto/
 Docs/_site/
 Docs/reference/
 Docs/.Rhistory
+Docs/_extensions/
 Docs/quartodoc_genomake.Rproj
+.Rproj.user

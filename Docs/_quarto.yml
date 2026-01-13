@@ -80,3 +80,12 @@ quartodoc:
         - pipelines.chromake.scripts.config.check_sample_files_exist
         - pipelines.chromake.scripts.paths.get_all_fastq_related_paths
         - pipelines.chromake.scripts.paths.get_sequencing_fastq_related_paths
+
+
+
+filters:
+  - interlinks
+
+interlinks:
+  sources: {}
+
