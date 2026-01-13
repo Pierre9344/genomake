@@ -1,0 +1,24 @@
+---
+title: "Get started"
+---
+
+The genomake package is a collections of scripts and pipeline written in python to analyze with genomic data.
+
+This package is a WIP.
+
+# Installation
+
+Genomeka can be installed via conda using 
+```{.yaml}
+test
+test2:
+  - azerty
+  - querty:
+    - psolomon
+    - xyz
+test3
+```
+
+# Chromake
+
+The `chromake` pipeline is a pipeline

@@ -48,7 +48,7 @@ def main():
     
     # chromake pipeline
     parser_chromake = subparsers.add_parser(
-        "chromake", help="Run the chromake pipeline to align ChIP and ATAC sequencing data and identify enriched peaks. Can be run locally or on a slurm cluster."
+        "chromake", help="Run the chromake pipeline to align ChIP and ATAC sequencing data and identify enriched peaks."
     )
     parser_chromake.add_argument(
         "--config-path", "-c", type=str, required=True,

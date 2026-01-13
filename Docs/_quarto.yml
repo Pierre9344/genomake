@@ -1,0 +1,82 @@
+project:
+  type: website
+  output-dir: _site
+
+# tell quarto to read the generated sidebar
+#metadata-files:
+#  - reference/_sidebar.yml
+
+website: 
+  title: "genomake"
+  description: "genomake, python scripts and pipeline to deal with genomic data"
+  page-navigation: true
+  navbar:
+    background: light
+    left: 
+      - text: "Get started"
+        file: get_started.qmd
+      - text: "Reference"
+        file: reference/index.qmd
+    
+  sidebar:
+    style: "floating"
+    collapse-level: 1
+    contents:
+      - section: chromake
+        contents:
+          # config.py
+          - text: "`create_example_config`"
+            href: reference/pipelines.chromake.scripts.config.create_example_config.qmd
+          - text: "`create_samplesheet_from_config`"
+            href:  reference/pipelines.chromake.scripts.config.create_samplesheet_from_config.qmd
+          - text: "`create_config_from_table`"
+            href:  reference/pipelines.chromake.scripts.config.create_config_from_table.qmd
+          - text: "`update_jobs`"
+            href:  reference/pipelines.chromake.scripts.config.update_jobs.qmd
+          - text: "`remove_sequencing`"
+            href: reference/pipelines.chromake.scripts.config.remove_sequencing.qmd
+          - text: "`remove_samples`"
+            href:  reference/pipelines.chromake.scripts.config.remove_samples.qmd
+          - text: "`check_project_and_sequencing`"
+            href:  reference/pipelines.chromake.scripts.config.check_project_and_sequencing.qmd
+          - text: "`check_sample_files_exist`"
+            href:  reference/pipelines.chromake.scripts.config.check_sample_files_exist.qmd
+          
+          # Paths.py
+          - text: "`get_all_fastq_related_paths`"
+            href: reference/pipelines.chromake.scripts.paths.get_all_fastq_related_paths.qmd
+          - text: "`get_sequencing_fastq_related_paths`"
+            href: reference/pipelines.chromake.scripts.paths.get_sequencing_fastq_related_paths.qmd
+
+# tell quarto to read the generated styles
+format:
+  html:
+     sidebar: true
+#    css:
+#      - reference/_styles-quartodoc.css
+    
+
+quartodoc:
+  # the name used to import the package you want to create reference docs for
+  package: genomake
+
+  # write sidebar and style data
+  sidebar: reference/_sidebar.yml
+  #css: reference/_styles-quartodoc.css
+
+  sections:
+    - title: chromake
+      desc: A snakemake pipeline to align ChIP-seq and ATAC-seq samples.
+      contents:
+        # the functions being documented in the package.
+        # you can refer to anything: class methods, modules, etc..
+        - pipelines.chromake.scripts.config.create_example_config
+        - pipelines.chromake.scripts.config.update_jobs
+        - pipelines.chromake.scripts.config.check_project_and_sequencing
+        - pipelines.chromake.scripts.config.remove_sequencing
+        - pipelines.chromake.scripts.config.remove_samples
+        - pipelines.chromake.scripts.config.create_samplesheet_from_config
+        - pipelines.chromake.scripts.config.create_config_from_table
+        - pipelines.chromake.scripts.config.check_sample_files_exist
+        - pipelines.chromake.scripts.paths.get_all_fastq_related_paths
+        - pipelines.chromake.scripts.paths.get_sequencing_fastq_related_paths
