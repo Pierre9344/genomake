@@ -22,9 +22,6 @@ def create_example_config(
 
     Parameters
     ----------
-    output : str, optional
-        Output directory OR full output file path.
-        Defaults to current working directory.
     filename : str, optional
         Filename to use if `output` is a directory.
 
@@ -183,6 +180,10 @@ def create_example_config(
 def update_jobs(config_path: str, jobs: dict) -> None:
     """
     Update or add the JOBS section in an existing YAML config.
+    
+    CORES_PER_JOBS: number of cpu cores to use for each jobs (>=1)
+    
+    QOS_INFOS: if using an executor like slurm, indicate the name of the qos (e.g. short), and the associated MaxWall in minutes.
 
     Parameters
     ----------
@@ -194,19 +195,11 @@ def update_jobs(config_path: str, jobs: dict) -> None:
     
     Example
     -------
-    jobs_update = {
-        "CORES_PER_JOBS": {
-            "FASTQC": 10,
-            "CUTADAPT": 10
-        },
-        "QOS_INFOS": {
-            "short": {"MaxWall": 2000},
-            "medium": {"MaxWall": 5000},
-            "long": 15000,
-        }
-    }
-
-    update_jobs("config.yaml", jobs_update)
+    >>> jobs_update = {
+    ...     "CORES_PER_JOBS": { "FASTQC": 10, "CUTADAPT": 10, "BOWTIE2": 30 },
+    ...     "QOS_INFOS": { "short": {"MaxWall": 2000}, "medium": {"MaxWall": 5000}, "long": {"MaxWall": 15000} }
+    ... }
+    >>> update_jobs("config.yaml", jobs_update)
     """
     
     with open(config_path) as stream:
@@ -560,7 +553,7 @@ def create_config_from_table(
         Dictionary of project_name -> project_path.
     jobs : dict, optional
         Default JOBS settings (CORES_PER_JOBS, QOS_INFOS).
-    sequencingd : dict
+    sequencings : dict
         Dictionary of sequencings informations (PATH, R1_ADAPTOR, R2_ADAPTOR).
 
     Returns
