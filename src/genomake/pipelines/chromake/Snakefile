@@ -24,11 +24,14 @@ onstart:
         }
     else:
         if "CORES_PER_JOBS" not in config["JOBS"]:
-            print("Number of cores to use for the jobs is not indicated in the config file. Using default values")
+            print("Number of cores to use for the jobs is not indicated in the config file. Using the pipeline default values")
             config["JOBS"]["CORES_PER_JOBS"] = {
                 "FASTQC": 10,
                 "CUTADAPT": 10,
-                "BOWTIE2": 30
+                "BOWTIE2": 30,
+                "SAMTOOLS_QC": 5,
+                "MULTIBAMSUMMARY": 5,
+                "BEDTOOLS": 5
             }
         else:
             if "FASTQC" not in config["JOBS"]["CORES_PER_JOBS"]:
@@ -46,6 +49,9 @@ onstart:
             if "MULTIBAMSUMMARY" not in config["JOBS"]["CORES_PER_JOBS"]:
                 print("Number of cores not indicated for deeptools multiBamSummary rule defaulting to 5")
                 config["JOBS"]["CORES_PER_JOBS"]["MULTIBAMSUMMARY"] = 5
+                if "BEDTOOLS" not in config["JOBS"]["CORES_PER_JOBS"]:
+                    print("Number of cores not indicated for bedtools rule defaulting to 5")
+                    config["JOBS"]["CORES_PER_JOBS"]["BEDTOOLS"] = 5
         if "QOS_INFOS" not in config["JOBS"]:
             print("The 'QOS_INFOS' field is missing in the config file. Using the example default values to be abble to set the ressources field of the rules. Will be ignored if executor is not set.")
             config["JOBS"]["QOS_INFOS"] = {
@@ -63,54 +69,56 @@ onstart:
                 "will be used for the samples peak calling."
             )
         
+        # PARAMETERS CHECK
         if "PARAMETERS" not in sequencing_data:
             raise RuntimeError("Each sequencing must have a parameters field to indicates at least the genome reference for bowtie2, and the genome used (hg38, mm10, ...)!")
         else:
+            # CUTADAPT is optional
             if "CUTADAPT" not in config["SEQUENCING"][sequencing_name]["PARAMETERS"]:
-                print(f"The {sequencing_name} seqencing don't list parameters for cutadapt. Using the pipeline default: '-q 20 --pair-filter=any'")
+                print(f"The {sequencing_name} seqencing don't list parameters for cutadapt. Using the pipeline default: '-q 20 --pair-filter=any'.")
                 config["SEQUENCING"][sequencing_name]["PARAMETERS"]["CUTADAPT"] = ""
+            
+            # Parameters representing path are not optional
+            parameters_error="""Each sequencing must have a parameters field to indicates at least:
+              - the genome reference for bowtie2 (BOWTIE2_REF)
+              - a bed of blacklisted regions (BLACKLIST_BED)
+              - a file indicating the chromosome size (CHROM_SIZE), see https://hgdownload.cse.ucsc.edu/goldenpath/hg38/bigZips/ for the format.
+              - the genome used, either the .fa file of the reference used to build bowtie2 reference (toplevel.fa for ensembl) or a string such as hg38 or mm10 if the genome was configured in homer with configureHomer.pl (GENOME)
+            """
             if "BOWTIE2_REF" not in config["SEQUENCING"][sequencing_name]["PARAMETERS"]:
-                raise RuntimeError(
-                """Each sequencing must have a parameters field to indicates at least:
-                  - the genome reference for bowtie2
-                  - a bed of blacklisted regions
-                  - the genome used (either the .fa file of the reference (toplevel.fa for ensembl) or a string such as hg38 or mm10 if the genome was configured in homer with configureHomer.pl
-                """
-                )
+                raise RuntimeError(parameters_error)
             if "GENOME" not in config["SEQUENCING"][sequencing_name]["PARAMETERS"]:
-                raise RuntimeError(
-                """Each sequencing must have a parameters field to indicates at least:
-                  - the genome reference for bowtie2
-                  - a bed of blacklisted regions
-                  - the genome used (either the .fa file of the reference (toplevel.fa for ensembl) or a string such as hg38 or mm10 if the genome was configured in homer with configureHomer.pl
-                """
-                )
+                raise RuntimeError(parameters_error)
             if "BLACKLIST_BED" not in config["SEQUENCING"][sequencing_name]["PARAMETERS"]:
+                raise RuntimeError(parameters_error)
+            if "CHROM_SIZE" not in config["SEQUENCING"][sequencing_name]["PARAMETERS"]:
                 raise RuntimeError(
-                """Each sequencing must have a parameters field to indicates at least:
-                  - the genome reference for bowtie2
-                  - a bed of blacklisted regions
-                  - the genome used (either the .fa file of the reference (toplevel.fa for ensembl) or a string such as hg38 or mm10 if the genome was configured in homer with configureHomer.pl
-                """
-                )            
+                raise RuntimeError(parameters_error)
+            del parameters_error
         sample_path = Path(sequencing_data["PATH"])
+        
+        # FOLDER CREATION
         if not sample_path.exists():
             raise RuntimeError(f"The sequencing {str(sequencing_name)} PATH field is not valid. Please check your config file!")
         (sample_path / "QC/FASTQC/RAW").mkdir(parents=True, exist_ok=True)
         (sample_path / "QC/FASTQC/TRIMMED").mkdir(parents=True, exist_ok=True)
         (sample_path / "QC/MULTIQC/RAW").mkdir(parents=True, exist_ok=True)
         (sample_path / "QC/MULTIQC/TRIMMED").mkdir(parents=True, exist_ok=True)
+        (sample_path / "QC/MULTIQC/STATS").mkdir(parents=True, exist_ok=True)
         (sample_path / "QC/CUTADAPT").mkdir(parents=True, exist_ok=True)
-        (sample_path / "TRIMMED").mkdir(parents=True, exist_ok=True)
         (sample_path / "QC/BOWTIE2").mkdir(parents=True, exist_ok=True)
         (sample_path / "QC/PICARD").mkdir(parents=True, exist_ok=True)
         (sample_path / "QC/flagstat").mkdir(parents=True, exist_ok=True)
         (sample_path / "QC/fragmentLen").mkdir(parents=True, exist_ok=True)
         (sample_path / "QC/stats").mkdir(parents=True, exist_ok=True)
-        (sample_path / "QC/MULTIQC/STATS").mkdir(parents=True, exist_ok=True)
+        (sample_path / "QC/CORRELATION/").mkdir(parents=True, exist_ok=True)
+        (sample_path / "TRIMMED").mkdir(parents=True, exist_ok=True)
         (sample_path / "BAM").mkdir(parents=True, exist_ok=True)
         (sample_path / "HOMER/").mkdir(parents=True, exist_ok=True)
-        (sample_path / "QC/CORRELATION/").mkdir(parents=True, exist_ok=True)
+        (sample_path / "BED").mkdir(parents=True, exist_ok=True)
+        (sample_path / "BEDGRAPH").mkdir(parents=True, exist_ok=True)
+    
+    # PROJECT CHECK
     for project_name, project_data in config["PROJECTS"].items():
         if "PROJECT_PATH" not in project_data:
             raise RuntimeError(f"The project {project_name} is missing the 'PROJECT_PATH field! Please add a valid path.")
@@ -232,7 +240,7 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                     str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + "_chrheader.bam")),
                     str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + "_filtered.bam")),
                     directory(str(Path(sequencing_data["PATH"]) / ("HOMER/" + sample_name))),
-                    str(Path(sequencing_data["PATH"]) / ("HOMER/" + sample_name + "_UCSC_track.bedGraph")),
+                    str(Path(sequencing_data["PATH"]) / ("BEDGRAPH/" + sample_name + "_UCSC_track.bedGraph")),
                     str(Path(sequencing_data["PATH"]) / ("QC/flagstat/" + sample_name + "_flagstat.txt")),
                     str(Path(sequencing_data["PATH"]) / ("QC/stats/" + sample_name + "_stats.txt")),
                 threads:
@@ -248,8 +256,8 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                     filtered2_sam=str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + "_rmDup.sam")),
                     bowtie_bam=str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + "_bowtie.bam")),
                     genome=sequencing_data["PARAMETERS"]["GENOME"],
-                    homer_output=str(Path(sequencing_data["PATH"]) / ("HOMER/" + sample_name + ".bedGraph")),
-                    homer_output2=str(Path(sequencing_data["PATH"]) / ("HOMER/" + sample_name + ".bedGraph.gz")),
+                    homer_output=str(Path(sequencing_data["PATH"]) / ("BEDGRAPH/" + sample_name + ".bedGraph")),
+                    homer_output2=str(Path(sequencing_data["PATH"]) / ("BEDGRAPH/" + sample_name + ".bedGraph.gz")),
                 resources:
                     mem_mb=lambda wildcards, attempt: 60000 * attempt,
                     runtime=lambda wildcards, attempt: attempt * 180,
@@ -299,7 +307,45 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                     samtools flagstat {output[2]} > {output[5]}
                     samtools stats {output[2]} > {output[6]}
                     """
-        
+            
+            rule:
+                name:
+                    f"bedtools_{sequencing_name}_{sample_name}"
+                input:
+                    str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + "_filtered.bam")),
+                output:
+                    str(Path(sequencing_data["PATH"]) / "BED" / (sample_name + ".bed")),
+                    str(Path(sequencing_data["PATH"]) / "BED" / (sample_name + "_sorted.bed")),
+                    str(Path(sequencing_data["PATH"]) / "BEDGRAPH" / (sample_name + ".bw")),
+                threads:
+                    config["JOBS"]["CORES_PER_JOBS"]["BEDTOOLS"]
+                params:
+                    blacklist=config["SEQUENCING"][sequencing_name]["PARAMETERS"]["BLACKLIST_BED"],
+                    chromsize=config["SEQUENCING"][sequencing_name]["PARAMETERS"]["CHROM_SIZE"]
+                    bed_clean=str(Path(sequencing_data["PATH"]) / "BED" / (sample_name + "_clean.bed")),
+                    bed_fragments=str(Path(sequencing_data["PATH"]) / "BED" / (sample_name + "_fragments.bed")),
+                    bed_tri=str(Path(sequencing_data["PATH"]) / "BED" / (sample_name + "_tri.bed")),
+                    bed_tri2=str(Path(sequencing_data["PATH"]) / "BED" / (sample_name + "_tri2.bed")),
+                    bedgraph_norm=str(Path(sequencing_data["PATH"]) / "BED" / (sample_name + "_bowtie2.fragments.normalized.bedGraph")),
+                    bedgraph_sort=str(Path(sequencing_data["PATH"]) / "BED" / (sample_name + "_bowtie2.fragments.normalized.bedGraph")),
+                resources:
+                    mem_mb=lambda wildcards, attempt: 20000 * attempt,
+                    runtime=lambda wildcards, attempt: attempt * 180,
+                    qos=lambda wildcards, attempt: get_qos_from_time(attempt, 180),
+                shell:
+                    r"""
+                    bedtools bamtobed -i {intput[0]} -bedpe > {output[0]}
+                    awk '$1==$4 && $6-$2 < 1000 {{print $0}}' {output[0]} > {params.bed_clean}
+                    cut -f 1,2,6 {params.bed_clean} | sort -k1,1 -k2,2n -k3,3n  > {params.bed_fragments}
+                    egrep -v 'HG10|HG11|HG12|HG13|PATCH|HSCHR|chrKI|chrHS|chrKB|GL|chrJH|chrM|chrKL|chrAAB|chrMT|NOVEL|KZ|KK|KV|KQ|KB|JH|KI' {params.bed_fragments} > {params.bed_tri}
+                    bedtools intersect -a {params.bed_tri} -b {params.blacklist} -f 0.5 -r -v > {params.bed_tri2}
+                    bedtools sort -i {params.bed_tri2} > {output[1]}
+                    bedtools genomecov -bg -i {output[1]} -g {params.chromsize} > {params.bedgraph_norm}
+                    bedtools sort -i {params.bedgrapg_norm} > {params.bedgrapg_sorm}
+                    bedGraphToBigWig {params.bedgraph_sorm} {params.chromsize} {output[2]} 
+                    rm {params.bed_clean} {params.bed_fragments} {params.bed_tri} {params.bed_tri2} {params.bedgraph_norm} {params.bedgraph_sort}
+                    """
+                    
         if "INPUT" in sequencing_data.keys():        
             for sample_name, sample_data in sequencing_data["INPUT"].items():
                 rule:
@@ -348,7 +394,7 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                         str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + "_chrheader.bam")),
                         str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + "_filtered.bam")),
                         directory(str(Path(sequencing_data["PATH"]) / ("HOMER/" + sample_name))),
-                        str(Path(sequencing_data["PATH"]) / ("HOMER/" + sample_name + "_UCSC_track.bedGraph")),
+                        str(Path(sequencing_data["PATH"]) / ("BEDGRAPH/" + sample_name + "_UCSC_track.bedGraph")),
                         str(Path(sequencing_data["PATH"]) / ("QC/flagstat/" + sample_name + "_flagstat.txt")),
                         str(Path(sequencing_data["PATH"]) / ("QC/stats/" + sample_name + "_stats.txt")),
                     threads:
@@ -364,8 +410,8 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                         filtered2_sam=str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + "_rmDup.sam")),
                         bowtie_bam=str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + "_bowtie.bam")),
                         genome=sequencing_data["PARAMETERS"]["GENOME"],
-                        homer_output=str(Path(sequencing_data["PATH"]) / ("HOMER/" + sample_name + ".bedGraph")),
-                        homer_output2=str(Path(sequencing_data["PATH"]) / ("HOMER/" + sample_name + ".bedGraph.gz")),
+                        homer_output=str(Path(sequencing_data["PATH"]) / ("BEDGRAPH/" + sample_name + ".bedGraph")),
+                        homer_output2=str(Path(sequencing_data["PATH"]) / ("BEDGRAPH/" + sample_name + ".bedGraph.gz")),
                     resources:
                         mem_mb=lambda wildcards, attempt: 60000 * attempt,
                         runtime=lambda wildcards, attempt: attempt * 180,
@@ -415,6 +461,43 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                         samtools flagstat {output[2]} > {output[5]}
                         samtools stats {output[2]} > {output[6]}
                         """
+                rule:
+                    name:
+                        f"bedtools_{sequencing_name}_{sample_name}"
+                    input:
+                        str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + "_filtered.bam")),
+                    output:
+                        str(Path(sequencing_data["PATH"]) / "BED" / (sample_name + ".bed")),
+                        str(Path(sequencing_data["PATH"]) / "BED" / (sample_name + "_sorted.bed")),
+                        str(Path(sequencing_data["PATH"]) / "BEDGRAPH" / (sample_name + ".bw")),
+                    threads:
+                        config["JOBS"]["CORES_PER_JOBS"]["BEDTOOLS"]
+                    params:
+                        blacklist=config["SEQUENCING"][sequencing_name]["PARAMETERS"]["BLACKLIST_BED"],
+                        chromsize=config["SEQUENCING"][sequencing_name]["PARAMETERS"]["CHROM_SIZE"]
+                        bed_clean=str(Path(sequencing_data["PATH"]) / "BED" / (sample_name + "_clean.bed")),
+                        bed_fragments=str(Path(sequencing_data["PATH"]) / "BED" / (sample_name + "_fragments.bed")),
+                        bed_tri=str(Path(sequencing_data["PATH"]) / "BED" / (sample_name + "_tri.bed")),
+                        bed_tri2=str(Path(sequencing_data["PATH"]) / "BED" / (sample_name + "_tri2.bed")),
+                        bedgraph_norm=str(Path(sequencing_data["PATH"]) / "BED" / (sample_name + "_bowtie2.fragments.normalized.bedGraph")),
+                        bedgraph_sort=str(Path(sequencing_data["PATH"]) / "BED" / (sample_name + "_bowtie2.fragments.normalized.bedGraph")),
+                    resources:
+                        mem_mb=lambda wildcards, attempt: 20000 * attempt,
+                        runtime=lambda wildcards, attempt: attempt * 180,
+                        qos=lambda wildcards, attempt: get_qos_from_time(attempt, 180),
+                    shell:
+                        r"""
+                        bedtools bamtobed -i {intput[0]} -bedpe > {output[0]}
+                        awk '$1==$4 && $6-$2 < 1000 {{print $0}}' {output[0]} > {params.bed_clean}
+                        cut -f 1,2,6 {params.bed_clean} | sort -k1,1 -k2,2n -k3,3n  > {params.bed_fragments}
+                        egrep -v 'HG10|HG11|HG12|HG13|PATCH|HSCHR|chrKI|chrHS|chrKB|GL|chrJH|chrM|chrKL|chrAAB|chrMT|NOVEL|KZ|KK|KV|KQ|KB|JH|KI' {params.bed_fragments} > {params.bed_tri}
+                        bedtools intersect -a {params.bed_tri} -b {params.blacklist} -f 0.5 -r -v > {params.bed_tri2}
+                        bedtools sort -i {params.bed_tri2} > {output[1]}
+                        bedtools genomecov -bg -i {output[1]} -g {params.chromsize} > {params.bedgraph_norm}
+                        bedtools sort -i {params.bedgrapg_norm} > {params.bedgrapg_sorm}
+                        bedGraphToBigWig {params.bedgraph_sorm} {params.chromsize} {output[2]} 
+                        rm {params.bed_clean} {params.bed_fragments} {params.bed_tri} {params.bed_tri2} {params.bedgraph_norm} {params.bedgraph_sort}
+                        """
         
         # multiqc of all trimmed fastq
         rule:
@@ -457,7 +540,7 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                     str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + "_chrheader.bam")),
                     str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + "_filtered.bam")),
                     directory(str(Path(sequencing_data["PATH"]) / ("HOMER/" + sample_name))),
-                    str(Path(sequencing_data["PATH"]) / ("HOMER/" + sample_name + "_UCSC_track.bedGraph")),
+                    str(Path(sequencing_data["PATH"]) / ("BEDGRAPH/" + sample_name + "_UCSC_track.bedGraph")),
                     str(Path(sequencing_data["PATH"]) / ("QC/flagstat/" + sample_name + "_flagstat.txt")),
                     str(Path(sequencing_data["PATH"]) / ("QC/stats/" + sample_name + "_stats.txt")),
                 threads:
@@ -473,8 +556,8 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                     filtered2_sam=str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + "_rmDup.sam")),
                     bowtie_bam=str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + "_bowtie.bam")),
                     genome=sequencing_data["PARAMETERS"]["GENOME"],
-                    homer_output=str(Path(sequencing_data["PATH"]) / ("HOMER/" + sample_name + ".bedGraph")),
-                    homer_output2=str(Path(sequencing_data["PATH"]) / ("HOMER/" + sample_name + ".bedGraph.gz")),
+                    homer_output=str(Path(sequencing_data["PATH"]) / ("BEDGRAPH/" + sample_name + ".bedGraph")),
+                    homer_output2=str(Path(sequencing_data["PATH"]) / ("BEDGRAPH/" + sample_name + ".bedGraph.gz")),
                 resources:
                     mem_mb=lambda wildcards, attempt: 60000 * attempt,
                     runtime=lambda wildcards, attempt: attempt * 180,
@@ -524,6 +607,44 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                     samtools flagstat {output[2]} > {output[5]}
                     samtools stats {output[2]} > {output[6]}
                     """
+            
+            rule:
+                name:
+                    f"bedtools_{sequencing_name}_{sample_name}"
+                input:
+                    str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + "_filtered.bam")),
+                output:
+                    str(Path(sequencing_data["PATH"]) / "BED" / (sample_name + ".bed")),
+                    str(Path(sequencing_data["PATH"]) / "BED" / (sample_name + "_sorted.bed")),
+                    str(Path(sequencing_data["PATH"]) / "BEDGRAPH" / (sample_name + ".bw")),
+                threads:
+                    config["JOBS"]["CORES_PER_JOBS"]["BEDTOOLS"]
+                params:
+                    blacklist=config["SEQUENCING"][sequencing_name]["PARAMETERS"]["BLACKLIST_BED"],
+                    chromsize=config["SEQUENCING"][sequencing_name]["PARAMETERS"]["CHROM_SIZE"]
+                    bed_clean=str(Path(sequencing_data["PATH"]) / "BED" / (sample_name + "_clean.bed")),
+                    bed_fragments=str(Path(sequencing_data["PATH"]) / "BED" / (sample_name + "_fragments.bed")),
+                    bed_tri=str(Path(sequencing_data["PATH"]) / "BED" / (sample_name + "_tri.bed")),
+                    bed_tri2=str(Path(sequencing_data["PATH"]) / "BED" / (sample_name + "_tri2.bed")),
+                    bedgraph_norm=str(Path(sequencing_data["PATH"]) / "BED" / (sample_name + "_bowtie2.fragments.normalized.bedGraph")),
+                    bedgraph_sort=str(Path(sequencing_data["PATH"]) / "BED" / (sample_name + "_bowtie2.fragments.normalized.bedGraph")),
+                resources:
+                    mem_mb=lambda wildcards, attempt: 20000 * attempt,
+                    runtime=lambda wildcards, attempt: attempt * 180,
+                    qos=lambda wildcards, attempt: get_qos_from_time(attempt, 180),
+                shell:
+                    r"""
+                    bedtools bamtobed -i {intput[0]} -bedpe > {output[0]}
+                    awk '$1==$4 && $6-$2 < 1000 {{print $0}}' {output[0]} > {params.bed_clean}
+                    cut -f 1,2,6 {params.bed_clean} | sort -k1,1 -k2,2n -k3,3n  > {params.bed_fragments}
+                    egrep -v 'HG10|HG11|HG12|HG13|PATCH|HSCHR|chrKI|chrHS|chrKB|GL|chrJH|chrM|chrKL|chrAAB|chrMT|NOVEL|KZ|KK|KV|KQ|KB|JH|KI' {params.bed_fragments} > {params.bed_tri}
+                    bedtools intersect -a {params.bed_tri} -b {params.blacklist} -f 0.5 -r -v > {params.bed_tri2}
+                    bedtools sort -i {params.bed_tri2} > {output[1]}
+                    bedtools genomecov -bg -i {output[1]} -g {params.chromsize} > {params.bedgraph_norm}
+                    bedtools sort -i {params.bedgrapg_norm} > {params.bedgrapg_sorm}
+                    bedGraphToBigWig {params.bedgraph_sorm} {params.chromsize} {output[2]} 
+                    rm {params.bed_clean} {params.bed_fragments} {params.bed_tri} {params.bed_tri2} {params.bedgraph_norm} {params.bedgraph_sort}
+                    """
         
         if "INPUT" in sequencing_data.keys():        
             for sample_name, sample_data in sequencing_data["INPUT"].items():
@@ -538,7 +659,7 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                         str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + "_chrheader.bam")),
                         str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + "_filtered.bam")),
                         directory(str(Path(sequencing_data["PATH"]) / ("HOMER/" + sample_name))),
-                        str(Path(sequencing_data["PATH"]) / ("HOMER/" + sample_name + "_UCSC_track.bedGraph")),
+                        str(Path(sequencing_data["PATH"]) / ("BEDGRAPH/" + sample_name + "_UCSC_track.bedGraph")),
                         str(Path(sequencing_data["PATH"]) / ("QC/flagstat/" + sample_name + "_flagstat.txt")),
                         str(Path(sequencing_data["PATH"]) / ("QC/stats/" + sample_name + "_stats.txt")),
                     threads:
@@ -554,8 +675,8 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                         filtered2_sam=str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + "_rmDup.sam")),
                         bowtie_bam=str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + "_bowtie.bam")),
                         genome=sequencing_data["PARAMETERS"]["GENOME"],
-                        homer_output=str(Path(sequencing_data["PATH"]) / ("HOMER/" + sample_name + ".bedGraph")),
-                        homer_output2=str(Path(sequencing_data["PATH"]) / ("HOMER/" + sample_name + ".bedGraph.gz")),
+                        homer_output=str(Path(sequencing_data["PATH"]) / ("BEDGRAPH/" + sample_name + ".bedGraph")),
+                        homer_output2=str(Path(sequencing_data["PATH"]) / ("BEDGRAPH/" + sample_name + ".bedGraph.gz")),
                     resources:
                         mem_mb=lambda wildcards, attempt: 60000 * attempt,
                         runtime=lambda wildcards, attempt: attempt * 180,
@@ -604,6 +725,44 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                         # samtools QC
                         samtools flagstat {output[2]} > {output[5]}
                         samtools stats {output[2]} > {output[6]}
+                        """
+                
+                rule:
+                    name:
+                        f"bedtools_{sequencing_name}_{sample_name}"
+                    input:
+                        str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + "_filtered.bam")),
+                    output:
+                        str(Path(sequencing_data["PATH"]) / "BED" / (sample_name + ".bed")),
+                        str(Path(sequencing_data["PATH"]) / "BED" / (sample_name + "_sorted.bed")),
+                        str(Path(sequencing_data["PATH"]) / "BEDGRAPH" / (sample_name + ".bw")),
+                    threads:
+                        config["JOBS"]["CORES_PER_JOBS"]["BEDTOOLS"]
+                    params:
+                        blacklist=config["SEQUENCING"][sequencing_name]["PARAMETERS"]["BLACKLIST_BED"],
+                        chromsize=config["SEQUENCING"][sequencing_name]["PARAMETERS"]["CHROM_SIZE"]
+                        bed_clean=str(Path(sequencing_data["PATH"]) / "BED" / (sample_name + "_clean.bed")),
+                        bed_fragments=str(Path(sequencing_data["PATH"]) / "BED" / (sample_name + "_fragments.bed")),
+                        bed_tri=str(Path(sequencing_data["PATH"]) / "BED" / (sample_name + "_tri.bed")),
+                        bed_tri2=str(Path(sequencing_data["PATH"]) / "BED" / (sample_name + "_tri2.bed")),
+                        bedgraph_norm=str(Path(sequencing_data["PATH"]) / "BED" / (sample_name + "_bowtie2.fragments.normalized.bedGraph")),
+                        bedgraph_sort=str(Path(sequencing_data["PATH"]) / "BED" / (sample_name + "_bowtie2.fragments.normalized.bedGraph")),
+                    resources:
+                        mem_mb=lambda wildcards, attempt: 20000 * attempt,
+                        runtime=lambda wildcards, attempt: attempt * 180,
+                        qos=lambda wildcards, attempt: get_qos_from_time(attempt, 180),
+                    shell:
+                        r"""
+                        bedtools bamtobed -i {intput[0]} -bedpe > {output[0]}
+                        awk '$1==$4 && $6-$2 < 1000 {{print $0}}' {output[0]} > {params.bed_clean}
+                        cut -f 1,2,6 {params.bed_clean} | sort -k1,1 -k2,2n -k3,3n  > {params.bed_fragments}
+                        egrep -v 'HG10|HG11|HG12|HG13|PATCH|HSCHR|chrKI|chrHS|chrKB|GL|chrJH|chrM|chrKL|chrAAB|chrMT|NOVEL|KZ|KK|KV|KQ|KB|JH|KI' {params.bed_fragments} > {params.bed_tri}
+                        bedtools intersect -a {params.bed_tri} -b {params.blacklist} -f 0.5 -r -v > {params.bed_tri2}
+                        bedtools sort -i {params.bed_tri2} > {output[1]}
+                        bedtools genomecov -bg -i {output[1]} -g {params.chromsize} > {params.bedgraph_norm}
+                        bedtools sort -i {params.bedgrapg_norm} > {params.bedgrapg_sorm}
+                        bedGraphToBigWig {params.bedgraph_sorm} {params.chromsize} {output[2]} 
+                        rm {params.bed_clean} {params.bed_fragments} {params.bed_tri} {params.bed_tri2} {params.bedgraph_norm} {params.bedgraph_sort}
                         """
     
     # After alignment
