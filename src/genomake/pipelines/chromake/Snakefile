@@ -126,7 +126,29 @@ onstart:
             raise RuntimeError(f"The project {project_name} 'PROJECT_PATH field is empty! Please add a valid path.")
         else:
             Path(project_data["PROJECT_PATH"]).mkdir(parents=True, exist_ok=True)
-
+        if "TYPE" not in project_data:
+            print(r"""
+            The project {project_name} don't have a valid 'TYPE' field. Alignment will be realized but not the peak calling.
+            Possible value for this field are: ATAC, H3K27AC, H3K27ME3, H2AUB.
+            """)
+        elif project_data["TYPE"] not in ["ATAC", "H3K27AC", "H3K27ME3", "H2AUB"]:
+            print(r"""
+            The project {project_name} don't have a valid 'TYPE' field. Alignment will be realized but not the peak calling.
+            Possible value for this field are: ATAC, H3K27AC, H3K27ME3, H2AUB.
+            """)
+        if "SEQUENCING" not in project_data:
+            raise RuntimeError(f"The project {project_name} is missing the 'SEQUENCING' field! Please add it.")
+        else:
+            need_error=False
+            error_message=["Some sequencing listed in the PROJECTS field are not present in the SEQUENCING field"]
+            for seq_id in project_data["SEQUENCING"]:
+                if seq_id not in config["SEQUENCING"]:
+                error_message.append(f"The project {project_name} list the sequencing {seq_id} who is not present in the SEQUENCING field of the configuration.")
+                need_error=True
+            if need_error:
+                raise RuntimeError("\n".join(error_message))
+            del error_message
+            del need_error
 
 rule all:
     input:
@@ -186,7 +208,6 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                 {params.fastqc_outdir} \
                 -o {params.multiqc_outdir} --force
             """
-    
     
     if (
         "R1_ADAPTOR" in sequencing_data
@@ -791,6 +812,5 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
             plotCorrelation -in {output[0]} -c spearman -p heatmap \
                 --colorMap RdYlBu -o {output[1]}
             """
-    
     
     
