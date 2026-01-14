@@ -90,6 +90,18 @@ def get_all_fastq_related_paths(cfg: dict, mode: str) -> list:
             if "INPUT" in sequencing_data:
                 for input_name, input_data in sequencing_data["INPUT"].items():
                     res.append(base / "HOMER" / (input_name + "_UCSC_track.bedGraph"))  
+        elif mode == "bed":
+            for sample_name, sample_data in sequencing_data["SAMPLES"].items():
+                res.append(base / "BED" / (sample_name + ".bed"))
+            if "INPUT" in sequencing_data:
+                for input_name, input_data in sequencing_data["INPUT"].items():
+                    res.append(base / "BED" / (input_name + ".bed"))
+        elif mode == "bed_sorted":
+            for sample_name, sample_data in sequencing_data["SAMPLES"].items():
+                res.append(base / "BED" / (sample_name + "_sorted.bed"))
+            if "INPUT" in sequencing_data:
+                for input_name, input_data in sequencing_data["INPUT"].items():
+                    res.append(base / "BED" / (input_name + "_sorted.bed"))
         else:
             print(f"There is an error, chromake.scripts.path.get_path dont recognize the {mode} mode!")      
     return res
@@ -194,6 +206,18 @@ def get_sequencing_fastq_related_paths(cfg: dict,
                     res.append(base / "QC/stats" / (input_name + "_stats.txt"))
         elif mode == "multiqc_stats":
             res = base / "QC/MULTIQC/STATS/multiqc_report.html"
+        elif mode == "bed":
+            for sample_name, sample_data in cfg["SEQUENCING"][sequencing_name]["SAMPLES"].items():
+                res.append(base / "BED" / (sample_name + ".bed"))
+            if "INPUT" in cfg["SEQUENCING"][sequencing_name]:
+                for input_name, sample_data in cfg["SEQUENCING"][sequencing_name]["INPUT"].items():
+                    res.append(base / "BED" / (input_name + ".bed"))
+        elif mode == "bed_sorted":
+            for sample_name, sample_data in cfg["SEQUENCING"][sequencing_name]["SAMPLES"].items():
+                res.append(base / "BED" / (sample_name + "_sorted.bed"))
+            if "INPUT" in cfg["SEQUENCING"][sequencing_name]:
+                for input_name, input_data in cfg["SEQUENCING"][sequencing_name]["SAMPLES"].items():
+                    res.append(base / "BED" / (input_name + "_sorted.bed"))
     else:
         print(f"There is an error, the configuration file don't contains a {sequencing_name} project!")
     return res

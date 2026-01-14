@@ -137,6 +137,7 @@ rule all:
         *chr_paths.get_all_fastq_related_paths(config, "multiqc_trimmed"),
         *chr_paths.get_all_fastq_related_paths(config, "bam_filtered"),
         *chr_paths.get_all_fastq_related_paths(config, "bedgraph"),
+        *chr_paths.get_all_fastq_related_paths(config, "bed_sorted"),
 
 def get_qos_from_time(attempt: int, default_time_min: int)->str:
 
