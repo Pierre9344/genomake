@@ -117,6 +117,9 @@ def get_sequencing_fastq_related_paths(cfg: dict,
             - multiqc_trimmed (multiqc report after adapter trimming)
             - bam (bam files after alignment with bowtie2)
             - bam_filtered (bam files after filtering the non-standard chromosomes)
+            - flagstat (output of samtools flagstat on the bam files)
+            - stats (output of samtools stats on the bam files)
+            - multiqc_stats (multiqc on the folder containing the stats output)
     
     Returns
     -------
@@ -177,6 +180,20 @@ def get_sequencing_fastq_related_paths(cfg: dict,
             if "INPUT" in cfg["SEQUENCING"][sequencing_name]:
                 for input_name, input_data in cfg["SEQUENCING"][sequencing_name]["SAMPLES"].items():
                     res.append(base / "BAM" / (input_name + "_filtered.bam"))
+        elif mode == "flagstat":
+            for sample_name, sample_data in cfg["SEQUENCING"][sequencing_name]["SAMPLES"].items():
+                res.append(base / "QC/flagstat" / (sample_name + "_flagstat.txt"))
+            if "INPUT" in cfg["SEQUENCING"][sequencing_name]:
+                for input_name, input_data in cfg["SEQUENCING"][sequencing_name]["SAMPLES"].items():
+                    res.append(base / "QC/flagstat" / (input_name + "_flagstat.txt"))
+        elif mode == "stats":
+            for sample_name, sample_data in cfg["SEQUENCING"][sequencing_name]["SAMPLES"].items():
+                res.append(base / "QC/stats" / (sample_name + "_stats.txt"))
+            if "INPUT" in cfg["SEQUENCING"][sequencing_name]:
+                for input_name, input_data in cfg["SEQUENCING"][sequencing_name]["SAMPLES"].items():
+                    res.append(base / "QC/stats" / (input_name + "_stats.txt"))
+        elif mode == "multiqc_stats":
+            res = base / "QC/MULTIQC/STATS/multiqc_report.html"
     else:
         print(f"There is an error, the configuration file don't contains a {sequencing_name} project!")
     return res
