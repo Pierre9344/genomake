@@ -45,6 +45,9 @@ onstart:
             if "SAMTOOLS_QC" not in config["JOBS"]["CORES_PER_JOBS"]:
                 print("Number of cores not indicated for samtools QC, defaulting to 5")
                 config["JOBS"]["CORES_PER_JOBS"]["SAMTOOLS_QC"] = 5
+            if "MULTIBAMSUMMARY" not in config["JOBS"]["CORES_PER_JOBS"]:
+                print("Number of cores not indicated for deeptools multiBamSummary rule defaulting to 5")
+                config["JOBS"]["CORES_PER_JOBS"]["MULTIBAMSUMMARY"] = 5
         if "QOS_INFOS" not in config["JOBS"]:
             print("The 'QOS_INFOS' field is missing in the config file. Using the example default values to be abble to set the ressources field of the rules. Will be ignored if executor is not set.")
             config["JOBS"]["QOS_INFOS"] = {
@@ -109,6 +112,7 @@ onstart:
         (sample_path / "QC/MULTIQC/STATS").mkdir(parents=True, exist_ok=True)
         (sample_path / "BAM").mkdir(parents=True, exist_ok=True)
         (sample_path / "HOMER/").mkdir(parents=True, exist_ok=True)
+        (sample_path / "QC/CORRELATION/").mkdir(parents=True, exist_ok=True)
     for project_name, project_data in config["PROJECTS"].items():
         if "PROJECT_PATH" not in project_data:
             raise RuntimeError(f"The project {project_name} is missing the 'PROJECT_PATH field! Please add a valid path.")
@@ -445,6 +449,30 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
         # If there no adaptor for trimming we use BWA on the original fastq (samples and input) do add later (same rules but not trimming)
     
     # After alignment
+    rule:
+        name:
+            f"multibamsummary_{sequencing_name}"
+        input:
+            *chr_paths.get_sequencing_fastq_related_paths(config, sequencing_name, "bam_filtered"),
+        output:
+            str(Path(sequencing_data["PATH"]) / "QC/CORRELATION" / (sequencing_name + "correlation_matrix.npz")),
+            str(Path(sequencing_data["PATH"]) / "QC/CORRELATION" / (sequencing_name + "correlation_plot.png")),
+        threads:
+            config["JOBS"]["CORES_PER_JOBS"]["MULTIBAMSUMMARY"],
+        params:
+            labels=lambda wildcards, input: " ".join(Path(b).name.replace("_filtered.bam", "") for b in input)
+        resources:
+            mem_mb=lambda wildcards, attempt: 10000 * attempt,
+            runtime=lambda wildcards, attempt: attempt * 60,
+            qos=lambda wildcards, attempt: get_qos_from_time(attempt, 60),
+        shell:
+            r"""                
+            multiBamSummary bins -p {threads} --verbose \
+                --bamfiles {input} --labels {params.labels} -o {output[0]}
+            
+            plotCorrelation -in {output[0]} -c spearman -p heatmap \
+                --colorMap RdYlBu -o {output[1]}
+            """
     
     
     
