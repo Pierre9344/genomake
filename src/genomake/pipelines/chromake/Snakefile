@@ -416,8 +416,8 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                 *chr_paths.get_sequencing_fastq_related_paths(config, sequencing_name, "fastqc_trimmed"),
                 *chr_paths.get_sequencing_fastq_related_paths(config, sequencing_name, "stats"),
             output:
-                *chr_paths.get_sequencing_fastq_related_paths(config, sequencing_name, "multiqc_trimmed"),
-                *chr_paths.get_sequencing_fastq_related_paths(config, sequencing_name, "multiqc_stats"),
+                chr_paths.get_sequencing_fastq_related_paths(config, sequencing_name, "multiqc_trimmed"),
+                chr_paths.get_sequencing_fastq_related_paths(config, sequencing_name, "multiqc_stats"),
             threads:
                 1,
             params:
