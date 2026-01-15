@@ -8,7 +8,7 @@ This package is a WIP.
 
 # Installation
 
-Genomeka can be installed via conda using the yml file next:
+Genomeke can be installed via conda using the yml file next:
 
 ```{.yaml}
 name: genomake
@@ -19,20 +19,20 @@ channels:
 dependencies:
   - bedtools
   - bowtie2
-  - cutadapt
-  - deeptools
   - fastqc
   - homer
-  - multiqc
+  - openssl
   - picard
+  - python
   - ucsc-bedgraphtobigwig
   - ucsc-bedtobigbed
   - samtools
-  - python
-  - openssl
   - pip:
       - git+https://github.com/Pierre9344/genomake
       - macs3
+      - cutadapt
+      - deeptools
+      - multiqc
       - snakemake-executor-plugin-slurm
 
 ```
@@ -41,13 +41,19 @@ dependencies:
 conda create -f genomake.yml -y
 ```
 
+For a simple installation on a local computer to access the functions to create and check the configuration file you can directly use pip:
+
+```{.bash}
+pip install git+https://github.com/Pierre9344/genomake
+```
+
 # Chromake
 
 ## Objectives
 
 The `chromake` pipeline is a pipeline to analyze ChIP-seq (H3K27ac, H3K27me3, and H2Aub marks), and ATAC-seq samples.
 
-This pipeline is a WIP. It currently realize the alignment of the samples, and generate UCSC compatible tracks but don't realize the peak calling.
+This pipeline is a WIP. It currently realize the alignment of the samples, and generate UCSC compatible tracks but doesn't realize the peak calling.
 
 ## Configuration file
 
