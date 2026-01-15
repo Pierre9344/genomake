@@ -236,7 +236,7 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                     bed_tri=str(Path(sequencing_data["PATH"]) / "BED" / (sample_name + "_tri.bed")),
                     bed_tri2=str(Path(sequencing_data["PATH"]) / "BED" / (sample_name + "_tri2.bed")),
                     bedgraph_norm=str(Path(sequencing_data["PATH"]) / "BED" / (sample_name + "_bowtie2.fragments.normalized.bedGraph")),
-                    bedgraph_sort=str(Path(sequencing_data["PATH"]) / "BED" / (sample_name + "_bowtie2.fragments.normalized.bedGraph")),
+                    bedgraph_sort=str(Path(sequencing_data["PATH"]) / "BED" / (sample_name + "_bowtie2.fragments.sorted.bedGraph")),
                 resources:
                     mem_mb=lambda wildcards, attempt: 20000 * attempt,
                     runtime=lambda wildcards, attempt: attempt * 180,
@@ -250,7 +250,7 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                     bedtools intersect -a {params.bed_tri} -b {params.blacklist} -f 0.5 -r -v > {params.bed_tri2}
                     bedtools sort -i {params.bed_tri2} > {output[1]}
                     bedtools genomecov -bg -i {output[1]} -g {params.chromsize} > {params.bedgraph_norm}
-                    bedtools sort -i {params.bedgrapg_norm} > {params.bedgrapg_sorm}
+                    bedtools sort -i {params.bedgraph_norm} > {params.bedgraph_sorm}
                     bedGraphToBigWig {params.bedgraph_sorm} {params.chromsize} {output[2]} 
                     rm {params.bed_clean} {params.bed_fragments} {params.bed_tri} {params.bed_tri2} {params.bedgraph_norm} {params.bedgraph_sort}
                     """
@@ -389,7 +389,7 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                         bed_tri=str(Path(sequencing_data["PATH"]) / "BED" / (sample_name + "_tri.bed")),
                         bed_tri2=str(Path(sequencing_data["PATH"]) / "BED" / (sample_name + "_tri2.bed")),
                         bedgraph_norm=str(Path(sequencing_data["PATH"]) / "BED" / (sample_name + "_bowtie2.fragments.normalized.bedGraph")),
-                        bedgraph_sort=str(Path(sequencing_data["PATH"]) / "BED" / (sample_name + "_bowtie2.fragments.normalized.bedGraph")),
+                        bedgraph_sort=str(Path(sequencing_data["PATH"]) / "BED" / (sample_name + "_bowtie2.fragments.sorted.bedGraph")),
                     resources:
                         mem_mb=lambda wildcards, attempt: 20000 * attempt,
                         runtime=lambda wildcards, attempt: attempt * 180,
@@ -403,7 +403,7 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                         bedtools intersect -a {params.bed_tri} -b {params.blacklist} -f 0.5 -r -v > {params.bed_tri2}
                         bedtools sort -i {params.bed_tri2} > {output[1]}
                         bedtools genomecov -bg -i {output[1]} -g {params.chromsize} > {params.bedgraph_norm}
-                        bedtools sort -i {params.bedgrapg_norm} > {params.bedgrapg_sorm}
+                        bedtools sort -i {params.bedgraph_norm} > {params.bedgraph_sorm}
                         bedGraphToBigWig {params.bedgraph_sorm} {params.chromsize} {output[2]} 
                         rm {params.bed_clean} {params.bed_fragments} {params.bed_tri} {params.bed_tri2} {params.bedgraph_norm} {params.bedgraph_sort}
                         """
@@ -536,7 +536,7 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                     bed_tri=str(Path(sequencing_data["PATH"]) / "BED" / (sample_name + "_tri.bed")),
                     bed_tri2=str(Path(sequencing_data["PATH"]) / "BED" / (sample_name + "_tri2.bed")),
                     bedgraph_norm=str(Path(sequencing_data["PATH"]) / "BED" / (sample_name + "_bowtie2.fragments.normalized.bedGraph")),
-                    bedgraph_sort=str(Path(sequencing_data["PATH"]) / "BED" / (sample_name + "_bowtie2.fragments.normalized.bedGraph")),
+                    bedgraph_sort=str(Path(sequencing_data["PATH"]) / "BED" / (sample_name + "_bowtie2.fragments.sorted.bedGraph")),
                 resources:
                     mem_mb=lambda wildcards, attempt: 20000 * attempt,
                     runtime=lambda wildcards, attempt: attempt * 180,
@@ -550,7 +550,7 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                     bedtools intersect -a {params.bed_tri} -b {params.blacklist} -f 0.5 -r -v > {params.bed_tri2}
                     bedtools sort -i {params.bed_tri2} > {output[1]}
                     bedtools genomecov -bg -i {output[1]} -g {params.chromsize} > {params.bedgraph_norm}
-                    bedtools sort -i {params.bedgrapg_norm} > {params.bedgrapg_sorm}
+                    bedtools sort -i {params.bedgraph_norm} > {params.bedgraph_sorm}
                     bedGraphToBigWig {params.bedgraph_sorm} {params.chromsize} {output[2]} 
                     rm {params.bed_clean} {params.bed_fragments} {params.bed_tri} {params.bed_tri2} {params.bedgraph_norm} {params.bedgraph_sort}
                     """
@@ -655,7 +655,7 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                         bed_tri=str(Path(sequencing_data["PATH"]) / "BED" / (sample_name + "_tri.bed")),
                         bed_tri2=str(Path(sequencing_data["PATH"]) / "BED" / (sample_name + "_tri2.bed")),
                         bedgraph_norm=str(Path(sequencing_data["PATH"]) / "BED" / (sample_name + "_bowtie2.fragments.normalized.bedGraph")),
-                        bedgraph_sort=str(Path(sequencing_data["PATH"]) / "BED" / (sample_name + "_bowtie2.fragments.normalized.bedGraph")),
+                        bedgraph_sort=str(Path(sequencing_data["PATH"]) / "BED" / (sample_name + "_bowtie2.fragments.sorted.bedGraph")),
                     resources:
                         mem_mb=lambda wildcards, attempt: 20000 * attempt,
                         runtime=lambda wildcards, attempt: attempt * 180,
@@ -669,7 +669,7 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                         bedtools intersect -a {params.bed_tri} -b {params.blacklist} -f 0.5 -r -v > {params.bed_tri2}
                         bedtools sort -i {params.bed_tri2} > {output[1]}
                         bedtools genomecov -bg -i {output[1]} -g {params.chromsize} > {params.bedgraph_norm}
-                        bedtools sort -i {params.bedgrapg_norm} > {params.bedgrapg_sorm}
+                        bedtools sort -i {params.bedgraph_norm} > {params.bedgraph_sorm}
                         bedGraphToBigWig {params.bedgraph_sorm} {params.chromsize} {output[2]} 
                         rm {params.bed_clean} {params.bed_fragments} {params.bed_tri} {params.bed_tri2} {params.bedgraph_norm} {params.bedgraph_sort}
                         """
