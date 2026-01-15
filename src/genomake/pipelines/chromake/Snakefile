@@ -243,7 +243,7 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                     qos=lambda wildcards, attempt: get_qos_from_time(attempt, 180),
                 shell:
                     r"""
-                    bedtools bamtobed -i {intput[0]} -bedpe > {output[0]}
+                    bedtools bamtobed -i {input[0]} -bedpe > {output[0]}
                     awk '$1==$4 && $6-$2 < 1000 {{print $0}}' {output[0]} > {params.bed_clean}
                     cut -f 1,2,6 {params.bed_clean} | sort -k1,1 -k2,2n -k3,3n  > {params.bed_fragments}
                     egrep -v 'HG10|HG11|HG12|HG13|PATCH|HSCHR|chrKI|chrHS|chrKB|GL|chrJH|chrM|chrKL|chrAAB|chrMT|NOVEL|KZ|KK|KV|KQ|KB|JH|KI' {params.bed_fragments} > {params.bed_tri}
@@ -396,7 +396,7 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                         qos=lambda wildcards, attempt: get_qos_from_time(attempt, 180),
                     shell:
                         r"""
-                        bedtools bamtobed -i {intput[0]} -bedpe > {output[0]}
+                        bedtools bamtobed -i {input[0]} -bedpe > {output[0]}
                         awk '$1==$4 && $6-$2 < 1000 {{print $0}}' {output[0]} > {params.bed_clean}
                         cut -f 1,2,6 {params.bed_clean} | sort -k1,1 -k2,2n -k3,3n  > {params.bed_fragments}
                         egrep -v 'HG10|HG11|HG12|HG13|PATCH|HSCHR|chrKI|chrHS|chrKB|GL|chrJH|chrM|chrKL|chrAAB|chrMT|NOVEL|KZ|KK|KV|KQ|KB|JH|KI' {params.bed_fragments} > {params.bed_tri}
@@ -543,7 +543,7 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                     qos=lambda wildcards, attempt: get_qos_from_time(attempt, 180),
                 shell:
                     r"""
-                    bedtools bamtobed -i {intput[0]} -bedpe > {output[0]}
+                    bedtools bamtobed -i {input[0]} -bedpe > {output[0]}
                     awk '$1==$4 && $6-$2 < 1000 {{print $0}}' {output[0]} > {params.bed_clean}
                     cut -f 1,2,6 {params.bed_clean} | sort -k1,1 -k2,2n -k3,3n  > {params.bed_fragments}
                     egrep -v 'HG10|HG11|HG12|HG13|PATCH|HSCHR|chrKI|chrHS|chrKB|GL|chrJH|chrM|chrKL|chrAAB|chrMT|NOVEL|KZ|KK|KV|KQ|KB|JH|KI' {params.bed_fragments} > {params.bed_tri}
@@ -662,7 +662,7 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                         qos=lambda wildcards, attempt: get_qos_from_time(attempt, 180),
                     shell:
                         r"""
-                        bedtools bamtobed -i {intput[0]} -bedpe > {output[0]}
+                        bedtools bamtobed -i {input[0]} -bedpe > {output[0]}
                         awk '$1==$4 && $6-$2 < 1000 {{print $0}}' {output[0]} > {params.bed_clean}
                         cut -f 1,2,6 {params.bed_clean} | sort -k1,1 -k2,2n -k3,3n  > {params.bed_fragments}
                         egrep -v 'HG10|HG11|HG12|HG13|PATCH|HSCHR|chrKI|chrHS|chrKB|GL|chrJH|chrM|chrKL|chrAAB|chrMT|NOVEL|KZ|KK|KV|KQ|KB|JH|KI' {params.bed_fragments} > {params.bed_tri}
