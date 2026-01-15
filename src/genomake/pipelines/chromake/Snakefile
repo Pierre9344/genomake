@@ -1,124 +1,38 @@
 import yaml
 from pathlib import Path
 from genomake.pipelines.chromake.scripts import paths as chr_paths
+from genomake.pipelines.chromake.scripts import config as chr_config
 import re
 
 onstart:
-    if "SEQUENCING" not in config:
-        raise RuntimeError("The configuration file is missing the 'SEQUENCING' field!")
-    if "PROJECTS" not in config:
-        raise RuntimeError("The configuration file is missing the 'PROJECTS' field!")
-    if "JOBS" not in config:
-        print("Jobs field missing from the configuration file. Adding one with the example default value")
-        config["JOBS"] = {
-              "CORES_PER_JOBS": {
-              "FASTQC": 10,
-              "CUTADAPT": 10,
-              "BOWTIE2": 30
-              },
-              "QOS_INFOS": {
-                  "short": {"MaxWall": 2000},
-                  "medium": {"MaxWall": 5000},
-                  "long": {"MaxWall": 15000}
-               }
-        }
-    else:
-        if "CORES_PER_JOBS" not in config["JOBS"]:
-            print("Number of cores to use for the jobs is not indicated in the config file. Using the pipeline default values")
-            config["JOBS"]["CORES_PER_JOBS"] = {
-                "FASTQC": 10,
-                "CUTADAPT": 10,
-                "BOWTIE2": 30,
-                "SAMTOOLS_QC": 5,
-                "MULTIBAMSUMMARY": 5,
-                "BEDTOOLS": 5
-            }
-        else:
-            if "FASTQC" not in config["JOBS"]["CORES_PER_JOBS"]:
-                print("Number of cores not indicated for fastqc, defaulting to 10")
-                config["JOBS"]["CORES_PER_JOBS"]["FASTQC"] = 10
-            if "CUTADAPT" not in config["JOBS"]["CORES_PER_JOBS"]:
-                print("Number of cores not indicated for cutadapt, defaulting to 10")
-                config["JOBS"]["CORES_PER_JOBS"]["CUTADAPT"] = 10
-            if "BOWTIE2" not in config["JOBS"]["CORES_PER_JOBS"]:
-                print("Number of cores not indicated for bowtie2, defaulting to 30")
-                config["JOBS"]["CORES_PER_JOBS"]["BOWTIE2"] = 30
-            if "SAMTOOLS_QC" not in config["JOBS"]["CORES_PER_JOBS"]:
-                print("Number of cores not indicated for samtools QC, defaulting to 5")
-                config["JOBS"]["CORES_PER_JOBS"]["SAMTOOLS_QC"] = 5
-            if "MULTIBAMSUMMARY" not in config["JOBS"]["CORES_PER_JOBS"]:
-                print("Number of cores not indicated for deeptools multiBamSummary rule defaulting to 5")
-                config["JOBS"]["CORES_PER_JOBS"]["MULTIBAMSUMMARY"] = 5
-                if "BEDTOOLS" not in config["JOBS"]["CORES_PER_JOBS"]:
-                    print("Number of cores not indicated for bedtools rule defaulting to 5")
-                    config["JOBS"]["CORES_PER_JOBS"]["BEDTOOLS"] = 5
-        if "QOS_INFOS" not in config["JOBS"]:
-            print("The 'QOS_INFOS' field is missing in the config file. Using the example default values to be abble to set the ressources field of the rules. Will be ignored if executor is not set.")
-            config["JOBS"]["QOS_INFOS"] = {
-                "short": {"MaxWall": 2000},
-                "medium": {"MaxWall": 5000},
-                "long": {"MaxWall": 15000}
-            }
-        
+    # check the configuration file, and modify it or raise runtime error if needed
+    chr_config.check_config_format(config)
+    
+    # Create folder for the pipelines outputs
     for sequencing_name, sequencing_data in config["SEQUENCING"].items():
-        if "INPUT" in sequencing_data and len(sequencing_data["INPUT"]) >= 2:
-            first_input = list(sequencing_data["INPUT"].keys())[0]
-            print(
-                f"The {sequencing_name} sequencing list more than one input. ",
-                f"All of them will be sequencded but only the first one '{first_input}' ",
-                "will be used for the samples peak calling."
-            )
-        
-        # PARAMETERS CHECK
-        if "PARAMETERS" not in sequencing_data:
-            raise RuntimeError("Each sequencing must have a parameters field to indicates at least the genome reference for bowtie2, and the genome used (hg38, mm10, ...)!")
-        else:
-            # CUTADAPT is optional
-            if "CUTADAPT" not in config["SEQUENCING"][sequencing_name]["PARAMETERS"]:
-                print(f"The {sequencing_name} seqencing don't list parameters for cutadapt. Using the pipeline default: '-q 20 --pair-filter=any'.")
-                config["SEQUENCING"][sequencing_name]["PARAMETERS"]["CUTADAPT"] = ""
-            
-            # Parameters representing path are not optional
-            parameters_error="""Each sequencing must have a parameters field to indicates at least:
-              - the genome reference for bowtie2 (BOWTIE2_REF)
-              - a bed of blacklisted regions (BLACKLIST_BED)
-              - a file indicating the chromosome size (CHROM_SIZE), see https://hgdownload.cse.ucsc.edu/goldenpath/hg38/bigZips/ for the format.
-              - the genome used, either the .fa file of the reference used to build bowtie2 reference (toplevel.fa for ensembl) or a string such as hg38 or mm10 if the genome was configured in homer with configureHomer.pl (GENOME)
-            """
-            if "BOWTIE2_REF" not in config["SEQUENCING"][sequencing_name]["PARAMETERS"]:
-                raise RuntimeError(parameters_error)
-            if "GENOME" not in config["SEQUENCING"][sequencing_name]["PARAMETERS"]:
-                raise RuntimeError(parameters_error)
-            if "BLACKLIST_BED" not in config["SEQUENCING"][sequencing_name]["PARAMETERS"]:
-                raise RuntimeError(parameters_error)
-            if "CHROM_SIZE" not in config["SEQUENCING"][sequencing_name]["PARAMETERS"]:
-                raise RuntimeError(
-                raise RuntimeError(parameters_error)
-            del parameters_error
         sample_path = Path(sequencing_data["PATH"])
-        
         # FOLDER CREATION
-        if not sample_path.exists():
-            raise RuntimeError(f"The sequencing {str(sequencing_name)} PATH field is not valid. Please check your config file!")
-        (sample_path / "QC/FASTQC/RAW").mkdir(parents=True, exist_ok=True)
-        (sample_path / "QC/FASTQC/TRIMMED").mkdir(parents=True, exist_ok=True)
-        (sample_path / "QC/MULTIQC/RAW").mkdir(parents=True, exist_ok=True)
-        (sample_path / "QC/MULTIQC/TRIMMED").mkdir(parents=True, exist_ok=True)
-        (sample_path / "QC/MULTIQC/STATS").mkdir(parents=True, exist_ok=True)
-        (sample_path / "QC/CUTADAPT").mkdir(parents=True, exist_ok=True)
-        (sample_path / "QC/BOWTIE2").mkdir(parents=True, exist_ok=True)
-        (sample_path / "QC/PICARD").mkdir(parents=True, exist_ok=True)
-        (sample_path / "QC/flagstat").mkdir(parents=True, exist_ok=True)
-        (sample_path / "QC/fragmentLen").mkdir(parents=True, exist_ok=True)
-        (sample_path / "QC/stats").mkdir(parents=True, exist_ok=True)
-        (sample_path / "QC/CORRELATION/").mkdir(parents=True, exist_ok=True)
-        (sample_path / "TRIMMED").mkdir(parents=True, exist_ok=True)
         (sample_path / "BAM").mkdir(parents=True, exist_ok=True)
-        (sample_path / "HOMER/").mkdir(parents=True, exist_ok=True)
         (sample_path / "BED").mkdir(parents=True, exist_ok=True)
         (sample_path / "BEDGRAPH").mkdir(parents=True, exist_ok=True)
+        (sample_path / "HOMER").mkdir(parents=True, exist_ok=True)
+        (sample_path / "QC/BOWTIE2").mkdir(parents=True, exist_ok=True)
+        (sample_path / "QC/CUTADAPT").mkdir(parents=True, exist_ok=True)
+        (sample_path / "QC/FASTQC/RAW").mkdir(parents=True, exist_ok=True)
+        (sample_path / "QC/FASTQC/TRIMMED").mkdir(parents=True, exist_ok=True)
+        (sample_path / "QC/flagstat").mkdir(parents=True, exist_ok=True)
+        (sample_path / "QC/fragmentLen").mkdir(parents=True, exist_ok=True)
+        (sample_path / "QC/MULTIQC/RAW").mkdir(parents=True, exist_ok=True)
+        (sample_path / "QC/MULTIQC/STATS").mkdir(parents=True, exist_ok=True)
+        (sample_path / "QC/MULTIQC/TRIMMED").mkdir(parents=True, exist_ok=True)
+        (sample_path / "TRIMMED").mkdir(parents=True, exist_ok=True)
+        
+        (sample_path / "QC/PICARD").mkdir(parents=True, exist_ok=True)
+        
+        (sample_path / "QC/stats").mkdir(parents=True, exist_ok=True)
+        (sample_path / "QC/CORRELATION").mkdir(parents=True, exist_ok=True)
     
-    # PROJECT CHECK
+    # Check PROJECT field of the configuration file.
     for project_name, project_data in config["PROJECTS"].items():
         if "PROJECT_PATH" not in project_data:
             raise RuntimeError(f"The project {project_name} is missing the 'PROJECT_PATH field! Please add a valid path.")
@@ -127,12 +41,12 @@ onstart:
         else:
             Path(project_data["PROJECT_PATH"]).mkdir(parents=True, exist_ok=True)
         if "TYPE" not in project_data:
-            print(r"""
+            print(f"""
             The project {project_name} don't have a valid 'TYPE' field. Alignment will be realized but not the peak calling.
             Possible value for this field are: ATAC, H3K27AC, H3K27ME3, H2AUB.
             """)
         elif project_data["TYPE"] not in ["ATAC", "H3K27AC", "H3K27ME3", "H2AUB"]:
-            print(r"""
+            print(f"""
             The project {project_name} don't have a valid 'TYPE' field. Alignment will be realized but not the peak calling.
             Possible value for this field are: ATAC, H3K27AC, H3K27ME3, H2AUB.
             """)
@@ -140,11 +54,11 @@ onstart:
             raise RuntimeError(f"The project {project_name} is missing the 'SEQUENCING' field! Please add it.")
         else:
             need_error=False
-            error_message=["Some sequencing listed in the PROJECTS field are not present in the SEQUENCING field"]
+            error_message=["", "Some sequencing listed in the PROJECTS field are not present in the SEQUENCING field"]
             for seq_id in project_data["SEQUENCING"]:
                 if seq_id not in config["SEQUENCING"]:
-                error_message.append(f"The project {project_name} list the sequencing {seq_id} who is not present in the SEQUENCING field of the configuration.")
-                need_error=True
+                    error_message.append(f"The project {project_name} list the sequencing {seq_id} who is not present in the SEQUENCING field of the configuration.")
+                    need_error=True
             if need_error:
                 raise RuntimeError("\n".join(error_message))
             del error_message
@@ -180,6 +94,10 @@ def get_qos_from_time(attempt: int, default_time_min: int)->str:
     # fallback to 'long' if none found
     return suitable_qos or "long"
 
+
+#####################################################
+# SEQUENCING QC, TRIMMING (OPTIONAL), AND ALIGNMENT #
+#####################################################
 
 for sequencing_name, sequencing_data in config["SEQUENCING"].items():
     rule:
@@ -787,7 +705,9 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                         rm {params.bed_clean} {params.bed_fragments} {params.bed_tri} {params.bed_tri2} {params.bedgraph_norm} {params.bedgraph_sort}
                         """
     
-    # After alignment
+    # RULES for after the alignment
+    
+    # Bam summary
     rule:
         name:
             f"multibamsummary_{sequencing_name}"
@@ -812,5 +732,15 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
             plotCorrelation -in {output[0]} -c spearman -p heatmap \
                 --colorMap RdYlBu -o {output[1]}
             """
+
+#####################
+# PROJECTS ANALYSES #
+#####################
+
+# Peak Calling
+
+    
+    
+    
     
     

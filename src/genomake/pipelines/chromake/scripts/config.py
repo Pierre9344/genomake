@@ -710,12 +710,109 @@ def check_sample_files_exist(config_path: str) -> bool:
                 if not os.path.exists(r2_path):
                     warnings.warn(f"Sample '{sample_name}' in sequencing '{seq_name}': R2 file '{r2_path}' does not exist.")
                     all_exist = False
+                    
+            if not r1_path and not r2_path:
+                print(f"Samples {sample_name} is missing both R1 and R2 paths")
 
     return all_exist
 
 
-
-
+def check_config_format(cfg: dict) -> dict:
+    if "SEQUENCING" not in cfg:
+        raise RuntimeError("The configuration file is missing the 'SEQUENCING' field!")
+    if "PROJECTS" not in cfg:
+        raise RuntimeError("The configuration file is missing the 'PROJECTS' field!")
+    if "JOBS" not in cfg:
+        print("Jobs field missing from the configuration file. Adding one with the example default value")
+        cfg["JOBS"] = {
+              "CORES_PER_JOBS": {
+              "FASTQC": 10,
+              "CUTADAPT": 10,
+              "BOWTIE2": 30
+              },
+              "QOS_INFOS": {
+                  "short": {"MaxWall": 2000},
+                  "medium": {"MaxWall": 5000},
+                  "long": {"MaxWall": 15000}
+               }
+        }
+    else:
+        if "CORES_PER_JOBS" not in cfg["JOBS"]:
+            print("Number of cores to use for the jobs is not indicated in the configuration file. Using the pipeline default values")
+            cfg["JOBS"]["CORES_PER_JOBS"] = {
+                "FASTQC": 10,
+                "CUTADAPT": 10,
+                "BOWTIE2": 30,
+                "SAMTOOLS_QC": 5,
+                "MULTIBAMSUMMARY": 5,
+                "BEDTOOLS": 5
+            }
+        else:
+            if "FASTQC" not in cfg["JOBS"]["CORES_PER_JOBS"]:
+                print("Number of cores not indicated for fastqc, defaulting to 10")
+                cfg["JOBS"]["CORES_PER_JOBS"]["FASTQC"] = 10
+            if "CUTADAPT" not in cfg["JOBS"]["CORES_PER_JOBS"]:
+                print("Number of cores not indicated for cutadapt, defaulting to 10")
+                cfg["JOBS"]["CORES_PER_JOBS"]["CUTADAPT"] = 10
+            if "BOWTIE2" not in cfg["JOBS"]["CORES_PER_JOBS"]:
+                print("Number of cores not indicated for bowtie2, defaulting to 30")
+                cfg["JOBS"]["CORES_PER_JOBS"]["BOWTIE2"] = 30
+            if "SAMTOOLS_QC" not in cfg["JOBS"]["CORES_PER_JOBS"]:
+                print("Number of cores not indicated for samtools QC, defaulting to 5")
+                cfg["JOBS"]["CORES_PER_JOBS"]["SAMTOOLS_QC"] = 5
+            if "MULTIBAMSUMMARY" not in cfg["JOBS"]["CORES_PER_JOBS"]:
+                print("Number of cores not indicated for deeptools multiBamSummary rule defaulting to 5")
+                cfg["JOBS"]["CORES_PER_JOBS"]["MULTIBAMSUMMARY"] = 5
+            if "BEDTOOLS" not in cfg["JOBS"]["CORES_PER_JOBS"]:
+                print("Number of cores not indicated for bedtools rule defaulting to 5")
+                cfg["JOBS"]["CORES_PER_JOBS"]["BEDTOOLS"] = 5
+        if "QOS_INFOS" not in cfg["JOBS"]:
+            print("The 'QOS_INFOS' field is missing in the cfg file. Using the example default values to be abble to set the ressources field of the rules. Will be ignored if executor is not set.")
+            cfg["JOBS"]["QOS_INFOS"] = {
+                "short": {"MaxWall": 2000},
+                "medium": {"MaxWall": 5000},
+                "long": {"MaxWall": 15000}
+            }
+        
+    for sequencing_name, sequencing_data in cfg["SEQUENCING"].items():
+        if "PATH" not in sequencing_data:
+            raise RuntimeError(f"The sequencing {sequencing_name} doesn't have a 'PATH' field indicating the absolute path of the project.")
+            
+        if "INPUT" in sequencing_data and len(sequencing_data["INPUT"]) >= 2:
+            first_input = list(sequencing_data["INPUT"].keys())[0]
+            print(
+                f"The {sequencing_name} sequencing list more than one input. ",
+                f"All of them will be sequencded but only the first one '{first_input}' ",
+                "will be used for the samples peak calling."
+            )
+        
+        # PARAMETERS CHECK
+        if "PARAMETERS" not in sequencing_data:
+            raise RuntimeError("Each sequencing must have a parameters field to indicates at least the genome reference for bowtie2, and the genome used (hg38, mm10, ...)!")
+        else:
+            # CUTADAPT is optional
+            if "CUTADAPT" not in cfg["SEQUENCING"][sequencing_name]["PARAMETERS"]:
+                print(f"The {sequencing_name} seqencing don't list parameters for cutadapt. Using the pipeline default: '-q 20 --pair-filter=any'.")
+                cfg["SEQUENCING"][sequencing_name]["PARAMETERS"]["CUTADAPT"] = ""
+            
+            # Parameters representing path are not optional
+            parameters_error="""
+            Each sequencing must have a parameters field to indicates at least:
+              - the genome reference for bowtie2 (BOWTIE2_REF)
+              - a bed of blacklisted regions (BLACKLIST_BED), see https://github.com/Boyle-Lab/Blacklist to download the file corresponding to the genome you use
+              - a file indicating the chromosome size (CHROM_SIZE), see https://hgdownload.cse.ucsc.edu/goldenpath/hg38/bigZips/ to download the one for GRCh38/hg38. UCSC also host the files for other genomes such as mm10.
+              - the genome used, either the .fa file of the reference used to build bowtie2 reference (toplevel.fa for ensembl) or a string such as hg38 or mm10 if the genome was configured in homer with configureHomer.pl (GENOME)
+            """
+            if "BOWTIE2_REF" not in cfg["SEQUENCING"][sequencing_name]["PARAMETERS"]:
+                raise RuntimeError(parameters_error)
+            if "GENOME" not in cfg["SEQUENCING"][sequencing_name]["PARAMETERS"]:
+                raise RuntimeError(parameters_error)
+            if "BLACKLIST_BED" not in cfg["SEQUENCING"][sequencing_name]["PARAMETERS"]:
+                raise RuntimeError(parameters_error)
+            if "CHROM_SIZE" not in cfg["SEQUENCING"][sequencing_name]["PARAMETERS"]:
+                raise RuntimeError(parameters_error)
+            del parameters_error
+    return cfg
 
 
 
