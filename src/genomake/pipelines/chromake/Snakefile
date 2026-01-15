@@ -423,8 +423,8 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
             params:
                 fastqc_outdir=str(Path(sequencing_data["PATH"]) / "QC/FASTQC/TRIMMED/"),
                 multiqc_outdir=str(Path(sequencing_data["PATH"]) / "QC/MULTIQC/TRIMMED/"),
-                fastqc_outdir=str(Path(sequencing_data["PATH"]) / "QC/stats/"),
-                multiqc_outdir=str(Path(sequencing_data["PATH"]) / "QC/MULTIQC/STATS/"),
+                fastqc_outdir2=str(Path(sequencing_data["PATH"]) / "QC/stats/"),
+                multiqc_outdir2=str(Path(sequencing_data["PATH"]) / "QC/MULTIQC/STATS/"),
             resources:
                 mem_mb=lambda wildcards, attempt: 10000 * attempt,
                 runtime=lambda wildcards, attempt: attempt * 60,
