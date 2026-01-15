@@ -4,6 +4,7 @@ The config module of chromake contains functions to read and write the config fi
 """
 
 import pandas as pd
+from pathlib import Path
 import yaml
 import warnings
 import os
@@ -717,11 +718,17 @@ def check_sample_files_exist(config_path: str) -> bool:
     return all_exist
 
 
-def check_config_format(cfg: dict) -> dict:
+def check_config_format(cfg: dict, raise_error: bool = True) -> dict:
     if "SEQUENCING" not in cfg:
-        raise RuntimeError("The configuration file is missing the 'SEQUENCING' field!")
+        if raise_error:
+            raise RuntimeError("The configuration file is missing the 'SEQUENCING' field!")
+        else:
+            print("The configuration file is missing the 'SEQUENCING' field!")
     if "PROJECTS" not in cfg:
-        raise RuntimeError("The configuration file is missing the 'PROJECTS' field!")
+        if raise_error:
+            raise RuntimeError("The configuration file is missing the 'PROJECTS' field!")
+        else:
+            print("The configuration file is missing the 'PROJECTS' field!")
     if "JOBS" not in cfg:
         print("Jobs field missing from the configuration file. Adding one with the example default value")
         cfg["JOBS"] = {
@@ -773,46 +780,108 @@ def check_config_format(cfg: dict) -> dict:
                 "medium": {"MaxWall": 5000},
                 "long": {"MaxWall": 15000}
             }
-        
-    for sequencing_name, sequencing_data in cfg["SEQUENCING"].items():
-        if "PATH" not in sequencing_data:
-            raise RuntimeError(f"The sequencing {sequencing_name} doesn't have a 'PATH' field indicating the absolute path of the project.")
+    if "SEQUENCING" in cfg:
+        for sequencing_name, sequencing_data in cfg["SEQUENCING"].items():
+            if "PATH" not in sequencing_data:
+                if raise_error:
+                    raise RuntimeError(f"The sequencing {sequencing_name} doesn't have a 'PATH' field indicating the absolute path of the project.")
+                else:
+                    print(f"The sequencing {sequencing_name} doesn't have a 'PATH' field indicating the absolute path of the project.")
             
-        if "INPUT" in sequencing_data and len(sequencing_data["INPUT"]) >= 2:
-            first_input = list(sequencing_data["INPUT"].keys())[0]
-            print(
-                f"The {sequencing_name} sequencing list more than one input. ",
-                f"All of them will be sequencded but only the first one '{first_input}' ",
-                "will be used for the samples peak calling."
-            )
-        
-        # PARAMETERS CHECK
-        if "PARAMETERS" not in sequencing_data:
-            raise RuntimeError("Each sequencing must have a parameters field to indicates at least the genome reference for bowtie2, and the genome used (hg38, mm10, ...)!")
-        else:
-            # CUTADAPT is optional
-            if "CUTADAPT" not in cfg["SEQUENCING"][sequencing_name]["PARAMETERS"]:
-                print(f"The {sequencing_name} seqencing don't list parameters for cutadapt. Using the pipeline default: '-q 20 --pair-filter=any'.")
-                cfg["SEQUENCING"][sequencing_name]["PARAMETERS"]["CUTADAPT"] = ""
+            if "INPUT" in sequencing_data and len(sequencing_data["INPUT"]) >= 2:
+                first_input = list(sequencing_data["INPUT"].keys())[0]
+                print(
+                    f"The {sequencing_name} sequencing list more than one input. ",
+                    f"All of them will be sequencded but only the first one '{first_input}' ",
+                    "will be used for the samples peak calling."
+                )
             
-            # Parameters representing path are not optional
-            parameters_error="""
-            Each sequencing must have a parameters field to indicates at least:
-              - the genome reference for bowtie2 (BOWTIE2_REF)
-              - a bed of blacklisted regions (BLACKLIST_BED), see https://github.com/Boyle-Lab/Blacklist to download the file corresponding to the genome you use
-              - a file indicating the chromosome size (CHROM_SIZE), see https://hgdownload.cse.ucsc.edu/goldenpath/hg38/bigZips/ to download the one for GRCh38/hg38. UCSC also host the files for other genomes such as mm10.
-              - the genome used, either the .fa file of the reference used to build bowtie2 reference (toplevel.fa for ensembl) or a string such as hg38 or mm10 if the genome was configured in homer with configureHomer.pl (GENOME)
-            """
-            if "BOWTIE2_REF" not in cfg["SEQUENCING"][sequencing_name]["PARAMETERS"]:
-                raise RuntimeError(parameters_error)
-            if "GENOME" not in cfg["SEQUENCING"][sequencing_name]["PARAMETERS"]:
-                raise RuntimeError(parameters_error)
-            if "BLACKLIST_BED" not in cfg["SEQUENCING"][sequencing_name]["PARAMETERS"]:
-                raise RuntimeError(parameters_error)
-            if "CHROM_SIZE" not in cfg["SEQUENCING"][sequencing_name]["PARAMETERS"]:
-                raise RuntimeError(parameters_error)
-            del parameters_error
-    return cfg
+            # PARAMETERS CHECK
+            if "PARAMETERS" not in sequencing_data:
+                if raise_error:
+                    raise RuntimeError("Each sequencing must have a parameters field to indicates at least the genome reference for bowtie2, and the genome used (hg38, mm10, ...)!")
+                else:
+                    print("Each sequencing must have a parameters field to indicates at least the genome reference for bowtie2, and the genome used (hg38, mm10, ...)!")
+            else:
+                # CUTADAPT is optional
+                if "CUTADAPT" not in cfg["SEQUENCING"][sequencing_name]["PARAMETERS"]:
+                    print(f"The {sequencing_name} seqencing don't list parameters for cutadapt. Using the pipeline default: '-q 20 --pair-filter=any'.")
+                    cfg["SEQUENCING"][sequencing_name]["PARAMETERS"]["CUTADAPT"] = ""
+                
+                # Parameters representing path are not optional
+                parameters_error="""
+                Each sequencing must have a parameters field to indicates at least:
+                  - the genome reference for bowtie2 (BOWTIE2_REF)
+                  - a bed of blacklisted regions (BLACKLIST_BED), see https://github.com/Boyle-Lab/Blacklist to download the file corresponding to the genome you use
+                  - a file indicating the chromosome size (CHROM_SIZE), see https://hgdownload.cse.ucsc.edu/goldenpath/hg38/bigZips/ to download the one for GRCh38/hg38. UCSC also host the files for other genomes such as mm10.
+                  - the genome used, either the .fa file of the reference used to build bowtie2 reference (toplevel.fa for ensembl) or a string such as hg38 or mm10 if the genome was configured in homer with configureHomer.pl (GENOME)
+                """
+                if "BOWTIE2_REF" not in cfg["SEQUENCING"][sequencing_name]["PARAMETERS"]:
+                    if raise_error:
+                        raise RuntimeError(parameters_error)
+                    else:
+                        print(parameters_error)
+                if "GENOME" not in cfg["SEQUENCING"][sequencing_name]["PARAMETERS"]:
+                    if raise_error:
+                        raise RuntimeError(parameters_error)
+                    else:
+                        print(parameters_error)
+                if "BLACKLIST_BED" not in cfg["SEQUENCING"][sequencing_name]["PARAMETERS"]:
+                    if raise_error:
+                        raise RuntimeError(parameters_error)
+                    else:
+                        print(parameters_error)
+                if "CHROM_SIZE" not in cfg["SEQUENCING"][sequencing_name]["PARAMETERS"]:
+                    if raise_error:
+                        raise RuntimeError(parameters_error)
+                    else:
+                        print(parameters_error)
+                del parameters_error
+    
+    # Check PROJECT field of the configuration file.
+    if "PROJECTS" in cfg:
+        for project_name, project_data in cfg["PROJECTS"].items():
+            if "PROJECT_PATH" not in project_data:
+                if raise_error:
+                    raise RuntimeError(f"The project {project_name} is missing the 'PROJECT_PATH field! Please add a valid path.")
+                else:
+                    print(f"The project {project_name} is missing the 'PROJECT_PATH field! Please add a valid path.")
+            elif project_data["PROJECT_PATH"] == "":
+                if raise_error:
+                    raise RuntimeError(f"The project {project_name} 'PROJECT_PATH field is empty! Please add a valid path.")
+                else:
+                    print(f"The project {project_name} 'PROJECT_PATH field is empty! Please add a valid path.")
+            else:
+                Path(project_data["PROJECT_PATH"]).mkdir(parents=True, exist_ok=True)
+            if "TYPE" not in project_data:
+                print(f"""
+                The project {project_name} don't have a valid 'TYPE' field. Alignment will be realized but not the peak calling.
+                Possible value for this field are: ATAC, H3K27AC, H3K27ME3, H2AUB.
+                """)
+            elif project_data["TYPE"] not in ["ATAC", "H3K27AC", "H3K27ME3", "H2AUB"]:
+                print(f"""
+                The project {project_name} don't have a valid 'TYPE' field. Alignment will be realized but not the peak calling.
+                Possible value for this field are: ATAC, H3K27AC, H3K27ME3, H2AUB.
+                """)
+            if "SEQUENCING" not in project_data:
+                if raise_error:
+                    raise RuntimeError(f"The project {project_name} is missing the 'SEQUENCING' field! Please add it.")
+                else:
+                    print(f"The project {project_name} is missing the 'SEQUENCING' field! Please add it.")
+            else:
+                need_error=False
+                error_message=["", "Some sequencing listed in the PROJECTS field are not present in the SEQUENCING field"]
+                for seq_id in project_data["SEQUENCING"]:
+                    if seq_id not in cfg["SEQUENCING"]:
+                        error_message.append(f"The project {project_name} list the sequencing {seq_id} who is not present in the SEQUENCING field of the configuration.")
+                        need_error=True
+                if need_error:
+                    if raise_error:
+                        raise RuntimeError("\n".join(error_message))
+                    else:
+                        print("\n".join(error_message))
+                del error_message
+                del need_error
 
 
 
