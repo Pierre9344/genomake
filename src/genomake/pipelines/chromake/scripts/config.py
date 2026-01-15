@@ -733,7 +733,19 @@ def check_sample_files_exist(config_path: str) -> bool:
     return all_exist
 
 
-def check_config_format(cfg: dict, raise_error: bool = True) -> dict:
+def check_config_format(cfg: dict, raise_error: bool = True):
+    """
+    Create an example genomake/chromake YAML configuration file
+    using the new SEQUENCING / PROJECTS split.
+
+    Parameters
+    ----------
+    cfg : dict
+        A dict object representing a configuration file for the chromake pipeline.
+    raise_error: bool
+        Raise a runtime error or simply print the message.
+    """
+    
     if "SEQUENCING" not in cfg:
         if raise_error:
             raise RuntimeError("The configuration file is missing the 'SEQUENCING' field!")
