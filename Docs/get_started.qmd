@@ -43,9 +43,13 @@ conda create -f genomake.yml -y
 
 # Chromake
 
+## Objectives
+
 The `chromake` pipeline is a pipeline to analyze ChIP-seq (H3K27ac, H3K27me3, and H2Aub marks), and ATAC-seq samples.
 
 This pipeline is a WIP. It currently realize the alignment of the samples, and generate UCSC compatible tracks but don't realize the peak calling.
+
+## Configuration file
 
 To use the pipeline, you need a YAML configuration file. This files must contains 3 fields:
 
@@ -53,12 +57,15 @@ To use the pipeline, you need a YAML configuration file. This files must contain
 - PROJECTS: used to regroup samples of multiple sequencing in a single project for the peak calling. It is recommanded to indicate different paths for different projects.
 - JOBS: information about the number of cores to use for multithreading, and qos (when using an executor like slurm).
 
- You can generate an example with:
+ You can generate an example configuration file with:
 
 ```{.python}
 from genomake.pipelines.chromake.scripts import config as chr_config
 chr_config.create_example_config("test_config.yaml")
+```
+Other functions can be used to convert the configuration file in a samplesheet (excel or csv) or to convert the samplesheet into a configuration file:
 
+```{.python}
 # convert to a samplesheet
 chr_config.create_samplesheet_from_config("test_config.yaml", "test_samplesheet.xlsx", False, True)
 
@@ -129,4 +136,3 @@ with open("test_config2.yaml") as stream:
     config = yaml.safe_load(stream)
 chr_config.check_config_format(config, raise_error=False)
 ```
-
