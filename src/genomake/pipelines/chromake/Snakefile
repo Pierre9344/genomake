@@ -230,7 +230,7 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                     config["JOBS"]["CORES_PER_JOBS"]["BEDTOOLS"]
                 params:
                     blacklist=config["SEQUENCING"][sequencing_name]["PARAMETERS"]["BLACKLIST_BED"],
-                    chromsize=config["SEQUENCING"][sequencing_name]["PARAMETERS"]["CHROM_SIZE"]
+                    chromsize=config["SEQUENCING"][sequencing_name]["PARAMETERS"]["CHROM_SIZE"],
                     bed_clean=str(Path(sequencing_data["PATH"]) / "BED" / (sample_name + "_clean.bed")),
                     bed_fragments=str(Path(sequencing_data["PATH"]) / "BED" / (sample_name + "_fragments.bed")),
                     bed_tri=str(Path(sequencing_data["PATH"]) / "BED" / (sample_name + "_tri.bed")),
@@ -383,7 +383,7 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                         config["JOBS"]["CORES_PER_JOBS"]["BEDTOOLS"]
                     params:
                         blacklist=config["SEQUENCING"][sequencing_name]["PARAMETERS"]["BLACKLIST_BED"],
-                        chromsize=config["SEQUENCING"][sequencing_name]["PARAMETERS"]["CHROM_SIZE"]
+                        chromsize=config["SEQUENCING"][sequencing_name]["PARAMETERS"]["CHROM_SIZE"],
                         bed_clean=str(Path(sequencing_data["PATH"]) / "BED" / (sample_name + "_clean.bed")),
                         bed_fragments=str(Path(sequencing_data["PATH"]) / "BED" / (sample_name + "_fragments.bed")),
                         bed_tri=str(Path(sequencing_data["PATH"]) / "BED" / (sample_name + "_tri.bed")),
@@ -530,7 +530,7 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                     config["JOBS"]["CORES_PER_JOBS"]["BEDTOOLS"]
                 params:
                     blacklist=config["SEQUENCING"][sequencing_name]["PARAMETERS"]["BLACKLIST_BED"],
-                    chromsize=config["SEQUENCING"][sequencing_name]["PARAMETERS"]["CHROM_SIZE"]
+                    chromsize=config["SEQUENCING"][sequencing_name]["PARAMETERS"]["CHROM_SIZE"],
                     bed_clean=str(Path(sequencing_data["PATH"]) / "BED" / (sample_name + "_clean.bed")),
                     bed_fragments=str(Path(sequencing_data["PATH"]) / "BED" / (sample_name + "_fragments.bed")),
                     bed_tri=str(Path(sequencing_data["PATH"]) / "BED" / (sample_name + "_tri.bed")),
@@ -649,7 +649,7 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                         config["JOBS"]["CORES_PER_JOBS"]["BEDTOOLS"]
                     params:
                         blacklist=config["SEQUENCING"][sequencing_name]["PARAMETERS"]["BLACKLIST_BED"],
-                        chromsize=config["SEQUENCING"][sequencing_name]["PARAMETERS"]["CHROM_SIZE"]
+                        chromsize=config["SEQUENCING"][sequencing_name]["PARAMETERS"]["CHROM_SIZE"],
                         bed_clean=str(Path(sequencing_data["PATH"]) / "BED" / (sample_name + "_clean.bed")),
                         bed_fragments=str(Path(sequencing_data["PATH"]) / "BED" / (sample_name + "_fragments.bed")),
                         bed_tri=str(Path(sequencing_data["PATH"]) / "BED" / (sample_name + "_tri.bed")),
