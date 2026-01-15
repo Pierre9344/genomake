@@ -104,7 +104,7 @@ def get_all_fastq_related_paths(cfg: dict, mode: str) -> list:
             for sample_name in sequencing_data["SAMPLES"].keys():
                 res.append(base / "HOMER" / (sample_name + "_UCSC_track.bedGraph"))
             if "INPUT" in sequencing_data:
-                for sample_name in sequencing_data["INPUT"].keyss():
+                for sample_name in sequencing_data["INPUT"].keys():
                     res.append(base / "HOMER" / (sample_name + "_UCSC_track.bedGraph"))  
         elif mode == "bed":
             for sample_name in sequencing_data["SAMPLES"].keys():
@@ -113,7 +113,7 @@ def get_all_fastq_related_paths(cfg: dict, mode: str) -> list:
                 for sample_name in sequencing_data["INPUT"].keys():
                     res.append(base / "BED" / (sample_name + ".bed"))
         elif mode == "bed_sorted":
-            for sample_name in sequencing_data["SAMPLES"].keyss():
+            for sample_name in sequencing_data["SAMPLES"].keys():
                 res.append(base / "BED" / (sample_name + "_sorted.bed"))
             if "INPUT" in sequencing_data:
                 for sample_name in sequencing_data["INPUT"].keys():
