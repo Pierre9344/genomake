@@ -95,7 +95,7 @@ def get_all_fastq_related_paths(cfg: dict, mode: str) -> list:
                 for sample_name in sequencing_data["INPUT"].keys():
                     res.append(base / "BAM" / (sample_name + ".bam"))
         elif mode == "bam_filtered":
-            for sample_name in sequencing_data["SAMPLES"].keys()():
+            for sample_name in sequencing_data["SAMPLES"].keys():
                 res.append(base / "BAM" / (sample_name + "_filtered.bam"))
             if "INPUT" in sequencing_data:
                 for sample_name in sequencing_data["INPUT"].keys():
