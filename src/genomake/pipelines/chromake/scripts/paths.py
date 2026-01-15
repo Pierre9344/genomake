@@ -102,10 +102,10 @@ def get_all_fastq_related_paths(cfg: dict, mode: str) -> list:
                     res.append(base / "BAM" / (sample_name + "_filtered.bam"))
         elif mode == "bedgraph":
             for sample_name in sequencing_data["SAMPLES"].keys():
-                res.append(base / "HOMER" / (sample_name + "_UCSC_track.bedGraph"))
+                res.append(base / "BEDGRAPH" / (sample_name + "_UCSC_track.bedGraph"))
             if "INPUT" in sequencing_data:
                 for sample_name in sequencing_data["INPUT"].keys():
-                    res.append(base / "HOMER" / (sample_name + "_UCSC_track.bedGraph"))  
+                    res.append(base / "BEDGRAPH" / (sample_name + "_UCSC_track.bedGraph"))  
         elif mode == "bed":
             for sample_name in sequencing_data["SAMPLES"].keys():
                 res.append(base / "BED" / (sample_name + ".bed"))
