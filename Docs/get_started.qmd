@@ -43,4 +43,85 @@ conda create -f genomake.yml -y
 
 # Chromake
 
-The `chromake` pipeline is a pipeline
+The `chromake` pipeline is a pipeline to analyze ChIP-seq (H3K27ac, H3K27me3, and H2Aub marks), and ATAC-seq samples.
+
+This pipeline is a WIP. It currently realize the alignment of the samples, and generate UCSC compatible tracks but don't realize the peak calling.
+
+To use the pipeline, you need a YAML configuration file. This files must contains 3 fields:
+
+- SEQUENCING: informations concerning one or more sequencing (global path, samples fastq, adaptor for trimming, genome for the alignment, ...). The PATH indicated for a sequencing will be used to output the QC and bam files
+- PROJECTS: used to regroup samples of multiple sequencing in a single project for the peak calling. It is recommanded to indicate different paths for different projects.
+- JOBS: information about the number of cores to use for multithreading, and qos (when using an executor like slurm).
+
+ You can generate an example with:
+
+```{.python}
+from genomake.pipelines.chromake.scripts import config as chr_config
+chr_config.create_example_config("test_config.yaml")
+
+# convert to a samplesheet
+chr_config.create_samplesheet_from_config("test_config.yaml", "test_samplesheet.xlsx", False, True)
+
+# Convert back to a config file. Sample R1, R2, and Marks can be obtained from the samplesheet.
+# Other informations need to be indicated using the other arguments of the function or to be added manually in the configuration file.
+chr_configg.create_config_from_table(
+    "test_samplesheet.xlsx",
+    "test_config2.yaml",
+    proj_paths = {
+        "ChIP_H3K27AC": "/scratch/.../ChIP_H3K27AC",
+        "ChIP_H3K27ME3": "/scratch/.../ChIP_H3K27ME3",
+        "ChIP_H2AUB": "/scratch/.../ChIP_H2AUB",
+        "ChIP_ATAC": "/scratch/.../ChIP_ATAC"
+    },
+    jobs = {
+        "CORES_PER_JOBS": {
+            "FASTQC": 10,
+            "CUTADAPT": 10,
+            "BOWTIE2": 30,
+            "SAMTOOLS_QC": 5,
+            "MULTIBAMSUMMARY": 5,
+            "BEDTOOLS": 5
+        },
+        "QOS_INFOS": {
+            "short": {"MaxWall": 24 * 60}, # 1 day
+            "medium": {"MaxWall": 3 * 24 * 60}, # 3 days
+            "long": {"MaxWall": 8 * 24 * 60}, # 8 days in minutes
+        },
+    }
+    sequencings = {
+        "MO203": {
+        "PATH": "/scratch/.../MO203/",
+        "R1_ADAPTOR": "AGATCGGAAGAGCACACGTCTGAACTCCAGTCA",
+        "R2_ADAPTOR": "AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT",
+        "PARAMETERS": {
+            "CUTADAPT": "-q 20 --pair-filter=any",
+            "BOWTIE2_REF": "<path to genome reference build for bowtie2>",
+            "BLACKLIST_BED": "<Path to blacklist file in bed format, see https://github.com/Boyle-Lab/Blacklist >",
+            "CHROM_SIZE": "<path to file wih the size of chromosome (can be found on UCSC) >"
+        }
+    },
+    "MO208": {
+        "PATH": "/scratch/.../Pierre_Solomon/MO208/",
+        "R1_ADAPTOR": "AGATCGGAAGAGCACACGTCTGAACTCCAGTCA",
+        "R2_ADAPTOR": "AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT",
+        "PARAMETERS": {
+            "CUTADAPT": "-q 20 --pair-filter=any",
+            "BOWTIE2_REF": "<path to genome reference build for bowtie2>",
+            "BLACKLIST_BED": "<Path to blacklist file in bed format, see https://github.com/Boyle-Lab/Blacklist >",
+            "CHROM_SIZE": "<path to file wih the size of chromosome (can be found on UCSC) >"
+        }
+    },
+    "MO211": {
+        "PATH": "/scratch/.../MO211/",
+        "R1_ADAPTOR": "CTGTCTCTTATACACATCT",
+        "R2_ADAPTOR": "CTGTCTCTTATACACATCT",
+        "PARAMETERS": {
+            "CUTADAPT": "-q 20 --pair-filter=any",
+            "BOWTIE2_REF": "<path to genome reference build for bowtie2>",
+            "BLACKLIST_BED": "<Path to blacklist file in bed format, see https://github.com/Boyle-Lab/Blacklist >",
+            "CHROM_SIZE": "<path to file wih the size of chromosome (can be found on UCSC) >"
+        }
+    }
+})
+```
+

@@ -15,7 +15,7 @@ import os
 #    return str(path).replace("\\", "/")
 
 def create_example_config(
-    filename: str = "config.yaml",
+    filename: str = "test_config.yaml",
 ) :
     """
     Create an example genomake/chromake YAML configuration file
@@ -63,11 +63,14 @@ def create_example_config(
                         "R2": "FASTQ/Input_Batch1_R2_001.fastq.gz",
                     }
                 },
-                "PATH": "/scratch/nautilus/projects/CR2TI_lab/SingleCell/Pierre_Solomon/MO203/",
+                "PATH": "/scratch/.../MO203/",
                 "R1_ADAPTOR": "AGATCGGAAGAGCACACGTCTGAACTCCAGTCA",
                 "R2_ADAPTOR": "AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT",
                 "PARAMETERS": {
-                    "CUTADAPT": "-q 20 --pair-filter=any"
+                    "CUTADAPT": "-q 20 --pair-filter=any",
+                    "BOWTIE2_REF": "<path to genome reference build for bowtie2>",
+                    "BLACKLIST_BED": "<Path to blacklist file in bed format, see https://github.com/Boyle-Lab/Blacklist >",
+                    "CHROM_SIZE": "<path to file wih the size of chromosome (can be found on UCSC) >"
                 }
             },
             "MO208": {
@@ -94,11 +97,14 @@ def create_example_config(
                         "R2": "FASTQ/Input_BATCH2_S2_R2_001.fastq.gz",
                     }
                 },
-                "PATH": "/scratch/nautilus/projects/CR2TI_lab/SingleCell/Pierre_Solomon/MO208/",
+                "PATH": "/scratch/.../Pierre_Solomon/MO208/",
                 "R1_ADAPTOR": "AGATCGGAAGAGCACACGTCTGAACTCCAGTCA",
                 "R2_ADAPTOR": "AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT",
                 "PARAMETERS": {
-                    "CUTADAPT": "-q 20 --pair-filter=any"
+                    "CUTADAPT": "-q 20 --pair-filter=any",
+                    "BOWTIE2_REF": "<path to genome reference build for bowtie2>",
+                    "BLACKLIST_BED": "<Path to blacklist file in bed format, see https://github.com/Boyle-Lab/Blacklist >",
+                    "CHROM_SIZE": "<path to file wih the size of chromosome (can be found on UCSC) >"
                 }
             },
             "MO211": {
@@ -114,11 +120,14 @@ def create_example_config(
                         "TYPE": "ATAC",
                     },
                 },
-                "PATH": "/scratch/nautilus/projects/CR2TI_lab/SingleCell/Pierre_Solomon/MO211/",
+                "PATH": "/scratch/.../MO211/",
                 "R1_ADAPTOR": "CTGTCTCTTATACACATCT",
                 "R2_ADAPTOR": "CTGTCTCTTATACACATCT",
                 "PARAMETERS": {
-                    "CUTADAPT": "-q 20 --pair-filter=any"
+                    "CUTADAPT": "-q 20 --pair-filter=any",
+                    "BOWTIE2_REF": "<path to genome reference build for bowtie2>",
+                    "BLACKLIST_BED": "<Path to blacklist file in bed format, see https://github.com/Boyle-Lab/Blacklist >",
+                    "CHROM_SIZE": "<path to file wih the size of chromosome (can be found on UCSC) >"
                 }
             },
         },
@@ -127,32 +136,35 @@ def create_example_config(
                 "SEQUENCING": ["MO203", "MO208"],
                 "TYPE": "H3K27AC",
                 "MIN_SAMPLES_FOR_PEAKS": 2,
-                "PROJECT_PATH": "/scratch/nautilus/projects/CR2TI_lab/SingleCell/Pierre_Solomon/ChIP_H3K27AC",
+                "PROJECT_PATH": "/scratch/.../ChIP_H3K27AC",
             },
             "ChIP_H3K27ME3": {
                 "SEQUENCING": ["MO203"],
                 "TYPE": "H3K27ME3",
                 "MIN_SAMPLES_FOR_PEAKS": 2,
-                "PROJECT_PATH": "/scratch/nautilus/projects/CR2TI_lab/SingleCell/Pierre_Solomon/ChIP_H3K27ME3",
+                "PROJECT_PATH": "/scratch/.../ChIP_H3K27ME3",
             },
             "ChIP_H2AUB": {
                 "SEQUENCING": ["MO203", "MO208"],
                 "TYPE": "H2AUB",
                 "MIN_SAMPLES_FOR_PEAKS": 2,
-                "PROJECT_PATH": "/scratch/nautilus/projects/CR2TI_lab/SingleCell/Pierre_Solomon/ChIP_H2AUB",
+                "PROJECT_PATH": "/scratch/.../ChIP_H2AUB",
             },
             "ChIP_ATAC": {
                 "SEQUENCING": ["MO211"],
                 "TYPE": "ATAC",
                 "MIN_SAMPLES_FOR_PEAKS": 2,
-                "PROJECT_PATH": "/scratch/nautilus/projects/CR2TI_lab/SingleCell/Pierre_Solomon/ChIP_ATAC",
+                "PROJECT_PATH": "/scratch/.../ChIP_ATAC",
             },
         },
         "JOBS": {
             "CORES_PER_JOBS": {
                 "FASTQC": 10,
                 "CUTADAPT": 10,
-                "BOWTIE2": 30
+                "BOWTIE2": 30,
+                "SAMTOOLS_QC": 5,
+                "MULTIBAMSUMMARY": 5,
+                "BEDTOOLS": 5
             },
             "QOS_INFOS": {
                 "short": {"MaxWall": 24 * 60}, # 1 day
@@ -202,7 +214,10 @@ def update_jobs(config_path: str, jobs: dict) -> None:
         "CORES_PER_JOBS": {
             "FASTQC": 10,
             "CUTADAPT": 10,
-            "BOWTIE2": 30
+            "BOWTIE2": 30,
+            "SAMTOOLS_QC": 5,
+            "MULTIBAMSUMMARY": 5,
+            "BEDTOOLS": 5
         },
         "QOS_INFOS": {
             "short": {"MaxWall": 2000},
