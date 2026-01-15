@@ -4,10 +4,10 @@ from genomake.pipelines.chromake.scripts import paths as chr_paths
 from genomake.pipelines.chromake.scripts import config as chr_config
 import re
 
+# check the configuration file, and modify it or raise runtime error if needed
+chr_config.check_config_format(config)
+
 onstart:
-    # check the configuration file, and modify it or raise runtime error if needed
-    chr_config.check_config_format(config)
-    
     # Create folder for the pipelines outputs
     for sequencing_name, sequencing_data in config["SEQUENCING"].items():
         sample_path = Path(sequencing_data["PATH"])
