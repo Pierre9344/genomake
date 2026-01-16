@@ -5,7 +5,9 @@
 </a>
 
 
-Genomake (genomic make) is a python package to analyze genomic data using snakemake pipeline.
+Genomake (genomic make) is a python package to analyze genomic data.
+
+This package is a WIP.
 
 See the [documentation](https://pierre9344.github.io/genomake/) for geting started.
 
