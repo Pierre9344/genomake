@@ -35,7 +35,7 @@ Documentation was generated using [quartodoc](https://machow.github.io/quartodoc
 ```{.bash}
 cd <path to genomake base folder>
 pip install .
-cd Docs
+cd docs
 quartodoc build
 quarto render .
 ```
