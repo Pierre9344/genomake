@@ -1,7 +1,11 @@
 # About genomake
 
+<a href="https://pierre9344.github.io/genomake/l"><img src="docs_source/logo.png" align="right" height="138" /></a>
+
+
 Genomake (genomic make) is a python package to analyze genomic data using snakemake pipeline.
 
+See the [documentation](https://pierre9344.github.io/genomake/) for geting started.
 
 # Current pipeline
 
@@ -27,16 +31,4 @@ Steps realized:
     4. Peak calling (using macs2).
     5. Read count (bedtools and samtools) /!\ WIP /!\
     
-
-# Documentation
-
-Documentation was generated using [quartodoc](https://machow.github.io/quartodoc/get-started/overview.html). While there is no website currently, you can access it by downloading the project from github then go into the Docs folder and launch the commands next:
-
-```{.bash}
-cd <path to genomake base folder>
-pip install .
-cd docs
-quartodoc build
-quarto render .
-```
 
