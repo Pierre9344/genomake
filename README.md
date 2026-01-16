@@ -25,4 +25,18 @@ Steps realized:
     2. QC (fastqc and multiqc) of raw and trimmed fastq files.
     3. Alignment on genome (using bowtie2).
     4. Peak calling (using macs2).
-    5. Read count (bedtools and samtools)
+    5. Read count (bedtools and samtools) /!\ WIP /!\
+    
+
+# Documentation
+
+Documentation was generated using [quartodoc](https://machow.github.io/quartodoc/get-started/overview.html). While there is no website currently, you can access it by downloading the project from github then go into the Docs folder and launch the commands next:
+
+```{.bash}
+cd <path to genomake base folder>
+pip install .
+cd Docs
+quartodoc build
+quarto render .
+```
+
