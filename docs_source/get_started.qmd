@@ -146,6 +146,34 @@ with open("test_config2.yaml") as stream:
 chr_config.check_config_format(config, raise_error=False)
 ```
 
+## Launching the pipeline
+
+Once the configuration file is created, chromake can be launched using the CLI included in genomake:
+
+```{.bash}
+genomake chromake -c ./config.yaml --cores 250 --jobs 10
+```
+
+If you need to:
+
+- use an executor
+
+- do a dry run
+
+- unlock the directory
+
+Then you can use the `--others-snakemake` argument. Here an example for the slurm executor:
+
+```{.bash}
+genomake chromake -c ./config.yaml --cores 250 --local-cores 1 --jobs 8 \
+   --others-snakemake "--executor slurm --default-resources \
+   slurm_account=<your_slurm_account> clusters=<name_cluster_for_computation> --slurm-logdir \
+   ./logs --slurm-keep-successful-logs --slurm-delete-logfiles-older-than 0 \
+   --rerun-incomplete"
+```
+
+You can check the final command without launching it using the `-p` argument of `genomake chromake`.
+
 ## Outputs
 
 The outputs of chromake will be placed in the directories of the sequencings (trimmed fastq, qc, bam, bedGraph track) or the directories of the projects (bed resulting from the peak calling).
