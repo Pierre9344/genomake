@@ -181,13 +181,6 @@
     "text": "Parameters\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\n--config-path, -c\nstr\nPath to the YAML configuration file describing samples, references, and pipeline parameters. See genomake.pipelines.chromake.scripts.config.create_example_config() for an example.\nrequired\n\n\n--jobs, -j\nint\nMaximum number of Snakemake jobs to run concurrently.\n5\n\n\n--cores\nint\nMaximum number of CPU cores used in parallel (Snakemake --cores).\n150\n\n\n--local-cores\nint\nIn cluster/cloud mode, use at most N cores of the host machine in parallel (default: number of CPU cores of the host). The cores are used to execute local rules. This option is ignored when not in cluster/cloud mode. (Snakemake --local-cores).\n1\n\n\n--others-snakemake\nstr\nAdditional arguments passed verbatim to Snakemake (e.g. executor, SLURM options).\n\"\"\n\n\n--print-only, -p\nflag\nPrint the generated Snakemake command and exit without executing the workflow.\nFalse"
   },
   {
-    "objectID": "cli.html#returns",
-    "href": "cli.html#returns",
-    "title": "genomake CLI",
-    "section": "Returns",
-    "text": "Returns\n\n\n\nName\nType\nDescription\n\n\n\n\n\nint\nExit status of the Snakemake execution."
-  },
-  {
     "objectID": "cli.html#examples",
     "href": "cli.html#examples",
     "title": "genomake CLI",

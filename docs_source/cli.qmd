@@ -59,13 +59,6 @@ This command wraps a Snakemake workflow and exposes common resource-management o
 
 ------------------------------------------------------------------------
 
-## Returns
-
-| Name | Type  | Description                             |
-|------|-------|-----------------------------------------|
-|      | `int` | Exit status of the Snakemake execution. |
-
-------------------------------------------------------------------------
 
 ## Examples
 
