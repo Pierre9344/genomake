@@ -270,7 +270,7 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                     name:
                         f"cutadapt_{sequencing_name}_{sample_name}"
                     input:
-                        str(Path(sequencing_data["PATH"]) / sample_data["R1"]), 
+                        str(Path(sequencing_data["PATH"]) / sample_data["R1"]),
                         str(Path(sequencing_data["PATH"]) / sample_data["R2"]),
                     output:
                         str(Path(sequencing_data["PATH"]) / "TRIMMED/" / Path(sample_data["R1"]).name),
