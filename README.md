@@ -1,9 +1,11 @@
 # About genomake
 
 <a href="https://pierre9344.github.io/genomake/">
-  <img src="docs_source/logo.png" align="right" height="138"
-       style="background-color: white; display: inline-block;" />
+  <div style="background-color: white; display: inline-block;">
+    <img src="docs_source/logo.png" align="right" height="138" />
+  </div>
 </a>
+
 
 Genomake (genomic make) is a python package to analyze genomic data using snakemake pipeline.
 
