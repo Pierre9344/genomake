@@ -40,7 +40,7 @@ rule all:
         *chr_paths.get_all_fastq_related_paths(config, "cutadapt"),
         *chr_paths.get_all_fastq_related_paths(config, "fastqc_trimmed"),
         *chr_paths.get_all_fastq_related_paths(config, "multiqc_trimmed"),
-        *chr_paths.get_all_fastq_related_paths(config, "multiqc_stats"),
+        *chr_paths.get_all_fastq_related_paths(config, "multiqc_bam"),
         *chr_paths.get_all_fastq_related_paths(config, "bam_filtered_coord"),
         *chr_paths.get_all_fastq_related_paths(config, "bam_filtered_name"),
         *chr_paths.get_all_fastq_related_paths(config, "bedgraph"),
@@ -433,7 +433,7 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                 *chr_paths.get_sequencing_fastq_related_paths(config, sequencing_name, "flagstat"),
             output:
                 chr_paths.get_sequencing_fastq_related_paths(config, sequencing_name, "multiqc_trimmed"),
-                chr_paths.get_sequencing_fastq_related_paths(config, sequencing_name, "multiqc_stats"),
+                chr_paths.get_sequencing_fastq_related_paths(config, sequencing_name, "multiqc_bam"),
             threads:
                 1,
             params:
@@ -709,7 +709,7 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                 *chr_paths.get_sequencing_fastq_related_paths(config, sequencing_name, "flagstat"),
                 *chr_paths.get_sequencing_fastq_related_paths(config, sequencing_name, "stats"),
             output:
-                chr_paths.get_sequencing_fastq_related_paths(config, sequencing_name, "multiqc_stats"),
+                chr_paths.get_sequencing_fastq_related_paths(config, sequencing_name, "multiqc_bam"),
             threads:
                 1,
             params:
