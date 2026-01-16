@@ -66,7 +66,7 @@ def get_all_fastq_related_paths(cfg: dict, mode: str) -> list:
         elif mode == "multiqc_trimmed":
             res.append(base / "QC/MULTIQC//Trimmed_fastq.html")
         elif mode == "multiqc_bam":
-            res.appen(base / "QC/MULTIQC/Bam_report.html")
+            res.append(base / "QC/MULTIQC/Bam_report.html")
         elif mode == "cutadapt":
             for sample in sequencing_data.get("SAMPLES", {}).values():
                 if sample["R1"]:
