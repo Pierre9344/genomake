@@ -17,7 +17,7 @@ See the [documentation](https://pierre9344.github.io/genomake/) for geting start
 
 Chromake is a pipeline to analyze ATAC-seq and ChIP-seq experiment.
 
-It currently supports the epigenetic marks H3K27Ac, H3K27me3, and H2Aub (H2A Ubiquitination):
+It will supports peak calling for the epigenetic marks H3K27Ac, H3K27me3, and H2Aub (H2A Ubiquitination) and for ATAC-seq experiment:
 
 | Experiment 	| Epigenetic mark 	| Full name                                                                             	| Config recognized names 	|
 |------------	|-----------------	|---------------------------------------------------------------------------------------	|-------------------------	|
