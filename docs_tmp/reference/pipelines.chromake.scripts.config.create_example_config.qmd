@@ -1,0 +1,22 @@
+# pipelines.chromake.scripts.config.create_example_config { #genomake.pipelines.chromake.scripts.config.create_example_config }
+
+```python
+pipelines.chromake.scripts.config.create_example_config(
+    filename='test_config.yaml',
+)
+```
+
+Create an example genomake/chromake YAML configuration file
+using the new SEQUENCING / PROJECTS split.
+
+## Parameters {.doc-section .doc-section-parameters}
+
+| Name     | Type   | Description                                 | Default              |
+|----------|--------|---------------------------------------------|----------------------|
+| filename | str    | Filename to use if `output` is a directory. | `'test_config.yaml'` |
+
+## Returns {.doc-section .doc-section-returns}
+
+| Name   | Type   | Description                                  |
+|--------|--------|----------------------------------------------|
+|        | str    | Path to the written YAML configuration file. |

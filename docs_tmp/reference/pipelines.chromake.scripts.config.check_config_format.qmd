@@ -1,0 +1,15 @@
+# pipelines.chromake.scripts.config.check_config_format { #genomake.pipelines.chromake.scripts.config.check_config_format }
+
+```python
+pipelines.chromake.scripts.config.check_config_format(cfg, raise_error=True)
+```
+
+Create an example genomake/chromake YAML configuration file
+using the new SEQUENCING / PROJECTS split.
+
+## Parameters {.doc-section .doc-section-parameters}
+
+| Name        | Type   | Description                                                                | Default    |
+|-------------|--------|----------------------------------------------------------------------------|------------|
+| cfg         | dict   | A dict object representing a configuration file for the chromake pipeline. | _required_ |
+| raise_error | bool   | Raise a runtime error or simply print the message.                         | `True`     |

@@ -1,0 +1,17 @@
+# pipelines.chromake.scripts.config.remove_sequencing { #genomake.pipelines.chromake.scripts.config.remove_sequencing }
+
+```python
+pipelines.chromake.scripts.config.remove_sequencing(
+    config_path,
+    sequencing_name,
+)
+```
+
+Remove an entire sequencing project from the YAML config.
+
+## Parameters {.doc-section .doc-section-parameters}
+
+| Name            | Type   | Description                               | Default    |
+|-----------------|--------|-------------------------------------------|------------|
+| config_path     | str    | Path to the YAML config file.             | _required_ |
+| sequencing_name | str    | Name of the sequencing project to remove. | _required_ |

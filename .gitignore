@@ -207,11 +207,11 @@ marimo/_lsp/
 __marimo__/
 
 # Documentation
-docs_tmp/.Rproj.user/
-docs_tmp/.quarto/
-docs_tmp/_site/
-docs_tmp/reference/
-docs_tmp/.Rhistory
-docs_tmp/_extensions/
-docs_tmp/quartodoc_genomake.Rproj
+docs/.Rproj.user/
+docs/.quarto/
+docs/_site/
+docs/reference/
+docs/.Rhistory
+docs/_extensions/
+docs/quartodoc_genomake.Rproj
 .Rproj.user

@@ -1,0 +1,40 @@
+# pipelines.chromake.scripts.config.update_jobs { #genomake.pipelines.chromake.scripts.config.update_jobs }
+
+```python
+pipelines.chromake.scripts.config.update_jobs(config_path, jobs)
+```
+
+Update or add the JOBS section in an existing YAML config.
+
+CORES_PER_JOBS: number of cpu cores to use for each jobs (>=1)
+
+QOS_INFOS: if using an executor like slurm, indicate the name of the qos (e.g. short), and the associated MaxWall in minutes.
+
+## Parameters {.doc-section .doc-section-parameters}
+
+| Name        | Type   | Description                                                                                    | Default    |
+|-------------|--------|------------------------------------------------------------------------------------------------|------------|
+| config_path | str    | Path to the YAML config file.                                                                  | _required_ |
+| jobs        | dict   | Dictionary containing JOBS information to update. Can be a full replacement or partial update. | _required_ |
+
+## Example {.doc-section .doc-section-example}
+
+
+```{.python}
+jobs_update = {
+    "CORES_PER_JOBS": {
+        "FASTQC": 10,
+        "CUTADAPT": 10,
+        "BOWTIE2": 30,
+        "SAMTOOLS_QC": 5,
+        "MULTIBAMSUMMARY": 5,
+        "BEDTOOLS": 5
+    },
+    "QOS_INFOS": {
+        "short": {"MaxWall": 2000},
+        "medium": {"MaxWall": 5000},
+        "long": {"MaxWall": 15000} 
+    }
+}
+update_jobs("config.yaml", jobs_update)
+```

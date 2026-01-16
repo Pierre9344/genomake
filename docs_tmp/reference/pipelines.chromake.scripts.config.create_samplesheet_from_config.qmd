@@ -1,0 +1,28 @@
+# pipelines.chromake.scripts.config.create_samplesheet_from_config { #genomake.pipelines.chromake.scripts.config.create_samplesheet_from_config }
+
+```python
+pipelines.chromake.scripts.config.create_samplesheet_from_config(
+    config_path,
+    output_path,
+    strand_columns=False,
+    excel=True,
+)
+```
+
+Create a samplesheet table (CSV or Excel) from a YAML config, resolving relative paths
+by adding the sequencing project path. Includes both SAMPLES and INPUTS.
+
+## Parameters {.doc-section .doc-section-parameters}
+
+| Name           | Type   | Description                                                                                                                                                                                        | Default    |
+|----------------|--------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------|
+| config_path    | str    | Path to the YAML config file.                                                                                                                                                                      | _required_ |
+| output_path    | str    | Path to save the generated table (CSV by default; Excel if excel=True).                                                                                                                            | _required_ |
+| strand_columns | bool   | If True, each strand (R1, R2) PATH will be a separate column (wide format); if False, each strand will be in separate rows and a STRAND columns will be added to differentiate them (long format). | `False`    |
+| excel          | bool   | If True, save as Excel (.xlsx). Otherwise, save as CSV.                                                                                                                                            | `True`     |
+
+## Returns {.doc-section .doc-section-returns}
+
+| Name   | Type   | Description                             |
+|--------|--------|-----------------------------------------|
+|        | str    | Path to the generated samplesheet file. |

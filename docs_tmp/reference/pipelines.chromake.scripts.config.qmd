@@ -1,0 +1,237 @@
+# pipelines.chromake.scripts.config { #genomake.pipelines.chromake.scripts.config }
+
+`pipelines.chromake.scripts.config`
+
+The config module of chromake contains functions to read and write the config file of the chromake pipeline.
+
+## Functions
+
+| Name | Description |
+| --- | --- |
+| [check_config_format](#genomake.pipelines.chromake.scripts.config.check_config_format) | Create an example genomake/chromake YAML configuration file |
+| [check_project_and_sequencing](#genomake.pipelines.chromake.scripts.config.check_project_and_sequencing) | Ensures that projects with no associated sequencing samples are removed from the config, |
+| [check_sample_files_exist](#genomake.pipelines.chromake.scripts.config.check_sample_files_exist) | Check if all R1 and R2 FASTQ files listed in the config exist. |
+| [create_config_from_table](#genomake.pipelines.chromake.scripts.config.create_config_from_table) | Create a YAML config from a table. Supports SAMPLES and optional INPUT files. |
+| [create_example_config](#genomake.pipelines.chromake.scripts.config.create_example_config) | Create an example genomake/chromake YAML configuration file |
+| [create_samplesheet_from_config](#genomake.pipelines.chromake.scripts.config.create_samplesheet_from_config) | Create a samplesheet table (CSV or Excel) from a YAML config, resolving relative paths |
+| [remove_samples](#genomake.pipelines.chromake.scripts.config.remove_samples) | Remove specific samples from a project in the YAML config. |
+| [remove_sequencing](#genomake.pipelines.chromake.scripts.config.remove_sequencing) | Remove an entire sequencing project from the YAML config. |
+| [update_jobs](#genomake.pipelines.chromake.scripts.config.update_jobs) | Update or add the JOBS section in an existing YAML config. |
+
+### check_config_format { #genomake.pipelines.chromake.scripts.config.check_config_format }
+
+```python
+pipelines.chromake.scripts.config.check_config_format(cfg, raise_error=True)
+```
+
+Create an example genomake/chromake YAML configuration file
+using the new SEQUENCING / PROJECTS split.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name        | Type   | Description                                                                | Default    |
+|-------------|--------|----------------------------------------------------------------------------|------------|
+| cfg         | dict   | A dict object representing a configuration file for the chromake pipeline. | _required_ |
+| raise_error | bool   | Raise a runtime error or simply print the message.                         | `True`     |
+
+### check_project_and_sequencing { #genomake.pipelines.chromake.scripts.config.check_project_and_sequencing }
+
+```python
+pipelines.chromake.scripts.config.check_project_and_sequencing(config)
+```
+
+Ensures that projects with no associated sequencing samples are removed from the config,
+and removes empty sequencing projects, while making sure the mark is considered in the filtering process.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type   | Description                           | Default    |
+|--------|--------|---------------------------------------|------------|
+| config | dict   | Loaded YAML config (as a dictionary). | _required_ |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type   | Description                |
+|--------|--------|----------------------------|
+|        | dict   | Updated config dictionary. |
+
+### check_sample_files_exist { #genomake.pipelines.chromake.scripts.config.check_sample_files_exist }
+
+```python
+pipelines.chromake.scripts.config.check_sample_files_exist(config_path)
+```
+
+Check if all R1 and R2 FASTQ files listed in the config exist.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name        | Type   | Description                   | Default    |
+|-------------|--------|-------------------------------|------------|
+| config_path | str    | Path to the YAML config file. | _required_ |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type   | Description                                         |
+|--------|--------|-----------------------------------------------------|
+|        | bool   | True if all R1 and R2 files exist, False otherwise. |
+
+### create_config_from_table { #genomake.pipelines.chromake.scripts.config.create_config_from_table }
+
+```python
+pipelines.chromake.scripts.config.create_config_from_table(
+    table_path,
+    output_path,
+    proj_paths,
+    jobs=None,
+    sequencings=None,
+)
+```
+
+Create a YAML config from a table. Supports SAMPLES and optional INPUT files.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name        | Type   | Description                                                            | Default    |
+|-------------|--------|------------------------------------------------------------------------|------------|
+| table_path  | str    | Path to the input CSV or Excel table.                                  | _required_ |
+| output_path | str    | Path to write the YAML config.                                         | _required_ |
+| proj_paths  | dict   | Dictionary of project_name -> project_path.                            | _required_ |
+| jobs        | dict   | Default JOBS settings (CORES_PER_JOBS, QOS_INFOS).                     | `None`     |
+| sequencings | dict   | Dictionary of sequencings informations (PATH, R1_ADAPTOR, R2_ADAPTOR). | `None`     |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type   | Description                           |
+|--------|--------|---------------------------------------|
+|        | str    | Path to the written YAML config file. |
+
+### create_example_config { #genomake.pipelines.chromake.scripts.config.create_example_config }
+
+```python
+pipelines.chromake.scripts.config.create_example_config(
+    filename='test_config.yaml',
+)
+```
+
+Create an example genomake/chromake YAML configuration file
+using the new SEQUENCING / PROJECTS split.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name     | Type   | Description                                 | Default              |
+|----------|--------|---------------------------------------------|----------------------|
+| filename | str    | Filename to use if `output` is a directory. | `'test_config.yaml'` |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type   | Description                                  |
+|--------|--------|----------------------------------------------|
+|        | str    | Path to the written YAML configuration file. |
+
+### create_samplesheet_from_config { #genomake.pipelines.chromake.scripts.config.create_samplesheet_from_config }
+
+```python
+pipelines.chromake.scripts.config.create_samplesheet_from_config(
+    config_path,
+    output_path,
+    strand_columns=False,
+    excel=True,
+)
+```
+
+Create a samplesheet table (CSV or Excel) from a YAML config, resolving relative paths
+by adding the sequencing project path. Includes both SAMPLES and INPUTS.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name           | Type   | Description                                                                                                                                                                                        | Default    |
+|----------------|--------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------|
+| config_path    | str    | Path to the YAML config file.                                                                                                                                                                      | _required_ |
+| output_path    | str    | Path to save the generated table (CSV by default; Excel if excel=True).                                                                                                                            | _required_ |
+| strand_columns | bool   | If True, each strand (R1, R2) PATH will be a separate column (wide format); if False, each strand will be in separate rows and a STRAND columns will be added to differentiate them (long format). | `False`    |
+| excel          | bool   | If True, save as Excel (.xlsx). Otherwise, save as CSV.                                                                                                                                            | `True`     |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type   | Description                             |
+|--------|--------|-----------------------------------------|
+|        | str    | Path to the generated samplesheet file. |
+
+### remove_samples { #genomake.pipelines.chromake.scripts.config.remove_samples }
+
+```python
+pipelines.chromake.scripts.config.remove_samples(
+    config_path,
+    sequencing_name,
+    samples,
+)
+```
+
+Remove specific samples from a project in the YAML config.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name            | Type        | Description                                 | Default    |
+|-----------------|-------------|---------------------------------------------|------------|
+| config_path     | str         | Path to the YAML config file.               | _required_ |
+| sequencing_name | str         | Name of the project containing the samples. | _required_ |
+| samples         | list of str | List of sample names to remove.             | _required_ |
+
+### remove_sequencing { #genomake.pipelines.chromake.scripts.config.remove_sequencing }
+
+```python
+pipelines.chromake.scripts.config.remove_sequencing(
+    config_path,
+    sequencing_name,
+)
+```
+
+Remove an entire sequencing project from the YAML config.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name            | Type   | Description                               | Default    |
+|-----------------|--------|-------------------------------------------|------------|
+| config_path     | str    | Path to the YAML config file.             | _required_ |
+| sequencing_name | str    | Name of the sequencing project to remove. | _required_ |
+
+### update_jobs { #genomake.pipelines.chromake.scripts.config.update_jobs }
+
+```python
+pipelines.chromake.scripts.config.update_jobs(config_path, jobs)
+```
+
+Update or add the JOBS section in an existing YAML config.
+
+CORES_PER_JOBS: number of cpu cores to use for each jobs (>=1)
+
+QOS_INFOS: if using an executor like slurm, indicate the name of the qos (e.g. short), and the associated MaxWall in minutes.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name        | Type   | Description                                                                                    | Default    |
+|-------------|--------|------------------------------------------------------------------------------------------------|------------|
+| config_path | str    | Path to the YAML config file.                                                                  | _required_ |
+| jobs        | dict   | Dictionary containing JOBS information to update. Can be a full replacement or partial update. | _required_ |
+
+#### Example {.doc-section .doc-section-example}
+
+
+```{.python}
+jobs_update = {
+    "CORES_PER_JOBS": {
+        "FASTQC": 10,
+        "CUTADAPT": 10,
+        "BOWTIE2": 30,
+        "SAMTOOLS_QC": 5,
+        "MULTIBAMSUMMARY": 5,
+        "BEDTOOLS": 5
+    },
+    "QOS_INFOS": {
+        "short": {"MaxWall": 2000},
+        "medium": {"MaxWall": 5000},
+        "long": {"MaxWall": 15000} 
+    }
+}
+update_jobs("config.yaml", jobs_update)
+```
