@@ -21,6 +21,8 @@ website:
         file: get_started.qmd
       - text: "Reference"
         file: reference/index.qmd
+      - text: "Command Line Interface"
+        file: cli.qmd
     right:
       - icon: github
         href: https://github.com/Pierre9344/genomake
@@ -43,6 +45,7 @@ website:
 format:
   html:
      sidebar: true
+     embed-resources: true
      css:
        - styles.css
     

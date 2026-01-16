@@ -40,7 +40,7 @@ def _cmd_chromake_pipeline(args):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="genomake CLI: pipelines to analyze genomic sequencing data"
+        description="genomake CLI: pipelines to analyze genomic data"
     )
     
     # Subcommands
@@ -73,7 +73,7 @@ def main():
     # --executor slurm --default-resources --slurm-delete-logfiles-older-than 0 --slurm-logdir "logs"
     parser_chromake.add_argument(
         "--print-only", "-p", action="store_true", default=False,
-        help="Only print the final snakemake command. Default to 5"
+        help="Only print the final snakemake command and exit without executing the pipeline."
     )
     parser_chromake.set_defaults(func=_cmd_chromake_pipeline)
 

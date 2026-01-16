@@ -1,0 +1,92 @@
+---
+title: "genomake CLI"
+---
+
+# genomake
+
+```         
+genomake [-h] {chromake,...} ...
+```
+
+Command-line interface for **genomake**, a python package to analyze genomic sequencing data.
+
+------------------------------------------------------------------------
+
+## Commands
+
+| Command | Description |
+|----------------------------|--------------------------------------------|
+| `chromake` | Run the chromake pipeline to align ChIP-seq and ATAC-seq data and identify enriched peaks. |
+| *(future)* | Additional pipelines will be added in future releases. |
+
+------------------------------------------------------------------------
+
+## Global options
+
+| Name           | Type | Description                 |
+|----------------|------|-----------------------------|
+| `-h`, `--help` | flag | Show help message and exit. |
+
+------------------------------------------------------------------------
+
+# genomake chromake
+
+```         
+genomake chromake \
+  --config-path CONFIG_PATH \
+  [--jobs JOBS] \
+  [--cores CORES] \
+  [--local-cores LOCAL_CORES] \
+  [--others-snakemake OTHERS_SNAKEMAKE] \
+  [--print-only]
+```
+
+Run the **chromake** pipeline to align ChIP-seq and ATAC-seq data and identify enriched peaks.\
+This command wraps a Snakemake workflow and exposes common resource-management options.
+
+------------------------------------------------------------------------
+
+## Parameters
+
+| Name | Type | Description | Default |
+|-----------------|-----------------|-----------------------|-----------------|
+| `--config-path`, `-c` | `str` | Path to the YAML configuration file describing samples, references, and pipeline parameters. See `genomake.pipelines.chromake.scripts.config.create_example_config()` for an example. | *required* |
+| `--jobs`, `-j` | `int` | Maximum number of Snakemake jobs to run concurrently. | `5` |
+| `--cores` | `int` | Maximum number of CPU cores used in parallel (Snakemake `--cores`). | `150` |
+| `--local-cores` | `int` | In cluster/cloud mode, use at most N cores of the host machine in parallel (default: number of CPU cores of the host). The cores are used to execute local rules. This option is ignored when not in cluster/cloud mode. (Snakemake `--local-cores`). | `1` |
+| `--others-snakemake` | `str` | Additional arguments passed verbatim to Snakemake (e.g. executor, SLURM options). | `""` |
+| `--print-only`, `-p` | `flag` | Print the generated Snakemake command and exit without executing the workflow. | `False` |
+
+------------------------------------------------------------------------
+
+## Returns
+
+| Name | Type  | Description                             |
+|------|-------|-----------------------------------------|
+|      | `int` | Exit status of the Snakemake execution. |
+
+------------------------------------------------------------------------
+
+## Examples
+
+Run the pipeline locally:
+
+```         
+genomake chromake -c config.yaml
+```
+
+Run on a SLURM cluster:
+
+```         
+genomake chromake \
+  -c config.yaml \
+  --jobs 8 \
+  --cores 250 \
+  --others-snakemake "--executor slurm --default-resources slurm_account=singlecell"
+```
+
+Print the Snakemake command without running it:
+
+```         
+genomake chromake -c config.yaml --print-only
+```
