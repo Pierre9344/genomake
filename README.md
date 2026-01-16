@@ -1,9 +1,7 @@
 # About genomake
 
 <a href="https://pierre9344.github.io/genomake/">
-  <div style="background-color: white; display: inline-block;">
-    <img src="docs_source/logo.png" align="right" height="138" />
-  </div>
+    <img src="docs_source/logo.png" align="right" height="138" style="background-color: white;" />
 </a>
 
 
