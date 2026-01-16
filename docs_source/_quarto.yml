@@ -1,6 +1,6 @@
 project:
   type: website
-  output-dir: _site
+  output-dir: ../docs
 
 # tell quarto to read the generated sidebar
 #metadata-files:
