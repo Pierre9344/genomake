@@ -143,10 +143,10 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
             
             rule:
                 name:
-                    f"bowtie2_{sequencing_name}_{sample_name}"
+                    f"bowtie2_trimmed_{sequencing_name}_{sample_name}"
                 input:
-                    str(Path(sequencing_data["PATH"]) / sample_data["R1"]),
-                    str(Path(sequencing_data["PATH"]) / sample_data["R2"]),
+                    str(Path(sequencing_data["PATH"]) / "TRIMMED/" / Path(sample_data["R1"]).name),
+                    str(Path(sequencing_data["PATH"]) / "TRIMMED/" / Path(sample_data["R2"]).name),
                 output:
                     str(Path(sequencing_data["PATH"]) / "QC/fragmentLen" / (sample_name + "_fragmentLen.txt")),
                     str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + "_chrheader.bam")),
@@ -228,7 +228,7 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
             
             rule:
                 name:
-                    f"bedtools_{sequencing_name}_{sample_name}"
+                    f"bedtools_trimmed_{sequencing_name}_{sample_name}"
                 input:
                     str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + "_filtered.namesort.bam")),
                 output:
@@ -303,7 +303,7 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                 
                 rule:
                     name:
-                        f"bowtie2_{sequencing_name}_{sample_name}"
+                        f"bowtie2_trimmed_{sequencing_name}_{sample_name}"
                     input:
                         str(Path(sequencing_data["PATH"]) / sample_data["R1"]),
                         str(Path(sequencing_data["PATH"]) / sample_data["R2"]),
@@ -388,7 +388,7 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                 
                 rule:
                     name:
-                        f"bedtools_{sequencing_name}_{sample_name}"
+                        f"bedtools_trimmed_{sequencing_name}_{sample_name}"
                     input:
                         str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + "_filtered.namesort.bam")),
                     output:
@@ -456,7 +456,7 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
         for sample_name, sample_data in sequencing_data["SAMPLES"].items():
             rule:
                 name:
-                    f"bowtie2_{sequencing_name}_{sample_name}"
+                    f"bowtie2_raw_{sequencing_name}_{sample_name}"
                 input:
                     str(Path(sequencing_data["PATH"]) / sample_data["R1"]),
                     str(Path(sequencing_data["PATH"]) / sample_data["R2"]),
@@ -541,7 +541,7 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
             
             rule:
                 name:
-                    f"bedtools_{sequencing_name}_{sample_name}"
+                    f"bedtools_raw_{sequencing_name}_{sample_name}"
                 input:
                     str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + "_filtered.namesort.bam")),
                 output:
@@ -581,7 +581,7 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
             for sample_name, sample_data in sequencing_data["INPUT"].items():
                 rule:
                     name:
-                        f"bowtie2_{sequencing_name}_{sample_name}"
+                        f"bowtie2_raw_{sequencing_name}_{sample_name}"
                     input:
                         str(Path(sequencing_data["PATH"]) / sample_data["R1"]),
                         str(Path(sequencing_data["PATH"]) / sample_data["R2"]),
@@ -666,7 +666,7 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                 
                 rule:
                     name:
-                        f"bedtools_{sequencing_name}_{sample_name}"
+                        f"bedtools_raw_{sequencing_name}_{sample_name}"
                     input:
                         str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + "_filtered.namesort.bam")),
                     output:
