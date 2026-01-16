@@ -95,7 +95,8 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                 -o {params.fastqc_outdir}
             multiqc \
                 {params.fastqc_outdir} \
-                -o {params.multiqc_outdir} --force
+                -o {params.multiqc_outdir} --force \
+                -n Raw_fastq
             """
     
     if (
@@ -438,7 +439,8 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
             params:
                 fastqc_outdir=str(Path(sequencing_data["PATH"]) / "QC/FASTQC/TRIMMED/"),
                 multiqc_outdir=str(Path(sequencing_data["PATH"]) / "QC/MULTIQC/TRIMMED/"),
-                fastqc_outdir2=str(Path(sequencing_data["PATH"]) / "QC/flagstat/"),
+                flagstat=str(Path(sequencing_data["PATH"]) / "QC/flagstat/"),
+                stats=str(Path(sequencing_data["PATH"]) / "QC/stats/"),
                 multiqc_outdir2=str(Path(sequencing_data["PATH"]) / "QC/MULTIQC/STATS/"),
             resources:
                 mem_mb=lambda wildcards, attempt: 10000 * attempt,
@@ -446,8 +448,8 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                 qos=lambda wildcards, attempt: get_qos_from_time(attempt, 60),
             shell:
                 r"""
-                multiqc {params.fastqc_outdir} -o {params.multiqc_outdir} --force
-                multiqc {params.multiqc_outdir2} -o {params.fastqc_outdir2} --force
+                multiqc {params.fastqc_outdir} -o {params.multiqc_outdir} --force -n Trimmed_FASTQ
+                multiqc {params.flagstat} {params.stats} -d -o {params.multiqc_outdir2} --force -n Bam_report
                 """
                   
     else:
@@ -703,15 +705,17 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
         
         rule:
             name:
-                f"multiqc_stats_{sequencing_name}"
+                f"multiqc_trimmed_{sequencing_name}"
             input:
+                *chr_paths.get_sequencing_fastq_related_paths(config, sequencing_name, "flagstat"),
                 *chr_paths.get_sequencing_fastq_related_paths(config, sequencing_name, "stats"),
             output:
                 chr_paths.get_sequencing_fastq_related_paths(config, sequencing_name, "multiqc_stats"),
             threads:
                 1,
             params:
-                fastqc_outdir=str(Path(sequencing_data["PATH"]) / "QC/flagstat/"),
+                flagstat=str(Path(sequencing_data["PATH"]) / "QC/flagstat/"),
+                stats=str(Path(sequencing_data["PATH"]) / "QC/stats/"),
                 multiqc_outdir=str(Path(sequencing_data["PATH"]) / "QC/MULTIQC/STATS/"),
             resources:
                 mem_mb=lambda wildcards, attempt: 10000 * attempt,
@@ -719,7 +723,7 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                 qos=lambda wildcards, attempt: get_qos_from_time(attempt, 60),
             shell:
                 r"""
-                multiqc {params.multiqc_outdir} -o {params.fastqc_outdir} --force
+                multiqc {params.flagstat} {params.stats} -d -o {params.multiqc_outdir} --force -n Bam_report
                 """
                 
     # RULES for after the alignment
