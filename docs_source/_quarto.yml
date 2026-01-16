@@ -46,6 +46,12 @@ format:
   html:
      sidebar: true
      embed-resources: true
+     toc: true
+     toc-depth: 3
+     grid:
+       body-width: 1200px
+       margin-width: 250px
+       gutter-width: 3em
      css:
        - styles.css
        - reference/_styles-quartodoc.css
