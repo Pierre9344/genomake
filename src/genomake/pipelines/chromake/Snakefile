@@ -22,9 +22,9 @@ onstart:
         (sample_path / "QC/FASTQC/TRIMMED").mkdir(parents=True, exist_ok=True)
         (sample_path / "QC/flagstat").mkdir(parents=True, exist_ok=True)
         (sample_path / "QC/fragmentLen").mkdir(parents=True, exist_ok=True)
-        (sample_path / "QC/MULTIQC/RAW").mkdir(parents=True, exist_ok=True)
-        (sample_path / "QC/MULTIQC/STATS").mkdir(parents=True, exist_ok=True)
-        (sample_path / "QC/MULTIQC/TRIMMED").mkdir(parents=True, exist_ok=True)
+        (sample_path / "QC/MULTIQC").mkdir(parents=True, exist_ok=True)
+        (sample_path / "QC/MULTIQC").mkdir(parents=True, exist_ok=True)
+        (sample_path / "QC/MULTIQC").mkdir(parents=True, exist_ok=True)
         (sample_path / "TRIMMED").mkdir(parents=True, exist_ok=True)
         
         (sample_path / "QC/PICARD").mkdir(parents=True, exist_ok=True)
@@ -81,7 +81,7 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
             *chr_paths.get_sequencing_fastq_related_paths(config, sequencing_name, "multiqc_raw"),
         params:
             fastqc_outdir=str(Path(sequencing_data["PATH"]) / "QC/FASTQC/RAW/"),
-            multiqc_outdir=str(Path(sequencing_data["PATH"]) / "QC/MULTIQC/RAW/"),
+            multiqc_outdir=str(Path(sequencing_data["PATH"]) / "QC/MULTIQC/"),
         threads: config["JOBS"]["CORES_PER_JOBS"]["FASTQC"]
         resources:
             mem_mb=lambda wildcards, attempt: 10000 * attempt,
@@ -438,18 +438,17 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
                 1,
             params:
                 fastqc_outdir=str(Path(sequencing_data["PATH"]) / "QC/FASTQC/TRIMMED/"),
-                multiqc_outdir=str(Path(sequencing_data["PATH"]) / "QC/MULTIQC/TRIMMED/"),
+                multiqc_outdir=str(Path(sequencing_data["PATH"]) / "QC/MULTIQC/"),
                 flagstat=str(Path(sequencing_data["PATH"]) / "QC/flagstat/"),
                 stats=str(Path(sequencing_data["PATH"]) / "QC/stats/"),
-                multiqc_outdir2=str(Path(sequencing_data["PATH"]) / "QC/MULTIQC/STATS/"),
             resources:
                 mem_mb=lambda wildcards, attempt: 10000 * attempt,
                 runtime=lambda wildcards, attempt: attempt * 60,
                 qos=lambda wildcards, attempt: get_qos_from_time(attempt, 60),
             shell:
                 r"""
-                multiqc {params.fastqc_outdir} -o {params.multiqc_outdir} --force -n Trimmed_FASTQ
-                multiqc {params.flagstat} {params.stats} -d -o {params.multiqc_outdir2} --force -n Bam_report
+                multiqc {params.fastqc_outdir} -o {params.multiqc_outdir} --force -n Trimmed_fastq
+                multiqc {params.flagstat} {params.stats} -d -o {params.multiqc_outdir} --force -n Bam_report
                 """
                   
     else:
@@ -716,7 +715,7 @@ for sequencing_name, sequencing_data in config["SEQUENCING"].items():
             params:
                 flagstat=str(Path(sequencing_data["PATH"]) / "QC/flagstat/"),
                 stats=str(Path(sequencing_data["PATH"]) / "QC/stats/"),
-                multiqc_outdir=str(Path(sequencing_data["PATH"]) / "QC/MULTIQC/STATS/"),
+                multiqc_outdir=str(Path(sequencing_data["PATH"]) / "QC/MULTIQC"),
             resources:
                 mem_mb=lambda wildcards, attempt: 10000 * attempt,
                 runtime=lambda wildcards, attempt: attempt * 60,
