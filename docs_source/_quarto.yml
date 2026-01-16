@@ -48,6 +48,7 @@ format:
      embed-resources: true
      css:
        - styles.css
+       - reference/_styles-quartodoc.css
     
 
 quartodoc:
