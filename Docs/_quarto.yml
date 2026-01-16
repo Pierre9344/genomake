@@ -21,6 +21,10 @@ website:
         file: get_started.qmd
       - text: "Reference"
         file: reference/index.qmd
+    right:
+      - icon: github
+        href: https://github.com/Pierre9344/genomake
+        aria-label: genomake GitHub
     
   sidebar:
     style: "floating"
