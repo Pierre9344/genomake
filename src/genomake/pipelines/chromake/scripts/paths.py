@@ -89,6 +89,8 @@ def get_all_fastq_related_paths(cfg: dict, mode: str) -> list:
                         res.append(base / "QC/FASTQC/TRIMMED" / re.sub(r"\.fastq(\.gz)?$", "_fastqc.html", Path(sample["R2"]).name))
         elif mode == "multiqc_trimmed":
             res.append(base / "QC/MULTIQC/TRIMMED/multiqc_report.html")
+        elif mode == "multiqc_stats":
+            res = base / "QC/MULTIQC/STATS/multiqc_report.html"
         elif mode == "bam":
             for sample_name in sequencing_data["SAMPLES"].keys():
                 res.append(base / "BAM" / (sample_name + ".bam"))

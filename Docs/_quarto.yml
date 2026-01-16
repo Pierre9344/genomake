@@ -8,10 +8,14 @@ project:
 
 website: 
   title: "genomake"
+  favicon: logo.png
   description: "genomake, python scripts and pipeline to deal with genomic data"
   page-navigation: true
   navbar:
     background: light
+    logo: logo.png
+    logo-height: 100px
+    logo-width: 100px
     left: 
       - text: "Get started"
         file: get_started.qmd
@@ -35,8 +39,8 @@ website:
 format:
   html:
      sidebar: true
-#    css:
-#      - reference/_styles-quartodoc.css
+     css:
+       - styles.css
     
 
 quartodoc:
