@@ -33,9 +33,9 @@ def get_all_fastq_related_paths(cfg: dict, mode: str) -> list:
         A list of file paths.
     """
     res = []
-    for sequencing_name, sequencing_data in cfg["SEQUENCING"].items():
+    for sequencing_name, sequencing_data in cfg["SEQUENCINGS"].items():
         base = Path(sequencing_data["PATH"])
-        if mode == "sequencing":
+        if mode == "SEQUENCINGS":
             res.append(base)
         elif mode == "fastq_raw":
             for sample in sequencing_data.get("SAMPLES", {}).values():
@@ -98,16 +98,16 @@ def get_all_fastq_related_paths(cfg: dict, mode: str) -> list:
                 for sample_name in sequencing_data["INPUT"].keys():
                     res.append(base / "BAM" / (sample_name + ".bam"))
         elif mode == "bam_filtered_coord":
-            for sample_name in cfg["SEQUENCING"][sequencing_name]["SAMPLES"].keys():
+            for sample_name in cfg["SEQUENCINGS"][sequencing_name]["SAMPLES"].keys():
                 res.append(base / "BAM" / (sample_name + "_filtered.coordsort.bam"))
-            if "INPUT" in cfg["SEQUENCING"][sequencing_name]:
-                for sample_name in cfg["SEQUENCING"][sequencing_name]["SAMPLES"].keys():
+            if "INPUT" in cfg["SEQUENCINGS"][sequencing_name]:
+                for sample_name in cfg["SEQUENCINGS"][sequencing_name]["SAMPLES"].keys():
                     res.append(base / "BAM" / (sample_name + "_filtered.coordsort.bam"))
         elif mode == "bam_filtered_name":
-            for sample_name in cfg["SEQUENCING"][sequencing_name]["SAMPLES"].keys():
+            for sample_name in cfg["SEQUENCINGS"][sequencing_name]["SAMPLES"].keys():
                 res.append(base / "BAM" / (sample_name + "_filtered.namesort.bam"))
-            if "INPUT" in cfg["SEQUENCING"][sequencing_name]:
-                for sample_name in cfg["SEQUENCING"][sequencing_name]["SAMPLES"].keys():
+            if "INPUT" in cfg["SEQUENCINGS"][sequencing_name]:
+                for sample_name in cfg["SEQUENCINGS"][sequencing_name]["SAMPLES"].keys():
                     res.append(base / "BAM" / (sample_name + "_filtered.namesort.bam"))
         elif mode == "bedgraph":
             for sample_name in sequencing_data["SAMPLES"].keys():
@@ -164,30 +164,30 @@ def get_sequencing_fastq_related_paths(cfg: dict,
         A list of all file paths.
     """
     res = []
-    if sequencing_name in cfg["SEQUENCING"].keys():
-        base = Path(cfg["SEQUENCING"][sequencing_name]["PATH"])
-        if mode == "sequencing":
+    if sequencing_name in cfg["SEQUENCINGS"].keys():
+        base = Path(cfg["SEQUENCINGS"][sequencing_name]["PATH"])
+        if mode == "SEQUENCINGS":
             res.append(base)
         elif mode == "fastq_raw":
-            for sample in cfg["SEQUENCING"][sequencing_name].get("SAMPLES", {}).values():
+            for sample in cfg["SEQUENCINGS"][sequencing_name].get("SAMPLES", {}).values():
                 if sample["R1"]:
                     res.append(base / sample["R1"])
                 if sample["R2"]:
                     res.append(base / sample["R2"])
-            if "INPUT" in cfg["SEQUENCING"][sequencing_name]:
-                for sample in cfg["SEQUENCING"][sequencing_name].get("INPUT", {}).values():
+            if "INPUT" in cfg["SEQUENCINGS"][sequencing_name]:
+                for sample in cfg["SEQUENCINGS"][sequencing_name].get("INPUT", {}).values():
                     if sample["R1"]:
                         res.append(base / sample["R1"])
                     if sample["R2"]:
                         res.append(base / sample["R2"])
         elif mode == "fastqc_raw":
-            for sample in cfg["SEQUENCING"][sequencing_name].get("SAMPLES", {}).values():
+            for sample in cfg["SEQUENCINGS"][sequencing_name].get("SAMPLES", {}).values():
                 if sample["R1"]:
                     res.append(base / "QC/FASTQC/RAW" / re.sub(r"\.fastq(\.gz)?$", "_fastqc.html", Path(sample["R1"]).name))
                 if sample["R2"]:
                     res.append(base / "QC/FASTQC/RAW" / re.sub(r"\.fastq(\.gz)?$", "_fastqc.html", Path(sample["R2"]).name))
-            if "INPUT" in cfg["SEQUENCING"][sequencing_name]:
-                for sample in cfg["SEQUENCING"][sequencing_name].get("INPUT", {}).values():
+            if "INPUT" in cfg["SEQUENCINGS"][sequencing_name]:
+                for sample in cfg["SEQUENCINGS"][sequencing_name].get("INPUT", {}).values():
                     if sample["R1"]:
                         res.append(base / "QC/FASTQC/RAW" / re.sub(r"\.fastq(\.gz)?$", "_fastqc.html", Path(sample["R1"]).name))
                     if sample["R2"]:
@@ -199,70 +199,70 @@ def get_sequencing_fastq_related_paths(cfg: dict,
         elif mode == "multiqc_bam":
             res.append(base / "QC/MULTIQC/Bam_report.html")
         elif mode == "cutadapt":
-            for sample in cfg["SEQUENCING"][sequencing_name].get("SAMPLES", {}).values():
+            for sample in cfg["SEQUENCINGS"][sequencing_name].get("SAMPLES", {}).values():
                 if sample["R1"]:
                     res.append(base / "TRIMMED" / Path(sample["R1"]).name)
                 if sample["R2"]:
                     res.append(base / "TRIMMED" / Path(sample["R2"]).name)
-            if "INPUT" in cfg["SEQUENCING"][sequencing_name]:
-                for inp in cfg["SEQUENCING"][sequencing_name].get("SAMPLES", {}).values():
+            if "INPUT" in cfg["SEQUENCINGS"][sequencing_name]:
+                for inp in cfg["SEQUENCINGS"][sequencing_name].get("SAMPLES", {}).values():
                     if sample["R1"]:
                         res.append(base / "TRIMMED" / Path(inp["R1"]).name)
                     if sample["R2"]:
                         res.append(base / "TRIMMED" / Path(inp["R2"]).name)
         elif mode == "fastqc_trimmed":
-            for sample in cfg["SEQUENCING"][sequencing_name].get("SAMPLES", {}).values():
+            for sample in cfg["SEQUENCINGS"][sequencing_name].get("SAMPLES", {}).values():
                 if sample["R1"]:
                     res.append(base / "QC/FASTQC/TRIMMED" / re.sub(r"\.fastq(\.gz)?$", "_fastqc.html", Path(sample["R1"]).name))
                 if sample["R2"]:
                     res.append(base / "QC/FASTQC/TRIMMED" / re.sub(r"\.fastq(\.gz)?$", "_fastqc.html", Path(sample["R2"]).name))
-            if "INPUT" in cfg["SEQUENCING"][sequencing_name]:
-                for inp in cfg["SEQUENCING"][sequencing_name].get("SAMPLES", {}).values():
+            if "INPUT" in cfg["SEQUENCINGS"][sequencing_name]:
+                for inp in cfg["SEQUENCINGS"][sequencing_name].get("SAMPLES", {}).values():
                     if sample["R1"]:
                         res.append(base / "QC/FASTQC/TRIMMED" / re.sub(r"\.fastq(\.gz)?$", "_fastqc.html", Path(inp["R1"]).name))
                     if sample["R2"]:
                         res.append(base / "QC/FASTQC/TRIMMED" / re.sub(r"\.fastq(\.gz)?$", "_fastqc.html", Path(inp["R2"]).name))
         elif mode == "bam":
-            for sample_name in cfg["SEQUENCING"][sequencing_name]["SAMPLES"].keys():
+            for sample_name in cfg["SEQUENCINGS"][sequencing_name]["SAMPLES"].keys():
                 res.append(base / "BAM" / (sample_name + ".bam"))
-            if "INPUT" in cfg["SEQUENCING"][sequencing_name]:
-                for sample_name in cfg["SEQUENCING"][sequencing_name]["INPUT"].keys():
+            if "INPUT" in cfg["SEQUENCINGS"][sequencing_name]:
+                for sample_name in cfg["SEQUENCINGS"][sequencing_name]["INPUT"].keys():
                     res.append(base / "BAM" / (sample_name + ".bam"))
         elif mode == "bam_filtered_coord":
-            for sample_name in cfg["SEQUENCING"][sequencing_name]["SAMPLES"].keys():
+            for sample_name in cfg["SEQUENCINGS"][sequencing_name]["SAMPLES"].keys():
                 res.append(base / "BAM" / (sample_name + "_filtered.coordsort.bam"))
-            if "INPUT" in cfg["SEQUENCING"][sequencing_name]:
-                for sample_name in cfg["SEQUENCING"][sequencing_name]["SAMPLES"].keys():
+            if "INPUT" in cfg["SEQUENCINGS"][sequencing_name]:
+                for sample_name in cfg["SEQUENCINGS"][sequencing_name]["SAMPLES"].keys():
                     res.append(base / "BAM" / (sample_name + "_filtered.coordsort.bam"))
         elif mode == "bam_filtered_name":
-            for sample_name in cfg["SEQUENCING"][sequencing_name]["SAMPLES"].keys():
+            for sample_name in cfg["SEQUENCINGS"][sequencing_name]["SAMPLES"].keys():
                 res.append(base / "BAM" / (sample_name + "_filtered.namesort.bam"))
-            if "INPUT" in cfg["SEQUENCING"][sequencing_name]:
-                for sample_name in cfg["SEQUENCING"][sequencing_name]["SAMPLES"].keys():
+            if "INPUT" in cfg["SEQUENCINGS"][sequencing_name]:
+                for sample_name in cfg["SEQUENCINGS"][sequencing_name]["SAMPLES"].keys():
                     res.append(base / "BAM" / (sample_name + "_filtered.namesort.bam"))
         elif mode == "flagstat":
-            for sample_name in cfg["SEQUENCING"][sequencing_name]["SAMPLES"].keys():
+            for sample_name in cfg["SEQUENCINGS"][sequencing_name]["SAMPLES"].keys():
                 res.append(base / "QC/flagstat" / (sample_name + "_flagstat.txt"))
-            if "INPUT" in cfg["SEQUENCING"][sequencing_name]:
-                for sample_name in cfg["SEQUENCING"][sequencing_name]["SAMPLES"].keys():
+            if "INPUT" in cfg["SEQUENCINGS"][sequencing_name]:
+                for sample_name in cfg["SEQUENCINGS"][sequencing_name]["SAMPLES"].keys():
                     res.append(base / "QC/flagstat" / (sample_name + "_flagstat.txt"))
         elif mode == "stats":
-            for sample_name in cfg["SEQUENCING"][sequencing_name]["SAMPLES"].keys():
+            for sample_name in cfg["SEQUENCINGS"][sequencing_name]["SAMPLES"].keys():
                 res.append(base / "QC/stats" / (sample_name + "_stats.txt"))
-            if "INPUT" in cfg["SEQUENCING"][sequencing_name]:
-                for sample_name in cfg["SEQUENCING"][sequencing_name]["SAMPLES"].keys():
+            if "INPUT" in cfg["SEQUENCINGS"][sequencing_name]:
+                for sample_name in cfg["SEQUENCINGS"][sequencing_name]["SAMPLES"].keys():
                     res.append(base / "QC/stats" / (sample_name + "_stats.txt"))
         elif mode == "bed":
-            for sample_name in cfg["SEQUENCING"][sequencing_name]["SAMPLES"].keys():
+            for sample_name in cfg["SEQUENCINGS"][sequencing_name]["SAMPLES"].keys():
                 res.append(base / "BED" / (sample_name + ".bed"))
-            if "INPUT" in cfg["SEQUENCING"][sequencing_name]:
-                for sample_name in cfg["SEQUENCING"][sequencing_name]["INPUT"].keys():
+            if "INPUT" in cfg["SEQUENCINGS"][sequencing_name]:
+                for sample_name in cfg["SEQUENCINGS"][sequencing_name]["INPUT"].keys():
                     res.append(base / "BED" / (sample_name + ".bed"))
         elif mode == "bed_sorted":
-            for sample_name in cfg["SEQUENCING"][sequencing_name]["SAMPLES"].keys():
+            for sample_name in cfg["SEQUENCINGS"][sequencing_name]["SAMPLES"].keys():
                 res.append(base / "BED" / (sample_name + "_sorted.bed"))
-            if "INPUT" in cfg["SEQUENCING"][sequencing_name]:
-                for sample_name in cfg["SEQUENCING"][sequencing_name]["SAMPLES"].keys():
+            if "INPUT" in cfg["SEQUENCINGS"][sequencing_name]:
+                for sample_name in cfg["SEQUENCINGS"][sequencing_name]["SAMPLES"].keys():
                     res.append(base / "BED" / (sample_name + "_sorted.bed"))
     else:
         print(f"There is an error, the configuration file don't contains a {sequencing_name} project!")

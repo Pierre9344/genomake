@@ -33,7 +33,7 @@ def create_example_config(
     """
 
     config = {
-        "SEQUENCING": {
+        "SEQUENCINGS": {
             "MO203": {
                 "SAMPLES": {
                     "H3K27ac_BAP1": {
@@ -133,25 +133,25 @@ def create_example_config(
         },
         "PROJECTS": {
             "ChIP_H3K27AC": {
-                "SEQUENCING": ["MO203", "MO208"],
+                "SEQUENCINGS": ["MO203", "MO208"],
                 "TYPE": "H3K27AC",
                 "MIN_SAMPLES_FOR_PEAKS": 2,
                 "PROJECT_PATH": "/scratch/.../ChIP_H3K27AC",
             },
             "ChIP_H3K27ME3": {
-                "SEQUENCING": ["MO203"],
+                "SEQUENCINGS": ["MO203"],
                 "TYPE": "H3K27ME3",
                 "MIN_SAMPLES_FOR_PEAKS": 2,
                 "PROJECT_PATH": "/scratch/.../ChIP_H3K27ME3",
             },
             "ChIP_H2AUB": {
-                "SEQUENCING": ["MO203", "MO208"],
+                "SEQUENCINGS": ["MO203", "MO208"],
                 "TYPE": "H2AUB",
                 "MIN_SAMPLES_FOR_PEAKS": 2,
                 "PROJECT_PATH": "/scratch/.../ChIP_H2AUB",
             },
             "ChIP_ATAC": {
-                "SEQUENCING": ["MO211"],
+                "SEQUENCINGS": ["MO211"],
                 "TYPE": "ATAC",
                 "MIN_SAMPLES_FOR_PEAKS": 2,
                 "PROJECT_PATH": "/scratch/.../ChIP_ATAC",
@@ -279,22 +279,22 @@ def check_project_and_sequencing(config: dict) -> dict:
     dict
         Updated config dictionary.
     """
-    if "SEQUENCING" not in config:
+    if "SEQUENCINGS" not in config:
         return config
     
     # Loop through the sequencing section and clean empty sequencing projects
-    for sequencing_name, sequencing_data in config["SEQUENCING"].items():
+    for sequencing_name, sequencing_data in config["SEQUENCINGS"].items():
         # If there are no samples and inputs, remove the sequencing project
         if not sequencing_data.get("SAMPLES") and not sequencing_data.get("INPUT"):
-            del config["SEQUENCING"][sequencing_name]
+            del config["SEQUENCINGS"][sequencing_name]
             print(f"Removed sequencing project '{sequencing_name}' as it has no samples or inputs.")
         else:
             if sequencing_data.get("INPUT"):
                 if len(sequencing_data.get("INPUT")) == 0:
-                    del config["SEQUENCING"][sequencing_name]["INPUT"]
+                    del config["SEQUENCINGS"][sequencing_name]["INPUT"]
                     print(f"Removed the input field of sequencing project {sequencing_name} as it was empty.")
             
-            for sample_name, sample_data in config["SEQUENCING"][sequencing_name]["SAMPLES"].items():
+            for sample_name, sample_data in config["SEQUENCINGS"][sequencing_name]["SAMPLES"].items():
                 if (sample_data["TYPE"] in ["H3K27AC", "H3K27ME3", "H2AUB"]):
                     if "INPUT" in sequencing_data.keys():
                         for input_name, input_data in sequencing_data["INPUT"].items():
@@ -307,18 +307,18 @@ def check_project_and_sequencing(config: dict) -> dict:
         for project_key, project_data in config["PROJECTS"].items():
             project_mark = project_data.get("TYPE")  # Get the mark associated with the project
             
-            if isinstance(project_data.get("SEQUENCING"), list):
+            if isinstance(project_data.get("SEQUENCINGS"), list):
                 # Filter out sequencing projects that no longer have samples for the project mark
                 updated_sequencing_projects = [
-                    seq_proj for seq_proj in project_data["SEQUENCING"].items()
-                    if seq_proj in config["SEQUENCING"] and 
-                       config["SEQUENCING"][seq_proj].get("SAMPLES") and
-                       any(sample_data["TYPE"] == project_mark for sample_data in config["SEQUENCING"][seq_proj]["SAMPLES"].values())
+                    seq_proj for seq_proj in project_data["SEQUENCINGS"].items()
+                    if seq_proj in config["SEQUENCINGS"] and 
+                       config["SEQUENCINGS"][seq_proj].get("SAMPLES") and
+                       any(sample_data["TYPE"] == project_mark for sample_data in config["SEQUENCINGS"][seq_proj]["SAMPLES"].values())
                 ]
                 
                 # If the list is empty, remove the sequencing from the project
-                if updated_sequencing_projects != project_data["SEQUENCING"]:
-                    project_data["SEQUENCING"] = updated_sequencing_projects
+                if updated_sequencing_projects != project_data["SEQUENCINGS"]:
+                    project_data["SEQUENCINGS"] = updated_sequencing_projects
                     print(f"Updated project '{project_key}' to reflect current sequencing projects: {updated_sequencing_projects}")
                     
                     # If no valid sequencing projects remain, remove the project
@@ -349,8 +349,8 @@ def remove_sequencing(config_path: str, sequencing_name: str) -> None:
         return
 
     # Remove the sequencing project from SEQUENCING section
-    if "SEQUENCING" in config and sequencing_name in config["SEQUENCING"]:
-        del config["SEQUENCING"][sequencing_name]
+    if "SEQUENCINGS" in config and sequencing_name in config["SEQUENCINGS"]:
+        del config["SEQUENCINGS"][sequencing_name]
         print(f"Removed sequencing project '{sequencing_name}' from SEQUENCING.")
     else:
         print(f"Sequencing project '{sequencing_name}' not found in SEQUENCING.")
@@ -378,11 +378,11 @@ def remove_samples(config_path: str, sequencing_name: str, samples: list[str]) -
     with open(config_path) as stream:
         config = yaml.safe_load(stream)
 
-    if "SEQUENCING" not in config or sequencing_name not in config["SEQUENCING"]:
+    if "SEQUENCINGS" not in config or sequencing_name not in config["SEQUENCINGS"]:
         print(f"Sequencing project '{sequencing_name}' not found in config.")
         return
 
-    sequencing_project = config["SEQUENCING"][sequencing_name]
+    sequencing_project = config["SEQUENCINGS"][sequencing_name]
     project_samples = sequencing_project.get("SAMPLES", {})
 
     for sample in samples:
@@ -440,7 +440,7 @@ def create_samplesheet_from_config(
         config = yaml.safe_load(stream)
 
     rows = []
-    sequencing = config.get("SEQUENCING", {})  # Get SEQUENCING instead of PROJECTS
+    sequencing = config.get("SEQUENCINGS", {})  # Get SEQUENCING instead of PROJECTS
     projects = config.get("PROJECTS", {})  # Get PROJECTS
 
     # Iterate over sequencing projects
@@ -457,7 +457,7 @@ def create_samplesheet_from_config(
                 # Wide format: separate R1 and R2 into distinct columns
                 row = {
                     "SAMPLE": sample_name,
-                    "SEQUENCING": seq_name,  # SEQUENCING
+                    "SEQUENCINGS": seq_name,  # SEQUENCING
                     "PROJECT": "",  # Will update later for regular samples
                     "TYPE": mark,  # The mark type (H3K27AC, H2AUB, etc.)
                     "R1": "",  # Placeholder for R1 path
@@ -489,7 +489,7 @@ def create_samplesheet_from_config(
                         full_path = (proj_path + path) if proj_path and not os.path.isabs(path) else path
                         rows.append({
                             "SAMPLE": sample_name,
-                            "SEQUENCING": seq_name,  # SEQUENCING
+                            "SEQUENCINGS": seq_name,  # SEQUENCING
                             "PROJECT": "",  # Will update later for regular samples
                             "TYPE": sample_type,  # The mark type (H3K27AC, H2AUB, etc.)
                             "STRAND": strand,  # Set STRAND (R1 or R2)
@@ -502,7 +502,7 @@ def create_samplesheet_from_config(
                 # Wide format: separate R1 and R2 into distinct columns for INPUTS
                 row_input = {
                     "SAMPLE": input_name,
-                    "SEQUENCING": seq_name,  # SEQUENCING
+                    "SEQUENCINGS": seq_name,  # SEQUENCING
                     "PROJECT": "INPUT",  # Mark as INPUT
                     "TYPE": "",  # No mark for INPUT
                     "R1": "",  # Placeholder for R1 path
@@ -525,7 +525,7 @@ def create_samplesheet_from_config(
                     full_path = (proj_path + path) if proj_path and not os.path.isabs(path) else path
                     rows.append({
                         "SAMPLE": input_name,
-                        "SEQUENCING": seq_name,  # SEQUENCING
+                        "SEQUENCINGS": seq_name,  # SEQUENCING
                         "PROJECT": "INPUT",  # Mark as INPUT
                         "TYPE": "",  # No mark for INPUT
                         "STRAND": strand,  # Set STRAND (R1 or R2)
@@ -598,13 +598,13 @@ def create_config_from_table(
         raise ValueError(f"Unsupported table format: {os.path.splitext(table_path)[1]}")
 
     # Check required columns
-    required_cols = {"SAMPLE", "SEQUENCING", "PROJECT", "TYPE", "STRAND", "PATH"}
+    required_cols = {"SAMPLE", "SEQUENCINGS", "PROJECT", "TYPE", "STRAND", "PATH"}
     missing_cols = required_cols - set(df.columns)
     if missing_cols:
         raise ValueError(f"Missing required columns: {missing_cols}")
 
     # Initialize config
-    config = {"SEQUENCING": {}}
+    config = {"SEQUENCINGS": {}}
     if jobs:
         config["JOBS"] = jobs
 
@@ -614,7 +614,7 @@ def create_config_from_table(
     # Iterate over each row and populate the config
     for _, row in df.iterrows():
         sample_name = row["SAMPLE"]
-        seq_name = row["SEQUENCING"]
+        seq_name = row["SEQUENCINGS"]
         proj_name = row["PROJECT"]
         mark = row["TYPE"]
         strand = row["STRAND"]
@@ -625,17 +625,17 @@ def create_config_from_table(
         proj_path = proj_paths.get(proj_name, "")
 
         # If the sequencing project is not in the config, initialize it
-        if seq_name not in config["SEQUENCING"]:
-            config["SEQUENCING"][seq_name] = {"SAMPLES": {}}
-            config["SEQUENCING"][seq_name].update(sequencing)
+        if seq_name not in config["SEQUENCINGS"]:
+            config["SEQUENCINGS"][seq_name] = {"SAMPLES": {}}
+            config["SEQUENCINGS"][seq_name].update(sequencing)
 
         # Determine if the sample is an INPUT or regular SAMPLE
         if proj_name == "INPUT":
-            if "INPUT" not in config["SEQUENCING"][seq_name].keys():
-                config["SEQUENCING"][seq_name]["INPUT"] = {}
-            target_dict = config["SEQUENCING"][seq_name]["INPUT"]
+            if "INPUT" not in config["SEQUENCINGS"][seq_name].keys():
+                config["SEQUENCINGS"][seq_name]["INPUT"] = {}
+            target_dict = config["SEQUENCINGS"][seq_name]["INPUT"]
         else:
-            target_dict = config["SEQUENCING"][seq_name]["SAMPLES"]
+            target_dict = config["SEQUENCINGS"][seq_name]["SAMPLES"]
 
         # Normalize the sample path (remove the sequencing root path and make it relative to the sequencig folder)
         try:
@@ -666,11 +666,11 @@ def create_config_from_table(
                     "PROJECT_PATH": proj_path,
                     "TYPE": mark,
                     "MIN_SAMPLES_FOR_PEAKS": 2,
-                    "SEQUENCING": []  # Initialize the list for sequencing projects
+                    "SEQUENCINGS": []  # Initialize the list for sequencing projects
             }
             # Add the sequencing project to the list of associated sequencing projects
-            if seq_name not in config["PROJECTS"][proj_name]["SEQUENCING"]:
-                config["PROJECTS"][proj_name]["SEQUENCING"].append(seq_name)
+            if seq_name not in config["PROJECTS"][proj_name]["SEQUENCINGS"]:
+                config["PROJECTS"][proj_name]["SEQUENCINGS"].append(seq_name)
 
     #config = check_project_and_sequencing(config)
     with open(output_path, "w", encoding="utf-8") as fh:
@@ -700,7 +700,7 @@ def check_sample_files_exist(config_path: str) -> bool:
     all_exist = True
 
     # Check the SEQUENCING section
-    sequencing_data = config.get("SEQUENCING", {})
+    sequencing_data = config.get("SEQUENCINGS", {})
 
     for seq_name, seq_data in sequencing_data.items():
         samples = seq_data.get("SAMPLES", {})
@@ -746,7 +746,7 @@ def check_config_format(cfg: dict, raise_error: bool = True):
         Raise a runtime error or simply print the message.
     """
     
-    if "SEQUENCING" not in cfg:
+    if "SEQUENCINGS" not in cfg:
         if raise_error:
             raise RuntimeError("The configuration file is missing the 'SEQUENCING' field!")
         else:
@@ -804,8 +804,8 @@ def check_config_format(cfg: dict, raise_error: bool = True):
                 "medium": {"MaxWall": 5000},
                 "long": {"MaxWall": 15000}
             }
-    if "SEQUENCING" in cfg:
-        for sequencing_name, sequencing_data in cfg["SEQUENCING"].items():
+    if "SEQUENCINGS" in cfg:
+        for sequencing_name, sequencing_data in cfg["SEQUENCINGS"].items():
             if "PATH" not in sequencing_data:
                 if raise_error:
                     raise RuntimeError(f"The sequencing {sequencing_name} doesn't have a 'PATH' field indicating the absolute path of the project.")
@@ -828,9 +828,9 @@ def check_config_format(cfg: dict, raise_error: bool = True):
                     print("Each sequencing must have a parameters field to indicates at least the genome reference for bowtie2, and the genome used (hg38, mm10, ...)!")
             else:
                 # CUTADAPT is optional
-                if "CUTADAPT" not in cfg["SEQUENCING"][sequencing_name]["PARAMETERS"]:
+                if "CUTADAPT" not in cfg["SEQUENCINGS"][sequencing_name]["PARAMETERS"]:
                     print(f"The {sequencing_name} seqencing don't list parameters for cutadapt. Using the pipeline default: '-q 20 --pair-filter=any'.")
-                    cfg["SEQUENCING"][sequencing_name]["PARAMETERS"]["CUTADAPT"] = ""
+                    cfg["SEQUENCINGS"][sequencing_name]["PARAMETERS"]["CUTADAPT"] = ""
                 
                 # Parameters representing path are not optional
                 parameters_error="""
@@ -840,22 +840,22 @@ def check_config_format(cfg: dict, raise_error: bool = True):
                   - a file indicating the chromosome size (CHROM_SIZE), see https://hgdownload.cse.ucsc.edu/goldenpath/hg38/bigZips/ to download the one for GRCh38/hg38. UCSC also host the files for other genomes such as mm10.
                   - the genome used, either the .fa file of the reference used to build bowtie2 reference (toplevel.fa for ensembl) or a string such as hg38 or mm10 if the genome was configured in homer with configureHomer.pl (GENOME)
                 """
-                if "BOWTIE2_REF" not in cfg["SEQUENCING"][sequencing_name]["PARAMETERS"]:
+                if "BOWTIE2_REF" not in cfg["SEQUENCINGS"][sequencing_name]["PARAMETERS"]:
                     if raise_error:
                         raise RuntimeError(parameters_error)
                     else:
                         print(parameters_error)
-                if "GENOME" not in cfg["SEQUENCING"][sequencing_name]["PARAMETERS"]:
+                if "GENOME" not in cfg["SEQUENCINGS"][sequencing_name]["PARAMETERS"]:
                     if raise_error:
                         raise RuntimeError(parameters_error)
                     else:
                         print(parameters_error)
-                if "BLACKLIST_BED" not in cfg["SEQUENCING"][sequencing_name]["PARAMETERS"]:
+                if "BLACKLIST_BED" not in cfg["SEQUENCINGS"][sequencing_name]["PARAMETERS"]:
                     if raise_error:
                         raise RuntimeError(parameters_error)
                     else:
                         print(parameters_error)
-                if "CHROM_SIZE" not in cfg["SEQUENCING"][sequencing_name]["PARAMETERS"]:
+                if "CHROM_SIZE" not in cfg["SEQUENCINGS"][sequencing_name]["PARAMETERS"]:
                     if raise_error:
                         raise RuntimeError(parameters_error)
                     else:
@@ -887,7 +887,7 @@ def check_config_format(cfg: dict, raise_error: bool = True):
                 The project {project_name} don't have a valid 'TYPE' field. Alignment will be realized but not the peak calling.
                 Possible value for this field are: ATAC, H3K27AC, H3K27ME3, H2AUB.
                 """)
-            if "SEQUENCING" not in project_data:
+            if "SEQUENCINGS" not in project_data:
                 if raise_error:
                     raise RuntimeError(f"The project {project_name} is missing the 'SEQUENCING' field! Please add it.")
                 else:
@@ -895,8 +895,8 @@ def check_config_format(cfg: dict, raise_error: bool = True):
             else:
                 need_error=False
                 error_message=["", "Some sequencing listed in the PROJECTS field are not present in the SEQUENCING field"]
-                for seq_id in project_data["SEQUENCING"]:
-                    if seq_id not in cfg["SEQUENCING"]:
+                for seq_id in project_data["SEQUENCINGS"]:
+                    if seq_id not in cfg["SEQUENCINGS"]:
                         error_message.append(f"The project {project_name} list the sequencing {seq_id} who is not present in the SEQUENCING field of the configuration.")
                         need_error=True
                 if need_error:
