@@ -4,7 +4,7 @@ title: "genomake CLI"
 
 # genomake
 
-```         
+```{.bash}
 genomake [-h] {chromake,...} ...
 ```
 
@@ -64,13 +64,13 @@ This command wraps a Snakemake workflow and exposes common resource-management o
 
 Run the pipeline locally:
 
-```         
+```{.bash}
 genomake chromake -c config.yaml
 ```
 
 Run on a SLURM cluster:
 
-```         
+```{.bash}
 genomake chromake \
   -c config.yaml \
   --jobs 8 \
@@ -80,7 +80,7 @@ genomake chromake \
 
 Print the Snakemake command without running it:
 
-```         
+```{.bash}
 genomake chromake -c config.yaml --print-only
 ```
 
