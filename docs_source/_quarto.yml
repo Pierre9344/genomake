@@ -1,5 +1,6 @@
 project:
   type: website
+  execute-dir: project
   output-dir: ../docs
 
 # tell quarto to read the generated sidebar
@@ -54,7 +55,7 @@ format:
        gutter-width: 3em
      css:
        - styles.css
-       - reference/_styles-quartodoc.css
+       - _styles-quartodoc.css
     
 
 quartodoc:

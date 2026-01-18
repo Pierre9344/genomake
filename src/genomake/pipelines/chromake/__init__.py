@@ -1,21 +1,21 @@
 """
 Chromake pipeline
 
-This subpackage is used to contains a snakemake pipeline and functions to align sequencing data of ChIP-seq and ATAC-seq experiments, identify peaks, and realize a read count.
-
-The ressources used can be modified. In particular, the number of cores can be specified in the config file while other ressources (memory, runtime) will necessite to copy and modify the snakefile included in this subpackage.
+Chromake is used to align sequencing data of ChIP-seq and ATAC-seq experiments, identify peaks, and realize a read count. All those steps are realized using a snakemake pipeline included in this subpackage.
 
 Notes
 -----
 
-This subpackage contains submodules ([](`genomake.pipelines.chromake.scripts.config`) and [](`genomake.pipelines.chromake.scripts.config`)). Among them, [paths](`genomake.pipelines.chromake.scripts.paths`) is used by the snakefile to track the files it generate, while [config](`genomake.pipelines.chromake.scripts.config`) was created to help the user create the YAML config file needed by snakemake.
+The ressources used can be modified. In particular, the number of cores can be specified in the config file while other ressources (memory, runtime) will necessite to copy and modify the snakefile included in this subpackage.
+
+Chromake contains submodules ([](`genomake.pipelines.chromake.scripts.config`) and [](`genomake.pipelines.chromake.scripts.paths`)). Among them, [paths](`genomake.pipelines.chromake.scripts.paths`) is used by the snakefile to track the files it generate, while [config](`genomake.pipelines.chromake.scripts.config`) was created to help the user create the YAML config file needed by snakemake.
 
 Examples
 --------
 
 To run the pipeline:
     - you need at least 60 Go of RAM.
-    - you need a configuration file in a yaml format. Check [](`genomake.pipelines.chromake.scripts.config.create_example_config`) for an example. The [](`genomake.pipelines.chromake.scripts.config`) subpackage contains functions to generate such a config file from a samplesheet.
+    - you need a configuration file in a yaml format. Check [](`genomake.pipelines.chromake.scripts.config.create_example_config`) for an example. The [config](`genomake.pipelines.chromake.scripts.config`) submodules contains functions to generate such a config file from a samplesheet.
     - The configuration is composed of 3 main fields:
         - SEQUENCINGS
         - PROJECTS
@@ -137,7 +137,7 @@ snakemake --snakefile <PATH to snakefile in installation> \
 --slurm-delete-logfiles-older-than 0 --rerun-incomplete
 ```
 
-For more information, check the[Command Line Interface](cli.qmd) and the [Get started]()get_started.qmd) pages of the documentation.
+For more informations, check the [Command Line Interface](../cli.qmd) and the [Get started]()get_started.qmd) pages of the documentation.
 
 """
 

@@ -3866,7 +3866,19 @@ vertical-align: -.125em;
 
 
 <style type="text/css">.navbar-logo {max-height: 48px;width: auto;padding-right: 4px;}</style>
-<link rel="stylesheet" href="reference/_styles-quartodoc.css">
+<style type="text/css">
+
+.doc-section dt code {
+background: none;
+}
+.doc-section dt {
+background-color: #f8e4d8;
+display: block;
+}
+.doc-section dl dd {
+margin-left: 3rem;
+}
+</style>
 </head>
 
 <body class="nav-sidebar floating nav-fixed quarto-light">
@@ -3993,15 +4005,15 @@ vertical-align: -.125em;
 <h1>pipelines.chromake</h1>
 <p><code>pipelines.chromake</code></p>
 <p>Chromake pipeline</p>
-<p>This subpackage is used to contains a snakemake pipeline and functions to align sequencing data of ChIP-seq and ATAC-seq experiments, identify peaks, and realize a read count.</p>
-<p>The ressources used can be modified. In particular, the number of cores can be specified in the config file while other ressources (memory, runtime) will necessite to copy and modify the snakefile included in this subpackage.</p>
+<p>Chromake is used to align sequencing data of ChIP-seq and ATAC-seq experiments, identify peaks, and realize a read count. All those steps are realized using a snakemake pipeline included in this subpackage.</p>
 <section id="notes" class="level2 doc-section doc-section-notes">
 <h2 class="doc-section doc-section-notes anchored" data-anchor-id="notes">Notes</h2>
-<p>This subpackage contains submodules (<a href="..\reference/pipelines.chromake.scripts.config.html#genomake.pipelines.chromake.scripts.config"><code>genomake.pipelines.chromake.scripts.config</code></a> and <a href="..\reference/pipelines.chromake.scripts.config.html#genomake.pipelines.chromake.scripts.config"><code>genomake.pipelines.chromake.scripts.config</code></a>). Among them, <a href="..\reference/pipelines.chromake.scripts.paths.html#genomake.pipelines.chromake.scripts.paths">paths</a> is used by the snakefile to track the files it generate, while <a href="..\reference/pipelines.chromake.scripts.config.html#genomake.pipelines.chromake.scripts.config">config</a> was created to help the user create the YAML config file needed by snakemake.</p>
+<p>The ressources used can be modified. In particular, the number of cores can be specified in the config file while other ressources (memory, runtime) will necessite to copy and modify the snakefile included in this subpackage.</p>
+<p>Chromake contains submodules (<a href="..\reference/pipelines.chromake.scripts.config.html#genomake.pipelines.chromake.scripts.config"><code>genomake.pipelines.chromake.scripts.config</code></a> and <a href="..\reference/pipelines.chromake.scripts.paths.html#genomake.pipelines.chromake.scripts.paths"><code>genomake.pipelines.chromake.scripts.paths</code></a>). Among them, <a href="..\reference/pipelines.chromake.scripts.paths.html#genomake.pipelines.chromake.scripts.paths">paths</a> is used by the snakefile to track the files it generate, while <a href="..\reference/pipelines.chromake.scripts.config.html#genomake.pipelines.chromake.scripts.config">config</a> was created to help the user create the YAML config file needed by snakemake.</p>
 </section>
 <section id="examples" class="level2 doc-section doc-section-examples">
 <h2 class="doc-section doc-section-examples anchored" data-anchor-id="examples">Examples</h2>
-<p>To run the pipeline: - you need at least 60 Go of RAM. - you need a configuration file in a yaml format. Check <a href="..\reference/pipelines.chromake.scripts.config.html#genomake.pipelines.chromake.scripts.config.create_example_config"><code>genomake.pipelines.chromake.scripts.config.create_example_config</code></a> for an example. The <a href="..\reference/pipelines.chromake.scripts.config.html#genomake.pipelines.chromake.scripts.config"><code>genomake.pipelines.chromake.scripts.config</code></a> subpackage contains functions to generate such a config file from a samplesheet. - The configuration is composed of 3 main fields: - SEQUENCINGS - PROJECTS - JOBS</p>
+<p>To run the pipeline: - you need at least 60 Go of RAM. - you need a configuration file in a yaml format. Check <a href="..\reference/pipelines.chromake.scripts.config.html#genomake.pipelines.chromake.scripts.config.create_example_config"><code>genomake.pipelines.chromake.scripts.config.create_example_config</code></a> for an example. The <a href="..\reference/pipelines.chromake.scripts.config.html#genomake.pipelines.chromake.scripts.config">config</a> submodules contains functions to generate such a config file from a samplesheet. - The configuration is composed of 3 main fields: - SEQUENCINGS - PROJECTS - JOBS</p>
 <p>SEQUENCINGS is used to define the sample of a sequencing run that share similar adapter for trimming the reads, genome reference, and input samples (for ChIP-seq, more than one input can be indicated but only the first one will be used when identifying peak).</p>
 <p>Each sequencing must have a parameters field to indicates at least: - the genome reference for bowtie2 (BOWTIE2_REF) - a bed of blacklisted regions (BLACKLIST_BED), see https://github.com/Boyle-Lab/Blacklist to download the file corresponding to the genome you use - a file indicating the chromosome size (CHROM_SIZE), see https://hgdownload.cse.ucsc.edu/goldenpath/hg38/bigZips/ to download the one for GRCh38/hg38. UCSC also host the files for other genomes such as mm10. - the genome used, either the .fa file of the reference used to build bowtie2 reference (toplevel.fa for ensembl) or a string such as hg38 or mm10 if the genome was configured in homer with configureHomer.pl (GENOME) - Adaptor trimming will be realized if the <code>R1_ADAPTOR</code> and the <code>R2_ADAPTOR</code>fields are present</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">SEQUENCING</span><span class="kw">:</span></span>
@@ -4075,7 +4087,7 @@ vertical-align: -.125em;
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">genomake</span> chromake <span class="at">-c</span> ./config.yaml <span class="at">--cores</span> 250 <span class="at">--local-cores</span> 1 <span class="at">--jobs</span> 8 <span class="at">--others-snakemake</span> <span class="st">&quot;--executor slurm --default-resources slurm_account=singlecell clusters=nautilus --slurm-logdir ./logs --slurm-keep-successful-logs --slurm-delete-logfiles-older-than 0 --rerun-incomplete -np --unlock&quot;</span> <span class="at">-p</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>This command will print the command next as the “-p” argument was used, without it, the command will be executed):</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">snakemake</span> <span class="at">--snakefile</span> <span class="op">&lt;</span>PATH to snakefile in installation<span class="op">&gt;</span> --configfile ./config.yaml <span class="at">--retries</span> 4 <span class="at">--cores</span> 250 <span class="at">--jobs</span> 8 <span class="at">--local-cores</span> 1 <span class="at">--executor</span> slurm <span class="at">--default-resources</span> slurm_account=singlecell clusters=nautilus <span class="at">--slurm-logdir</span> ./logs <span class="at">--slurm-keep-successful-logs</span> <span class="at">--slurm-delete-logfiles-older-than</span> 0 <span class="at">--rerun-incomplete</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>For more information, check the<a href="cli.qmd">Command Line Interface</a> and the <a href>Get started</a>get_started.qmd) pages of the documentation.</p>
+<p>For more informations, check the <a href="../cli.html">Command Line Interface</a> and the <a href>Get started</a>get_started.qmd) pages of the documentation.</p>
 
 
 </section>

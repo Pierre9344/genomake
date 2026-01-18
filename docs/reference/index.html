@@ -3830,7 +3830,19 @@ vertical-align: -.125em;
 
 
 <style type="text/css">.navbar-logo {max-height: 48px;width: auto;padding-right: 4px;}</style>
-<link rel="stylesheet" href="reference/_styles-quartodoc.css">
+<style type="text/css">
+
+.doc-section dt code {
+background: none;
+}
+.doc-section dt {
+background-color: #f8e4d8;
+display: block;
+}
+.doc-section dl dd {
+margin-left: 3rem;
+}
+</style>
 </head>
 
 <body class="nav-sidebar floating nav-fixed quarto-light">
@@ -3973,7 +3985,7 @@ vertical-align: -.125em;
 </tr>
 <tr class="even">
 <td><a href="../reference/pipelines.chromake.scripts.config.create_example_config.html#genomake.pipelines.chromake.scripts.config.create_example_config">pipelines.chromake.scripts.config.create_example_config</a></td>
-<td>Create an example genomake/chromake YAML configuration file</td>
+<td>Create an example genomake/chromake YAML configuration file.</td>
 </tr>
 <tr class="odd">
 <td><a href="../reference/pipelines.chromake.scripts.config.update_jobs.html#genomake.pipelines.chromake.scripts.config.update_jobs">pipelines.chromake.scripts.config.update_jobs</a></td>
@@ -3981,7 +3993,7 @@ vertical-align: -.125em;
 </tr>
 <tr class="even">
 <td><a href="../reference/pipelines.chromake.scripts.config.check_project_and_sequencing.html#genomake.pipelines.chromake.scripts.config.check_project_and_sequencing">pipelines.chromake.scripts.config.check_project_and_sequencing</a></td>
-<td>Ensures that projects with no associated sequencing samples are removed from the config,</td>
+<td>Ensures that projects with no associated sequencing samples are removed from the config, and removes empty sequencing projects, while making sure the mark is considered in the filtering process.</td>
 </tr>
 <tr class="odd">
 <td><a href="../reference/pipelines.chromake.scripts.config.remove_sequencing.html#genomake.pipelines.chromake.scripts.config.remove_sequencing">pipelines.chromake.scripts.config.remove_sequencing</a></td>
@@ -4005,7 +4017,7 @@ vertical-align: -.125em;
 </tr>
 <tr class="even">
 <td><a href="../reference/pipelines.chromake.scripts.config.check_config_format.html#genomake.pipelines.chromake.scripts.config.check_config_format">pipelines.chromake.scripts.config.check_config_format</a></td>
-<td>Create an example genomake/chromake YAML configuration file</td>
+<td>Check the configuration file to make sure it follow the requirements of chromake. At runtile, it will stop snakemake if the file format is invalid.</td>
 </tr>
 <tr class="odd">
 <td><a href="../reference/pipelines.chromake.scripts.paths.get_all_fastq_related_paths.html#genomake.pipelines.chromake.scripts.paths.get_all_fastq_related_paths">pipelines.chromake.scripts.paths.get_all_fastq_related_paths</a></td>

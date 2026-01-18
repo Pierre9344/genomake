@@ -8,18 +8,12 @@ from pathlib import Path
 import yaml
 import warnings
 import os
-#import platform
-
-#def normalize_path(path: Path) -> str:
-#    # Convert Path to string and replace backslashes with forward slashes
-#    return str(path).replace("\\", "/")
 
 def create_example_config(
     filename: str = "test_config.yaml",
 ) :
     """
-    Create an example genomake/chromake YAML configuration file
-    using the new SEQUENCING / PROJECTS split.
+    Create an example genomake/chromake YAML configuration file.
 
     Parameters
     ----------
@@ -189,7 +183,6 @@ def create_example_config(
 
     return ("created the file: " + config_path)
 
-
 def update_jobs(config_path: str, jobs: dict) -> None:
     """
     Update or add the JOBS section in an existing YAML config.
@@ -263,11 +256,9 @@ def update_jobs(config_path: str, jobs: dict) -> None:
     with open(config_path, "w", encoding="utf-8") as stream:
         yaml.safe_dump(config, stream, sort_keys=False, default_flow_style=False)
 
-
 def check_project_and_sequencing(config: dict) -> dict:
     """
-    Ensures that projects with no associated sequencing samples are removed from the config,
-    and removes empty sequencing projects, while making sure the mark is considered in the filtering process.
+    Ensures that projects with no associated sequencing samples are removed from the config, and removes empty sequencing projects, while making sure the mark is considered in the filtering process.
 
     Parameters
     ----------
@@ -559,7 +550,6 @@ def create_samplesheet_from_config(
 
     return output_path
 
-
 def create_config_from_table(
     table_path: str,
     output_path: str,
@@ -678,7 +668,6 @@ def create_config_from_table(
 
     return output_path
 
-
 def check_sample_files_exist(config_path: str) -> bool:
     """
     Check if all R1 and R2 FASTQ files listed in the config exist.
@@ -732,11 +721,9 @@ def check_sample_files_exist(config_path: str) -> bool:
 
     return all_exist
 
-
 def check_config_format(cfg: dict, raise_error: bool = True):
     """
-    Create an example genomake/chromake YAML configuration file
-    using the new SEQUENCING / PROJECTS split.
+    Check the configuration file to make sure it follow the requirements of chromake. At runtile, it will stop snakemake if the file format is invalid.
 
     Parameters
     ----------
@@ -906,11 +893,6 @@ def check_config_format(cfg: dict, raise_error: bool = True):
                         print("\n".join(error_message))
                 del error_message
                 del need_error
-
-
-
-
-
 
 
 
