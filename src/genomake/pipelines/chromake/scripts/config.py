@@ -882,9 +882,22 @@ def check_config_format(cfg: dict, raise_error: bool = True):
             else:
                 need_error=False
                 error_message=["", "Some sequencing listed in the PROJECTS field are not present in the 'SEQUENCINGS' field:"]
-                for seq_id in project_data["SEQUENCINGS"]:
-                    if seq_id not in cfg["SEQUENCINGS"]:
-                        error_message.append(f"- The project {project_name} list the sequencing {seq_id} who is not present in the 'SEQUENCINGS' field of the configuration.")
+                cfg["PROJECTS"][project_name]["SAMPLES"] = []
+                for sequencing_name in project_data["SEQUENCINGS"]:
+                    if sequencing_name not in cfg["SEQUENCINGS"]:
+                        error_message.append(f"- The project {project_name} list the sequencing {sequencing_name} who is not present in the 'SEQUENCINGS' field of the configuration.")
+                        need_error=True
+                    else:
+                        # Add the path to the bed files for the samples that shares the project type
+                        base = Path(cfg["SEQUENCINGS"][sequencing_name]["PATH"])
+                        for sample_name, sample_data in cfg["SEQUENCINGS"][sequencing_name].items():
+                            if sample_data["TYPE"] == project_data["TYPE"]:
+                                cfg["PROJECTS"][project_name]["SAMPLES"].append(base / "BED" / (sample_name + "_sorted.bed"))
+                if len(cfg["PROJECTS"][project_name]["SAMPLES"]) == 0:
+                    if need_error:
+                        error_message.append(f"None of the sequencing listed in the project {project_name} contains samples associated to the project type. Please add the samples to the sequencing or remove this project.")
+                    else:
+                        error_message = f"None of the sequencing listed in the project {project_name} contains samples associated to the project type. Please add the samples to the sequencing or remove this project."
                         need_error=True
                 if need_error:
                     if raise_error:
@@ -893,7 +906,14 @@ def check_config_format(cfg: dict, raise_error: bool = True):
                         print("\n".join(error_message))
                 del error_message
                 del need_error
-
-
+                if "MIN_SAMPLES_FOR_PEAKS" in project_data:
+                    if project_data["MIN_SAMPLES_FOR_PEAKS"] > len(cfg["PROJECTS"][project_name]["SAMPLES"]):
+                        if raise_error:
+                            raise RuntimeError(f"The project {project_name} indicate that a peaks must be present in at least {project_data['MIN_SAMPLES_FOR_PEAKS']} samples to be considered but the project is associated to only {len(cfg['PROJECTS'][project_name]['SAMPLES'])} samples")
+                        else:
+                            print(f"The project {project_name} indicate that a peaks must be present in at least {project_data['MIN_SAMPLES_FOR_PEAKS']} samples to be considered but the project is associated to only {len(cfg['PROJECTS'][project_name]['SAMPLES'])} samples")
+                else:
+                    print(f"No minimal number of samples to consider peaks is indicated for the project {project_name}. Defaulting to 1. This will keep all peaks identified by macs!")
+                    cfg["PROJECTS"][project_name]["MIN_SAMPLES_FOR_PEAKS"]=1
 
 
