@@ -891,8 +891,15 @@ def check_config_format(cfg: dict, raise_error: bool = True):
                         # Add the path to the bed files for the samples that shares the project type
                         base = Path(cfg["SEQUENCINGS"][sequencing_name]["PATH"])
                         for sample_name, sample_data in cfg["SEQUENCINGS"][sequencing_name].items():
+                            no_sample=True
                             if sample_data["TYPE"] == project_data["TYPE"]:
                                 cfg["PROJECTS"][project_name]["SAMPLES"].append(base / "BED" / (sample_name + "_sorted.bed"))
+                                no_sample=False
+                            if no_sample:
+                                if need_error:
+                                    raise RuntimeError(f"The sequencing {sequencing_name} is indicated as associated to the {project_name} project but it don't contains samples for its epigenetic mark.")
+                                else:
+                                    print(f"The sequencing {sequencing_name} is indicated as associated to the {project_name} project but it don't contains samples for its epigenetic mark.")
                 if len(cfg["PROJECTS"][project_name]["SAMPLES"]) == 0:
                     if need_error:
                         error_message.append(f"None of the sequencing listed in the project {project_name} contains samples associated to the project type. Please add the samples to the sequencing or remove this project.")

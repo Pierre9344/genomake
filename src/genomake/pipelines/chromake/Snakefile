@@ -33,16 +33,16 @@ onstart:
 
 rule all:
     input:
-        *chr_paths.get_all_fastq_related_paths(config, "fastqc_raw"),
-        *chr_paths.get_all_fastq_related_paths(config, "multiqc_raw"),
-        *chr_paths.get_all_fastq_related_paths(config, "cutadapt"),
-        *chr_paths.get_all_fastq_related_paths(config, "fastqc_trimmed"),
-        *chr_paths.get_all_fastq_related_paths(config, "multiqc_trimmed"),
-        *chr_paths.get_all_fastq_related_paths(config, "multiqc_bam"),
-        *chr_paths.get_all_fastq_related_paths(config, "bam_filtered_coord"),
-        *chr_paths.get_all_fastq_related_paths(config, "bam_filtered_name"),
-        *chr_paths.get_all_fastq_related_paths(config, "bedgraph"),
-        *chr_paths.get_all_fastq_related_paths(config, "bed_sorted"),
+        *chr_paths.get_all_sequencings_related_paths(config, "fastqc_raw"),
+        *chr_paths.get_all_sequencings_related_paths(config, "multiqc_raw"),
+        *chr_paths.get_all_sequencings_related_paths(config, "cutadapt"),
+        *chr_paths.get_all_sequencings_related_paths(config, "fastqc_trimmed"),
+        *chr_paths.get_all_sequencings_related_paths(config, "multiqc_trimmed"),
+        *chr_paths.get_all_sequencings_related_paths(config, "multiqc_bam"),
+        *chr_paths.get_all_sequencings_related_paths(config, "bam_filtered_coord"),
+        *chr_paths.get_all_sequencings_related_paths(config, "bam_filtered_name"),
+        *chr_paths.get_all_sequencings_related_paths(config, "bedgraph"),
+        *chr_paths.get_all_sequencings_related_paths(config, "bed_sorted"),
 
 def get_qos_from_time(attempt: int, default_time_min: int)->str:
 
@@ -73,10 +73,10 @@ for sequencing_name, sequencing_data in config["SEQUENCINGS"].items():
         name:
             f"fastqc_raw_{sequencing_name}"
         input:
-            *chr_paths.get_sequencing_fastq_related_paths(config, sequencing_name, "fastq_raw"),
+            *chr_paths.get_sequencings_related_paths(config, sequencing_name, "fastq_raw"),
         output:
-            *chr_paths.get_sequencing_fastq_related_paths(config, sequencing_name, "fastqc_raw"),
-            *chr_paths.get_sequencing_fastq_related_paths(config, sequencing_name, "multiqc_raw"),
+            *chr_paths.get_sequencings_related_paths(config, sequencing_name, "fastqc_raw"),
+            *chr_paths.get_sequencings_related_paths(config, sequencing_name, "multiqc_raw"),
         params:
             fastqc_outdir=str(Path(sequencing_data["PATH"]) / "QC/FASTQC/RAW/"),
             multiqc_outdir=str(Path(sequencing_data["PATH"]) / "QC/MULTIQC/"),
@@ -427,11 +427,11 @@ for sequencing_name, sequencing_data in config["SEQUENCINGS"].items():
             name:
                 f"multiqc_trimmed_{sequencing_name}"
             input:
-                *chr_paths.get_sequencing_fastq_related_paths(config, sequencing_name, "fastqc_trimmed"),
-                *chr_paths.get_sequencing_fastq_related_paths(config, sequencing_name, "flagstat"),
+                *chr_paths.get_sequencings_related_paths(config, sequencing_name, "fastqc_trimmed"),
+                *chr_paths.get_sequencings_related_paths(config, sequencing_name, "flagstat"),
             output:
-                chr_paths.get_sequencing_fastq_related_paths(config, sequencing_name, "multiqc_trimmed"),
-                chr_paths.get_sequencing_fastq_related_paths(config, sequencing_name, "multiqc_bam"),
+                chr_paths.get_sequencings_related_paths(config, sequencing_name, "multiqc_trimmed"),
+                chr_paths.get_sequencings_related_paths(config, sequencing_name, "multiqc_bam"),
             threads:
                 1,
             params:
@@ -704,10 +704,10 @@ for sequencing_name, sequencing_data in config["SEQUENCINGS"].items():
             name:
                 f"multiqc_trimmed_{sequencing_name}"
             input:
-                *chr_paths.get_sequencing_fastq_related_paths(config, sequencing_name, "flagstat"),
-                *chr_paths.get_sequencing_fastq_related_paths(config, sequencing_name, "stats"),
+                *chr_paths.get_sequencings_related_paths(config, sequencing_name, "flagstat"),
+                *chr_paths.get_sequencings_related_paths(config, sequencing_name, "stats"),
             output:
-                chr_paths.get_sequencing_fastq_related_paths(config, sequencing_name, "multiqc_bam"),
+                chr_paths.get_sequencings_related_paths(config, sequencing_name, "multiqc_bam"),
             threads:
                 1,
             params:
@@ -730,7 +730,7 @@ for sequencing_name, sequencing_data in config["SEQUENCINGS"].items():
         name:
             f"multibamsummary_{sequencing_name}"
         input:
-            *chr_paths.get_sequencing_fastq_related_paths(config, sequencing_name, "bam_filtered_coord"),
+            *chr_paths.get_sequencings_related_paths(config, sequencing_name, "bam_filtered_coord"),
         output:
             str(Path(sequencing_data["PATH"]) / "QC/CORRELATION" / (sequencing_name + "correlation_matrix.npz")),
             str(Path(sequencing_data["PATH"]) / "QC/CORRELATION" / (sequencing_name + "correlation_plot.png")),
