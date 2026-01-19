@@ -737,7 +737,7 @@ def check_config_format(cfg: dict, raise_error: bool = True):
         if raise_error:
             raise RuntimeError("The configuration file is missing the 'SEQUENCING' field!")
         else:
-            print("The configuration file is missing the 'SEQUENCING' field!")
+            print("The configuration file is missing the 'SEQUENCINGS' field!")
     if "PROJECTS" not in cfg:
         print("The configuration file is missing the 'PROJECTS' field! Samples will be aligned but no peak calling will be realized.")
     if "JOBS" not in cfg:
