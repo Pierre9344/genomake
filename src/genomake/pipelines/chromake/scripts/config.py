@@ -854,14 +854,14 @@ def check_config_format(cfg: dict, raise_error: bool = True):
         for project_name, project_data in cfg["PROJECTS"].items():
             if "PROJECT_PATH" not in project_data:
                 if raise_error:
-                    raise RuntimeError(f"The project {project_name} is missing the 'PROJECT_PATH field! Please add a valid path.")
+                    raise RuntimeError(f"The project {project_name} is missing the 'PROJECT_PATH field`! Please add a valid path.")
                 else:
                     print(f"The project {project_name} is missing the 'PROJECT_PATH field! Please add a valid path.")
             elif project_data["PROJECT_PATH"] == "":
                 if raise_error:
-                    raise RuntimeError(f"The project {project_name} 'PROJECT_PATH field is empty! Please add a valid path.")
+                    raise RuntimeError(f"The project {project_name} 'PROJECT_PATH` field is empty! Please add a valid path.")
                 else:
-                    print(f"The project {project_name} 'PROJECT_PATH field is empty! Please add a valid path.")
+                    print(f"The project {project_name} 'PROJECT_PATH  field is empty! Please add a valid path.")
             else:
                 Path(project_data["PROJECT_PATH"]).mkdir(parents=True, exist_ok=True)
             if "TYPE" not in project_data:
@@ -876,15 +876,15 @@ def check_config_format(cfg: dict, raise_error: bool = True):
                 """)
             if "SEQUENCINGS" not in project_data:
                 if raise_error:
-                    raise RuntimeError(f"The project {project_name} is missing the 'SEQUENCING' field! Please add it.")
+                    raise RuntimeError(f"The project {project_name} is missing the 'SEQUENCINGS' field! Please add it.")
                 else:
-                    print(f"The project {project_name} is missing the 'SEQUENCING' field! Please add it.")
+                    print(f"The project {project_name} is missing the 'SEQUENCINGS' field! Please add it.")
             else:
                 need_error=False
-                error_message=["", "Some sequencing listed in the PROJECTS field are not present in the SEQUENCING field"]
+                error_message=["", "Some sequencing listed in the PROJECTS field are not present in the 'SEQUENCINGS' field:"]
                 for seq_id in project_data["SEQUENCINGS"]:
                     if seq_id not in cfg["SEQUENCINGS"]:
-                        error_message.append(f"The project {project_name} list the sequencing {seq_id} who is not present in the SEQUENCING field of the configuration.")
+                        error_message.append(f"- The project {project_name} list the sequencing {seq_id} who is not present in the 'SEQUENCINGS' field of the configuration.")
                         need_error=True
                 if need_error:
                     if raise_error:
