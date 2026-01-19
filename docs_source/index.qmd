@@ -12,7 +12,13 @@ This package is a WIP.
 
 # Installation
 
-Genomeke can be installed via conda using the yml file next:
+A Genomake for the chromake pipeline can be installed using pip.
+
+```{.bash}
+pip install git+https://github.com/Pierre9344/genomake
+```
+
+If you wish to install it in a conda environment, you can use a yml containing the lineS next.
 
 ```{.yaml}
 name: genomake
@@ -38,7 +44,6 @@ dependencies:
       - deeptools
       - multiqc
       - snakemake-executor-plugin-slurm
-
 ```
 
 ```{.bash}
