@@ -733,7 +733,7 @@ def check_config_format(cfg: dict, raise_error: bool = True):
         Raise a runtime error or simply print the message.
     """
     
-    if "SEQUENCINGS" not in cfg:
+    if "SEQUENCING" not in cfg:
         if raise_error:
             raise RuntimeError("The configuration file is missing the 'SEQUENCINGS' field!")
         else:

@@ -26,9 +26,7 @@ onstart:
         (sample_path / "QC/MULTIQC").mkdir(parents=True, exist_ok=True)
         (sample_path / "QC/MULTIQC").mkdir(parents=True, exist_ok=True)
         (sample_path / "TRIMMED").mkdir(parents=True, exist_ok=True)
-        
         (sample_path / "QC/PICARD").mkdir(parents=True, exist_ok=True)
-        
         (sample_path / "QC/stats").mkdir(parents=True, exist_ok=True)
         (sample_path / "QC/CORRELATION").mkdir(parents=True, exist_ok=True)
     
