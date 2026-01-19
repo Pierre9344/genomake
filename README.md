@@ -11,11 +11,11 @@ This package is a WIP.
 
 See the [documentation](https://pierre9344.github.io/genomake/) for geting started.
 
-# Current pipeline
+# Current pipelines
 
 ## chromake
 
-Chromake is a pipeline to analyze ATAC-seq and ChIP-seq experiment.
+Chromake is a snakemake pipeline to analyze ATAC-seq and ChIP-seq sequencing experiment.
 
 It will supports peak calling for the epigenetic marks H3K27Ac, H3K27me3, and H2Aub (H2A Ubiquitination) and for ATAC-seq experiment:
 
