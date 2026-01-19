@@ -735,7 +735,7 @@ def check_config_format(cfg: dict, raise_error: bool = True):
     
     if "SEQUENCINGS" not in cfg:
         if raise_error:
-            raise RuntimeError("The configuration file is missing the 'SEQUENCING' field!")
+            raise RuntimeError("The configuration file is missing the 'SEQUENCINGS' field!")
         else:
             print("The configuration file is missing the 'SEQUENCINGS' field!")
     if "PROJECTS" not in cfg:
