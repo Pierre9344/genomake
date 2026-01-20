@@ -269,3 +269,65 @@ def get_sequencings_related_paths(cfg: dict,
     return res
 
 
+def get_project_paths_for_macs3(cfg: dict,
+                                project_name: str
+                                ) -> dict:
+    """
+    Get a dictionary with the files necessary for the macs3 rules of a project.
+
+    Parameters
+    ----------
+    cfg : dict
+        Dict representing the configuration of an analysis with the chromake pipeline.
+    
+    project_name: str
+        String representing the name of the project in cfg
+    
+    Returns
+    -------
+    :
+        A dictionary of all file paths for the project.
+    """
+    res={}
+    # Basic checks of the configuration file
+    if project_name not in cfg["PROJECTS"]:
+        raise RuntimeError(f"The project {project_name} is not in the configuration file")
+    if "TYPE" not in cfg["PROJECTS"][project_name] or cfg["PROJECTS"][project_name]["TYPE"] not in ["ATAC", "H3K27AC", "H3K27ME3", "H2AUB"]:
+        raise RuntimeError(f"The project {project_name} don't list a valid 'TYPE'. Please add one among: ATAC, H3K27AC, H3K27ME3, H2AUB.")
+    if "SEQUENCINGS" not in cfg["PROJECTS"][project_name] or len(cfg["PROJECTS"][project_name]["SEQUENCINGS"]) < 1:
+        raise RuntimeError(f"The project {project_name} don't indicate any valid sequencing. Please add a sequencing or remove this project.")
+    
+    for sequencing_name in cfg["PROJECTS"][project_name]["SEQUENCINGS"]:
+        if sequencing_name not in cfg["SEQUENCINGS"]:
+            raise RuntimeError(f"The project {project_name} list the sequencing {sequencing_name} who is not present in the configuration file.")
+        if cfg["PROJECTS"][project_name]["TYPE"] in ["H3K27AC", "H3K27ME3", "H2AUB"]:
+            # ChIP-seq samples need an input when identifying the peaks
+            if "INPUT" not in cfg["SEQUENCINGS"][sequencing_name] or len(cfg["SEQUENCINGS"][sequencing_name]["INPUT"]) < 1:
+                raise RuntimeError(f"The type of the project {project_name} necessite an input for the callpeak command of macs but the associated {sequencing_name} don't list any.")
+            path_input_bed = str(Path( cfg["SEQUENCINGS"][sequencing_name]["PATH"]) / "BED" / (list(cfg["SEQUENCINGS"][sequencing_name]["INPUT"].keys())[0] + "_sorted.bed"))
+            for sample_name, sample_data in cfg["SEQUENCINGS"][sequencing_name]["SAMPLES"]:
+                if sample_data["TYPE"] == cfg["PROJECTS"][project_name]["TYPE"]:
+                    res["_".join([sequencing_name, sample_name])]={
+                        "INPUT": path_input_bed,
+                        "SAMPLE": str(Path( cfg["SEQUENCINGS"][sequencing_name]["PATH"]) / "BED" / (sample_name + "_sorted.bed")),
+                        "OUTDIR": str(Path(cfg["PROJECTS"][project_name]["PROJECT_PATH"]) / "peaks/"),
+                        "NAME": "_".join(["macs3",project_name, sequencing_name, sample_name])
+                        }
+        else:
+            # For the ATAC-seq, we don't need input file when identifying the peaks
+            for sample_name, sample_data in cfg["SEQUENCINGS"][sequencing_name]["SAMPLES"]:
+                if sample_data["TYPE"] == cfg["PROJECTS"][project_name]["TYPE"]:
+                    res["_".join([sequencing_name, sample_name])]={
+                        "SAMPLE": str(Path( cfg["SEQUENCINGS"][sequencing_name]["PATH"]) / "BED" / (sample_name + "_sorted.bed")),
+                        "OUTDIR": str(Path(cfg["PROJECTS"][project_name]["PROJECT_PATH"]) / "peaks/"),
+                        "NAME": "_".join(["macs3",project_name, sequencing_name, sample_name])
+                        }
+    if len(res) < 1:
+        raise RuntimeError(f"No sample corresponding to the {project_name} project were found! Please check your configuration file")
+    return res
+    
+
+
+
+
+

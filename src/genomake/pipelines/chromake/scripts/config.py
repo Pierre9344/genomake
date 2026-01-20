@@ -922,5 +922,13 @@ def check_config_format(cfg: dict, raise_error: bool = True):
                 else:
                     print(f"No minimal number of samples to consider peaks is indicated for the project {project_name}. Defaulting to 1. This will keep all peaks identified by macs!")
                     cfg["PROJECTS"][project_name]["MIN_SAMPLES_FOR_PEAKS"]=1
+        
+        # Make sure each project have different path
+        paths = [p["PROJECT_PATH"] for p in cfg["PROJECTS"].values()]
+        if len(paths) != len(set(paths)):
+            if raise_error:
+                raise RuntimeError("Some 'PROJECT_PATH' values are duplicated. Please indicate a different path for each projects.")
+            else:
+                print("Some 'PROJECT_PATH' values are duplicated. Please indicate a different path for each projects.")
 
 
