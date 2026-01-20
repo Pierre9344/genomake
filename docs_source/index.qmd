@@ -60,7 +60,12 @@ pip install git+https://github.com/Pierre9344/genomake
 
 ## Objectives
 
-The `chromake` pipeline is a pipeline to analyze ChIP-seq (H3K27ac, H3K27me3, and H2Aub marks), and ATAC-seq samples.
+The `chromake` pipeline is a pipeline to analyze ChIP-seq (H3K27ac, H3K27me3, and H2Aub marks), and ATAC-seq samples. It use fastq samples to:
+
+1. Realize an optional adaptor trimming (cutadapt)
+2. Align samples to a genome reference using bowtie2
+3. Identify enriched peaks (macs3)
+4. Realize quality controls (fastqc, samtools stats, samtools flagstat, multiqc)
 
 This pipeline is a WIP. It currently realize the alignment of the samples, and generate UCSC compatible tracks but doesn't realize the peak calling.
 
