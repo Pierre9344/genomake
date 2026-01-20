@@ -86,6 +86,7 @@ quartodoc:
         - pipelines.chromake.scripts.config.check_config_format
         - pipelines.chromake.scripts.paths.get_all_sequencings_related_paths
         - pipelines.chromake.scripts.paths.get_sequencings_related_paths
+        - pipelines.chromake.scripts.paths.get_project_paths_for_macs3
 
 
 

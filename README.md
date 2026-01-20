@@ -33,6 +33,7 @@ Steps realized:
     2. QC (fastqc and multiqc) of raw and trimmed fastq files.
     3. Alignment on genome (using bowtie2).
     4. Peak calling (using macs2).
-    5. Read count (bedtools and samtools) /!\ WIP /!\
+    5. Read count (macs3) /!\ WIP /!\
+    6. Preliminary analysis and report generation (quarto report with PCA, heatmap, and some standard QC) /!\ WIP /!\
     
 
