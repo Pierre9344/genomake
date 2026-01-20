@@ -29,7 +29,9 @@ onstart:
         (sample_path / "QC/PICARD").mkdir(parents=True, exist_ok=True)
         (sample_path / "QC/stats").mkdir(parents=True, exist_ok=True)
         (sample_path / "QC/CORRELATION").mkdir(parents=True, exist_ok=True)
-    
+    for project_name, project_data in config["SEQUENCINGS"].items():
+        project_path = Path(project_data["PROJECT_PATH"])
+        (project_path / "peaks").mkdir(parents=True, exist_ok=True)
 
 rule all:
     input:

@@ -922,6 +922,11 @@ def check_config_format(cfg: dict, raise_error: bool = True):
                 else:
                     print(f"No minimal number of samples to consider peaks is indicated for the project {project_name}. Defaulting to 1. This will keep all peaks identified by macs!")
                     cfg["PROJECTS"][project_name]["MIN_SAMPLES_FOR_PEAKS"]=1
+                if "PROJECT_PATH" not in project_data:
+                    if raise_error:
+                        raise RuntimeError(f"The project {project_name} don't have a 'PROJECT_PATH' field!")
+                    else:
+                        print(f"The project {project_name} don't have a 'PROJECT_PATH' field!")
         
         # Make sure each project have different path
         paths = [p["PROJECT_PATH"] for p in cfg["PROJECTS"].values()]
