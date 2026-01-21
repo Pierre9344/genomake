@@ -350,7 +350,7 @@ def get_project_paths_for_macs(cfg: dict,
                             res.append(str(Path(cfg["PROJECTS"][project_name]["PROJECT_PATH"]) / f"peaks/macs3_{project_name}_{sequencing_name}_{sample_name}_peaks.broadPeak"))
             else:
                 # For the ATAC-seq, we don't need input file when identifying the peaks
-                for sample_name, sample_data in cfg["SEQUENCINGS"][sequencing_name]["SAMPLES"]:
+                for sample_name, sample_data in cfg["SEQUENCINGS"][sequencing_name]["SAMPLES"].items():
                     if sample_data["TYPE"] == cfg["PROJECTS"][project_name]["TYPE"]:
                         res.append(str(Path(cfg["PROJECTS"][project_name]["PROJECT_PATH"]) / f"peaks/macs3_{project_name}_{sequencing_name}_{sample_name}_peaks.broadPeak"))
         if len(res) < 1:
