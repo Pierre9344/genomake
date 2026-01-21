@@ -318,7 +318,7 @@ def get_project_paths_for_macs(cfg: dict,
                             "INPUT": path_input_bed,
                             "SAMPLE": str(Path( cfg["SEQUENCINGS"][sequencing_name]["PATH"]) / "BED" / (sample_name + "_sorted.bed")),
                             "OUTDIR": str(Path(cfg["PROJECTS"][project_name]["PROJECT_PATH"]) / "peaks/"),
-                            "NAME": "_".join(["peak_calling",project_name, sequencing_name, sample_name])
+                            "NAME": "_".join(["macs",project_name, sequencing_name, sample_name])
                             }
             else:
                 # For the ATAC-seq, we don't need input file when identifying the peaks
@@ -327,7 +327,7 @@ def get_project_paths_for_macs(cfg: dict,
                         res["_".join([sequencing_name, sample_name])]={
                             "SAMPLE": str(Path( cfg["SEQUENCINGS"][sequencing_name]["PATH"]) / "BED" / (sample_name + "_sorted.bed")),
                             "OUTDIR": str(Path(cfg["PROJECTS"][project_name]["PROJECT_PATH"]) / "peaks/"),
-                            "NAME": "_".join(["peak_calling",project_name, sequencing_name, sample_name])
+                            "NAME": "_".join(["macs",project_name, sequencing_name, sample_name])
                             }
         if len(res) < 1:
             raise RuntimeError(f"No sample corresponding to the {project_name} project were found! Please check your configuration file")
@@ -345,14 +345,14 @@ def get_project_paths_for_macs(cfg: dict,
                 for sample_name, sample_data in cfg["SEQUENCINGS"][sequencing_name]["SAMPLES"].items():
                     if sample_data["TYPE"] == cfg["PROJECTS"][project_name]["TYPE"]:
                         if cfg["PROJECTS"][project_name]["TYPE"] == "H3K27AC":
-                            res.append(str(Path(cfg["PROJECTS"][project_name]["PROJECT_PATH"]) / f"peaks/macs3_{project_name}_{sequencing_name}_{sample_name}_peaks.narrowPeak"))
+                            res.append(str(Path(cfg["PROJECTS"][project_name]["PROJECT_PATH"]) / f"peaks/macs_{project_name}_{sequencing_name}_{sample_name}_peaks.narrowPeak"))
                         else:
-                            res.append(str(Path(cfg["PROJECTS"][project_name]["PROJECT_PATH"]) / f"peaks/macs3_{project_name}_{sequencing_name}_{sample_name}_peaks.broadPeak"))
+                            res.append(str(Path(cfg["PROJECTS"][project_name]["PROJECT_PATH"]) / f"peaks/macs_{project_name}_{sequencing_name}_{sample_name}_peaks.broadPeak"))
             else:
                 # For the ATAC-seq, we don't need input file when identifying the peaks
                 for sample_name, sample_data in cfg["SEQUENCINGS"][sequencing_name]["SAMPLES"].items():
                     if sample_data["TYPE"] == cfg["PROJECTS"][project_name]["TYPE"]:
-                        res.append(str(Path(cfg["PROJECTS"][project_name]["PROJECT_PATH"]) / f"peaks/macs3_{project_name}_{sequencing_name}_{sample_name}_peaks.broadPeak"))
+                        res.append(str(Path(cfg["PROJECTS"][project_name]["PROJECT_PATH"]) / f"peaks/macs_{project_name}_{sequencing_name}_{sample_name}_peaks.broadPeak"))
         if len(res) < 1:
             print(f"No sample corresponding to the {project_name} project were found! Please check your configuration file.")
         return res

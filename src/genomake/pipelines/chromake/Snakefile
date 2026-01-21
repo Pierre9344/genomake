@@ -45,7 +45,8 @@ rule all:
         *chr_paths.get_all_sequencings_related_paths(config, "bam_filtered_name"),
         *chr_paths.get_all_sequencings_related_paths(config, "bedgraph"),
         *chr_paths.get_all_sequencings_related_paths(config, "bed_sorted"),
-        *chr_paths.get_all_project_peaks(config),
+        # remove comment after the macs rule is added
+#        *chr_paths.get_all_project_peaks(config),
 
 
 from genomake.pipelines.chromake.scripts.snakemake_functions import get_qos_from_time
