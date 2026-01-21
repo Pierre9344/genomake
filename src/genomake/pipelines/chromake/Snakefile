@@ -744,7 +744,7 @@ for sequencing_name, sequencing_data in config["SEQUENCINGS"].items():
 if "PROJECTS" in config:
     from genomake.pipelines.chromake.scripts.snakemake_functions import detect_macs_version
     for project_name in config["PROJECTS"].keys():
-        peak_calling_data = chr_paths.get_project_paths_for_macs3(config, project_name, "macs")
+        peak_calling_data = chr_paths.get_project_paths_for_macs(config, project_name, "macs")
         
 
     
