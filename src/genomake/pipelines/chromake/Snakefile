@@ -46,25 +46,8 @@ rule all:
         *chr_paths.get_all_sequencings_related_paths(config, "bedgraph"),
         *chr_paths.get_all_sequencings_related_paths(config, "bed_sorted"),
 
-def get_qos_from_time(attempt: int, default_time_min: int)->str:
 
-    if "JOBS" not in config or "QOS_INFOS" not in config["JOBS"]:
-        return "long"
-
-    runtime_minutes = attempt * default_time_min
-    suitable_qos = None
-
-    for qos_name, qos_info in config["JOBS"]["QOS_INFOS"].items():
-        maxwall = qos_info.get("MaxWall")
-        if maxwall is None:
-            continue
-        if maxwall >= runtime_minutes:
-            if suitable_qos is None or maxwall < config["JOBS"]["QOS_INFOS"][suitable_qos]["MaxWall"]:
-                suitable_qos = qos_name
-
-    # fallback to 'long' if none found
-    return suitable_qos or "long"
-
+from genomake.pipelines.chromake.scripts.snakemake_functions import get_qos_from_time
 
 #####################################################
 # SEQUENCING QC, TRIMMING (OPTIONAL), AND ALIGNMENT #
@@ -86,7 +69,7 @@ for sequencing_name, sequencing_data in config["SEQUENCINGS"].items():
         resources:
             mem_mb=lambda wildcards, attempt: 10000 * attempt,
             runtime=lambda wildcards, attempt: attempt * 60,
-            qos=lambda wildcards, attempt: get_qos_from_time(attempt, 60),
+            qos=lambda wildcards, attempt: get_qos_from_time(attempt, 60, config),
         shell:
             r"""
             fastqc \
@@ -128,7 +111,7 @@ for sequencing_name, sequencing_data in config["SEQUENCINGS"].items():
                 resources:
                     mem_mb=lambda wildcards, attempt: 2000 * attempt,
                     runtime=lambda wildcards, attempt: attempt * 60,
-                    qos=lambda wildcards, attempt: get_qos_from_time(attempt, 60),
+                    qos=lambda wildcards, attempt: get_qos_from_time(attempt, 60, config),
                 shell:
                     r"""
                     cutadapt -a {params.r1_adaptor} -A {params.r2_adaptor} \
@@ -174,7 +157,7 @@ for sequencing_name, sequencing_data in config["SEQUENCINGS"].items():
                 resources:
                     mem_mb=lambda wildcards, attempt: 60000 * attempt,
                     runtime=lambda wildcards, attempt: attempt * 180,
-                    qos=lambda wildcards, attempt: get_qos_from_time(attempt, 180),
+                    qos=lambda wildcards, attempt: get_qos_from_time(attempt, 180, config),
                 shell:
                     r"""
                     bowtie2 -p {threads} --local --very-sensitive-local \
@@ -249,7 +232,7 @@ for sequencing_name, sequencing_data in config["SEQUENCINGS"].items():
                 resources:
                     mem_mb=lambda wildcards, attempt: 20000 * attempt,
                     runtime=lambda wildcards, attempt: attempt * 180,
-                    qos=lambda wildcards, attempt: get_qos_from_time(attempt, 180),
+                    qos=lambda wildcards, attempt: get_qos_from_time(attempt, 180, config),
                 shell:
                     r"""
                     bedtools bamtobed -i {input[0]} -bedpe > {output[0]}
@@ -288,7 +271,7 @@ for sequencing_name, sequencing_data in config["SEQUENCINGS"].items():
                     resources:
                         mem_mb=lambda wildcards, attempt: 10000 * attempt,
                         runtime=lambda wildcards, attempt: attempt * 60,
-                        qos=lambda wildcards, attempt: get_qos_from_time(attempt, 60),
+                        qos=lambda wildcards, attempt: get_qos_from_time(attempt, 60, config),
                     shell:
                         r"""
                         cutadapt -a {params.r1_adaptor} -A {params.r2_adaptor} \
@@ -334,7 +317,7 @@ for sequencing_name, sequencing_data in config["SEQUENCINGS"].items():
                     resources:
                         mem_mb=lambda wildcards, attempt: 60000 * attempt,
                         runtime=lambda wildcards, attempt: attempt * 180,
-                        qos=lambda wildcards, attempt: get_qos_from_time(attempt, 180),
+                        qos=lambda wildcards, attempt: get_qos_from_time(attempt, 180, config),
                     shell:
                         r"""
                         bowtie2 -p {threads} --local --very-sensitive-local \
@@ -409,7 +392,7 @@ for sequencing_name, sequencing_data in config["SEQUENCINGS"].items():
                     resources:
                         mem_mb=lambda wildcards, attempt: 20000 * attempt,
                         runtime=lambda wildcards, attempt: attempt * 180,
-                        qos=lambda wildcards, attempt: get_qos_from_time(attempt, 180),
+                        qos=lambda wildcards, attempt: get_qos_from_time(attempt, 180, config),
                     shell:
                         r"""
                         bedtools bamtobed -i {input[0]} -bedpe > {output[0]}
@@ -444,7 +427,7 @@ for sequencing_name, sequencing_data in config["SEQUENCINGS"].items():
             resources:
                 mem_mb=lambda wildcards, attempt: 10000 * attempt,
                 runtime=lambda wildcards, attempt: attempt * 60,
-                qos=lambda wildcards, attempt: get_qos_from_time(attempt, 60),
+                qos=lambda wildcards, attempt: get_qos_from_time(attempt, 60, config),
             shell:
                 r"""
                 multiqc {params.fastqc_outdir} -o {params.multiqc_outdir} --force -n Trimmed_fastq
@@ -487,7 +470,7 @@ for sequencing_name, sequencing_data in config["SEQUENCINGS"].items():
                 resources:
                     mem_mb=lambda wildcards, attempt: 60000 * attempt,
                     runtime=lambda wildcards, attempt: attempt * 180,
-                    qos=lambda wildcards, attempt: get_qos_from_time(attempt, 180),
+                    qos=lambda wildcards, attempt: get_qos_from_time(attempt, 180, config),
                 shell:
                     r"""
                     bowtie2 -p {threads} --local --very-sensitive-local \
@@ -612,7 +595,7 @@ for sequencing_name, sequencing_data in config["SEQUENCINGS"].items():
                     resources:
                         mem_mb=lambda wildcards, attempt: 60000 * attempt,
                         runtime=lambda wildcards, attempt: attempt * 180,
-                        qos=lambda wildcards, attempt: get_qos_from_time(attempt, 180),
+                        qos=lambda wildcards, attempt: get_qos_from_time(attempt, 180, config),
                     shell:
                         r"""
                         bowtie2 -p {threads} --local --very-sensitive-local \
@@ -687,7 +670,7 @@ for sequencing_name, sequencing_data in config["SEQUENCINGS"].items():
                     resources:
                         mem_mb=lambda wildcards, attempt: 20000 * attempt,
                         runtime=lambda wildcards, attempt: attempt * 180,
-                        qos=lambda wildcards, attempt: get_qos_from_time(attempt, 180),
+                        qos=lambda wildcards, attempt: get_qos_from_time(attempt, 180, config),
                     shell:
                         r"""
                         bedtools bamtobed -i {input[0]} -bedpe > {output[0]}
@@ -719,7 +702,7 @@ for sequencing_name, sequencing_data in config["SEQUENCINGS"].items():
             resources:
                 mem_mb=lambda wildcards, attempt: 10000 * attempt,
                 runtime=lambda wildcards, attempt: attempt * 60,
-                qos=lambda wildcards, attempt: get_qos_from_time(attempt, 60),
+                qos=lambda wildcards, attempt: get_qos_from_time(attempt, 60, config),
             shell:
                 r"""
                 multiqc {params.flagstat} {params.stats} -d -o {params.multiqc_outdir} --force -n Bam_report
@@ -743,7 +726,7 @@ for sequencing_name, sequencing_data in config["SEQUENCINGS"].items():
         resources:
             mem_mb=lambda wildcards, attempt: 10000 * attempt,
             runtime=lambda wildcards, attempt: attempt * 60,
-            qos=lambda wildcards, attempt: get_qos_from_time(attempt, 60),
+            qos=lambda wildcards, attempt: get_qos_from_time(attempt, 60, config),
         shell:
             r"""                
             multiBamSummary bins -p {threads} --verbose \
@@ -759,7 +742,6 @@ for sequencing_name, sequencing_data in config["SEQUENCINGS"].items():
 
 # Peak Calling
 
-    
     
     
     

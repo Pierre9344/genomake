@@ -39,7 +39,7 @@ dependencies:
   - samtools
   - pip:
       - git+https://github.com/Pierre9344/genomake
-      - macs3
+      - MACS3 # can be modified to MACS2 and the pipeline will detect which version to call in the rule
       - cutadapt
       - deeptools
       - multiqc

@@ -4033,7 +4033,7 @@ vertical-align: -.125em;
 <span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> samtools</span></span>
 <span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">pip</span><span class="kw">:</span></span>
 <span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> git+https://github.com/Pierre9344/genomake</span></span>
-<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> macs3</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> MACS3</span><span class="co"> # can be modified to MACS2 and the pipeline will detect which version to call in the rule</span></span>
 <span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> cutadapt</span></span>
 <span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> deeptools</span></span>
 <span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> multiqc</span></span>
@@ -4046,7 +4046,13 @@ vertical-align: -.125em;
 <h1>Chromake</h1>
 <section id="objectives" class="level2">
 <h2 class="anchored" data-anchor-id="objectives">Objectives</h2>
-<p>The <code>chromake</code> pipeline is a pipeline to analyze ChIP-seq (H3K27ac, H3K27me3, and H2Aub marks), and ATAC-seq samples.</p>
+<p>The <code>chromake</code> pipeline is a pipeline to analyze ChIP-seq (H3K27ac, H3K27me3, and H2Aub marks), and ATAC-seq samples. It use fastq samples to:</p>
+<ol type="1">
+<li>Realize an optional adaptor trimming (cutadapt)</li>
+<li>Align samples to a genome reference using bowtie2</li>
+<li>Identify enriched peaks (macs3)</li>
+<li>Realize quality controls (fastqc, samtools stats, samtools flagstat, multiqc)</li>
+</ol>
 <p>This pipeline is a WIP. It currently realize the alignment of the samples, and generate UCSC compatible tracks but doesn’t realize the peak calling.</p>
 </section>
 <section id="configuration-file" class="level2">

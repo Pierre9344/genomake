@@ -14,12 +14,41 @@ Examples
 --------
 
 To run the pipeline:
-    - you need at least 60 Go of RAM.
-    - you need a configuration file in a yaml format. Check [](`genomake.pipelines.chromake.scripts.config.create_example_config`) for an example. The [config](`genomake.pipelines.chromake.scripts.config`) submodules contains functions to generate such a config file from a samplesheet.
-    - The configuration is composed of 3 main fields:
-        - SEQUENCINGS
-        - PROJECTS
-        - JOBS
+
+- you need at least 60 Go of RAM.  
+- To install the necessary programs. It can be done with conda using a file like:
+        
+```{.yaml}
+name: genomake
+channels:
+  - bioconda
+  - conda-forge
+  - anaconda
+dependencies:
+  - bedtools
+  - bowtie2
+  - fastqc
+  - homer
+  - openssl
+  - picard
+  - python
+  - ucsc-bedgraphtobigwig
+  - ucsc-bedtobigbed
+  - samtools
+  - pip:
+      - git+https://github.com/Pierre9344/genomake
+      - MACS3 # can be modified to MACS2 and the pipeline will detect which version to call in the rule
+      - cutadapt
+      - deeptools
+      - multiqc
+      - snakemake-executor-plugin-slurm
+```
+        
+- you need a configuration file in a yaml format. Check [](`genomake.pipelines.chromake.scripts.config.create_example_config`) for an example. The [config](`genomake.pipelines.chromake.scripts.config`) submodule contains functions to generate such a config file from a samplesheet.
+- The configuration is composed of 3 main fields:
+    - SEQUENCINGS
+    - PROJECTS
+    - JOBS
 
 SEQUENCINGS is used to define the sample of a sequencing run that share similar adapter for trimming the reads, genome reference, and input samples (for ChIP-seq, more than one input can be indicated but only the first one will be used when identifying peak).
 
@@ -137,7 +166,7 @@ snakemake --snakefile <PATH to snakefile in installation> \
 --slurm-delete-logfiles-older-than 0 --rerun-incomplete
 ```
 
-For more informations, check the [Command Line Interface](../cli.qmd) and the [Get started]()get_started.qmd) pages of the documentation.
+For more informations, check the [Command Line Interface](../cli.qmd) and the [Get started](../index.qmd) pages of the documentation.
 
 """
 
