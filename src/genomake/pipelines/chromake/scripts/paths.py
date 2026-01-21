@@ -312,7 +312,7 @@ def get_project_paths_for_macs(cfg: dict,
                 if "INPUT" not in cfg["SEQUENCINGS"][sequencing_name] or len(cfg["SEQUENCINGS"][sequencing_name]["INPUT"]) < 1:
                     raise RuntimeError(f"The type of the project {project_name} necessite an input for the callpeak command of macs but the associated {sequencing_name} don't list any.")
                 path_input_bed = str(Path( cfg["SEQUENCINGS"][sequencing_name]["PATH"]) / "BED" / (list(cfg["SEQUENCINGS"][sequencing_name]["INPUT"].keys())[0] + "_sorted.bed"))
-                for sample_name, sample_data in cfg["SEQUENCINGS"][sequencing_name]["SAMPLES"]:
+                for sample_name, sample_data in cfg["SEQUENCINGS"][sequencing_name]["SAMPLES"].items():
                     if sample_data["TYPE"] == cfg["PROJECTS"][project_name]["TYPE"]:
                         res["_".join([sequencing_name, sample_name])]={
                             "INPUT": path_input_bed,
