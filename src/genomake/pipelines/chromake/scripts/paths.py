@@ -322,7 +322,7 @@ def get_project_paths_for_macs(cfg: dict,
                             }
             else:
                 # For the ATAC-seq, we don't need input file when identifying the peaks
-                for sample_name, sample_data in cfg["SEQUENCINGS"][sequencing_name]["SAMPLES"]:
+                for sample_name, sample_data in cfg["SEQUENCINGS"][sequencing_name]["SAMPLES"].items():
                     if sample_data["TYPE"] == cfg["PROJECTS"][project_name]["TYPE"]:
                         res["_".join([sequencing_name, sample_name])]={
                             "SAMPLE": str(Path( cfg["SEQUENCINGS"][sequencing_name]["PATH"]) / "BED" / (sample_name + "_sorted.bed")),
@@ -342,7 +342,7 @@ def get_project_paths_for_macs(cfg: dict,
                 # ChIP-seq samples need an input when identifying the peaks
                 if "INPUT" not in cfg["SEQUENCINGS"][sequencing_name] or len(cfg["SEQUENCINGS"][sequencing_name]["INPUT"]) < 1:
                     raise RuntimeError(f"The type of the project {project_name} necessite an input for the callpeak command of macs but the associated {sequencing_name} don't list any.")
-                for sample_name, sample_data in cfg["SEQUENCINGS"][sequencing_name]["SAMPLES"]:
+                for sample_name, sample_data in cfg["SEQUENCINGS"][sequencing_name]["SAMPLES"].items():
                     if sample_data["TYPE"] == cfg["PROJECTS"][project_name]["TYPE"]:
                         if cfg["PROJECTS"][project_name]["TYPE"] == "H3K27AC":
                             res.append(str(Path(cfg["PROJECTS"][project_name]["PROJECT_PATH"]) / f"peaks/macs3_{project_name}_{sequencing_name}_{sample_name}_peaks.narrowPeak"))
