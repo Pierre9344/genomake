@@ -45,6 +45,7 @@ rule all:
         *chr_paths.get_all_sequencings_related_paths(config, "bam_filtered_name"),
         *chr_paths.get_all_sequencings_related_paths(config, "bedgraph"),
         *chr_paths.get_all_sequencings_related_paths(config, "bed_sorted"),
+        *chr_paths.get_all_project_peaks(config),
 
 
 from genomake.pipelines.chromake.scripts.snakemake_functions import get_qos_from_time
@@ -230,7 +231,7 @@ for sequencing_name, sequencing_data in config["SEQUENCINGS"].items():
                     bedgraph_norm=str(Path(sequencing_data["PATH"]) / "BED" / (sample_name + "_bowtie2.fragments.normalized.bedGraph")),
                     bedgraph_sort=str(Path(sequencing_data["PATH"]) / "BED" / (sample_name + "_bowtie2.fragments.sorted.bedGraph")),
                 resources:
-                    mem_mb=lambda wildcards, attempt: 20000 * attempt,
+                    mem_mb=lambda wildcards, attempt: 30000 * attempt,
                     runtime=lambda wildcards, attempt: attempt * 180,
                     qos=lambda wildcards, attempt: get_qos_from_time(attempt, 180, config),
                 shell:
@@ -390,7 +391,7 @@ for sequencing_name, sequencing_data in config["SEQUENCINGS"].items():
                         bedgraph_norm=str(Path(sequencing_data["PATH"]) / "BED" / (sample_name + "_bowtie2.fragments.normalized.bedGraph")),
                         bedgraph_sort=str(Path(sequencing_data["PATH"]) / "BED" / (sample_name + "_bowtie2.fragments.sorted.bedGraph")),
                     resources:
-                        mem_mb=lambda wildcards, attempt: 20000 * attempt,
+                        mem_mb=lambda wildcards, attempt: 30000 * attempt,
                         runtime=lambda wildcards, attempt: attempt * 180,
                         qos=lambda wildcards, attempt: get_qos_from_time(attempt, 180, config),
                     shell:
@@ -543,7 +544,7 @@ for sequencing_name, sequencing_data in config["SEQUENCINGS"].items():
                     bedgraph_norm=str(Path(sequencing_data["PATH"]) / "BED" / (sample_name + "_bowtie2.fragments.normalized.bedGraph")),
                     bedgraph_sort=str(Path(sequencing_data["PATH"]) / "BED" / (sample_name + "_bowtie2.fragments.sorted.bedGraph")),
                 resources:
-                    mem_mb=lambda wildcards, attempt: 20000 * attempt,
+                    mem_mb=lambda wildcards, attempt: 30000 * attempt,
                     runtime=lambda wildcards, attempt: attempt * 180,
                     qos=lambda wildcards, attempt: get_qos_from_time(attempt, 180),
                 shell:
@@ -668,7 +669,7 @@ for sequencing_name, sequencing_data in config["SEQUENCINGS"].items():
                         bedgraph_norm=str(Path(sequencing_data["PATH"]) / "BED" / (sample_name + "_bowtie2.fragments.normalized.bedGraph")),
                         bedgraph_sort=str(Path(sequencing_data["PATH"]) / "BED" / (sample_name + "_bowtie2.fragments.sorted.bedGraph")),
                     resources:
-                        mem_mb=lambda wildcards, attempt: 20000 * attempt,
+                        mem_mb=lambda wildcards, attempt: 30000 * attempt,
                         runtime=lambda wildcards, attempt: attempt * 180,
                         qos=lambda wildcards, attempt: get_qos_from_time(attempt, 180, config),
                     shell:
@@ -740,7 +741,11 @@ for sequencing_name, sequencing_data in config["SEQUENCINGS"].items():
 # PROJECTS ANALYSES #
 #####################
 
-# Peak Calling
+if "PROJECTS" in config:
+    from genomake.pipelines.chromake.scripts.snakemake_functions import detect_macs_version
+    for project_name in config["PROJECTS"].keys():
+        peak_calling_data = chr_paths.get_project_paths_for_macs3(config, project_name, "macs")
+        
 
     
     

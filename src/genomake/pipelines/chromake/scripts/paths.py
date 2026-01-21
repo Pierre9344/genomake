@@ -269,12 +269,12 @@ def get_sequencings_related_paths(cfg: dict,
     return res
 
 
-def get_project_paths_for_macs3(cfg: dict,
+def get_project_paths_for_macs(cfg: dict,
                                 project_name: str,
                                 mode: str
                                 ):
     """
-    Get a dictionary with the files necessary for the macs3 rules of a project.
+    Get the files necessary for the macs2/macs3 rules of a project.
 
     Parameters
     ----------
@@ -286,8 +286,8 @@ def get_project_paths_for_macs3(cfg: dict,
     
     mode: str
         String indicating the output. Accepted values are:
-            - macs3 (dict with all inputs and the outputs of the macs3 command for all samples associated with the project)
-            - macs3_output (list of all outputs of the macs3 command for the project)
+            - macs (dict with all inputs and the outputs of the macs3 command for all samples associated with the project)
+            - macs_output (list of all outputs of the macs3 command for the project)
     Returns
     -------
     :
@@ -302,7 +302,7 @@ def get_project_paths_for_macs3(cfg: dict,
     if "SEQUENCINGS" not in cfg["PROJECTS"][project_name] or len(cfg["PROJECTS"][project_name]["SEQUENCINGS"]) < 1:
         raise RuntimeError(f"The project {project_name} don't indicate any valid sequencing. Please add a sequencing or remove this project.")
     
-    if mode == "macs3":
+    if mode == "macs":
         res={}
         for sequencing_name in cfg["PROJECTS"][project_name]["SEQUENCINGS"]:
             if sequencing_name not in cfg["SEQUENCINGS"]:
@@ -318,7 +318,7 @@ def get_project_paths_for_macs3(cfg: dict,
                             "INPUT": path_input_bed,
                             "SAMPLE": str(Path( cfg["SEQUENCINGS"][sequencing_name]["PATH"]) / "BED" / (sample_name + "_sorted.bed")),
                             "OUTDIR": str(Path(cfg["PROJECTS"][project_name]["PROJECT_PATH"]) / "peaks/"),
-                            "NAME": "_".join(["macs3",project_name, sequencing_name, sample_name])
+                            "NAME": "_".join(["peak_calling",project_name, sequencing_name, sample_name])
                             }
             else:
                 # For the ATAC-seq, we don't need input file when identifying the peaks
@@ -327,13 +327,13 @@ def get_project_paths_for_macs3(cfg: dict,
                         res["_".join([sequencing_name, sample_name])]={
                             "SAMPLE": str(Path( cfg["SEQUENCINGS"][sequencing_name]["PATH"]) / "BED" / (sample_name + "_sorted.bed")),
                             "OUTDIR": str(Path(cfg["PROJECTS"][project_name]["PROJECT_PATH"]) / "peaks/"),
-                            "NAME": "_".join(["macs3",project_name, sequencing_name, sample_name])
+                            "NAME": "_".join(["peak_calling",project_name, sequencing_name, sample_name])
                             }
         if len(res) < 1:
             raise RuntimeError(f"No sample corresponding to the {project_name} project were found! Please check your configuration file")
         return res
     
-    elif mode == "macs3_output":
+    elif mode == "macs_output":
         res=[]
         for sequencing_name in cfg["PROJECTS"][project_name]["SEQUENCINGS"]:
             if sequencing_name not in cfg["SEQUENCINGS"]:
@@ -354,11 +354,31 @@ def get_project_paths_for_macs3(cfg: dict,
                     if sample_data["TYPE"] == cfg["PROJECTS"][project_name]["TYPE"]:
                         res.append(str(Path(cfg["PROJECTS"][project_name]["PROJECT_PATH"]) / f"peaks/macs3_{project_name}_{sequencing_name}_{sample_name}_peaks.broadPeak"))
         if len(res) < 1:
-            raise RuntimeError(f"No sample corresponding to the {project_name} project were found! Please check your configuration file")
+            print(f"No sample corresponding to the {project_name} project were found! Please check your configuration file.")
         return res
     
 
+def get_all_project_peaks(cfg: dict):
+    """
+    Get the files necessary for the macs3 rules of all projects.
 
+    Parameters
+    ----------
+    cfg : dict
+        Dict representing the configuration of an analysis with the chromake pipeline.
+    
+    Returns
+    -------
+    :
+        A list of files outputed by macs2 or macs3
+    """
+    res = []
+    if "PROJECTS" in cfg:
+        for project_name in cfg["PROJECTS"].keys():
+            res.extend(get_project_paths_for_macs(cfg, project_name, "macs_output"))
+    return res
+    
+    
 
 
 
