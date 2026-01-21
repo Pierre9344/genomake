@@ -890,7 +890,7 @@ def check_config_format(cfg: dict, raise_error: bool = True):
                     else:
                         # Add the path to the bed files for the samples that shares the project type
                         base = Path(cfg["SEQUENCINGS"][sequencing_name]["PATH"])
-                        for sample_name, sample_data in cfg["SEQUENCINGS"][sequencing_name].items():
+                        for sample_name, sample_data in cfg["SEQUENCINGS"][sequencing_name]["SAMPLES"].items():
                             no_sample=True
                             if sample_data["TYPE"] == project_data["TYPE"]:
                                 cfg["PROJECTS"][project_name]["SAMPLES"].append(base / "BED" / (sample_name + "_sorted.bed"))
