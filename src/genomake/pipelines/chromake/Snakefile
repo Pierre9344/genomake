@@ -136,6 +136,7 @@ for sequencing_name, sequencing_data in config["SEQUENCINGS"].items():
                     str(Path(sequencing_data["PATH"]) / "QC/fragmentLen" / (sample_name + "_fragmentLen.txt")),
                     str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + "_chrheader.bam")),
                     str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + "_filtered.coordsort.bam")),
+                    str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + "_filtered.coordsort.bam.bai")),
                     str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + "_filtered.namesort.bam")),
                     directory(str(Path(sequencing_data["PATH"]) / ("HOMER/" + sample_name))),
                     str(Path(sequencing_data["PATH"]) / ("BEDGRAPH/" + sample_name + "_UCSC_track.bedGraph")),
@@ -296,6 +297,8 @@ for sequencing_name, sequencing_data in config["SEQUENCINGS"].items():
                         str(Path(sequencing_data["PATH"]) / "QC/fragmentLen" / (sample_name + "_fragmentLen.txt")),
                         str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + "_chrheader.bam")),
                         str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + "_filtered.coordsort.bam")),
+                        str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + "_filtered.coordsort.bam.bai")),
+                        str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + "_filtered.coordsort.bai")),
                         str(Path(sequencing_data["PATH"]) / "BAM/" / (sample_name + "_filtered.namesort.bam")),
                         directory(str(Path(sequencing_data["PATH"]) / ("HOMER/" + sample_name))),
                         str(Path(sequencing_data["PATH"]) / ("BEDGRAPH/" + sample_name + "_UCSC_track.bedGraph")),
@@ -744,13 +747,42 @@ for sequencing_name, sequencing_data in config["SEQUENCINGS"].items():
 
 if "PROJECTS" in config:
     from genomake.pipelines.chromake.scripts.snakemake_functions import detect_macs_version
+    macs_version=detect_macs_version()
     for project_name in config["PROJECTS"].keys():
         if "TYPE" not in config["PROJECTS"][project_name]:
             continue
-        peak_calling_data = chr_paths.get_project_paths_for_macs(config, project_name, "macs")
+        peak_calling_dict = chr_paths.get_project_paths_for_macs(config, project_name, "macs")
+        if len(peak_calling_dict) == 0:
+            continue
+            
+        
         if config["PROJECTS"][project_name]["TYPE"] == "ATAC":
             # broad peaks, don't need input
-            pass
+            for peak_calling_data in peak_calling_dict.values():
+                rule:
+                    name:
+                        peak_calling_data["NAME"]
+                    input:
+                        peak_calling_data["SAMPLE"],
+                    output:
+                        peak_calling_data["OUTDIR"] + peak_calling_data["NAME"] + "_peaks.broadPeak"
+                    threads:
+                        1,
+                    params:
+                        outdir=peak_calling_data["OUTDIR"],
+                        macs_command=macs_version,
+                        name=peak_calling_data["NAME"],
+                    resources:
+                        mem_mb=lambda wildcards, attempt: 10000 * attempt,
+                        runtime=lambda wildcards, attempt: attempt * 120,
+                        qos=lambda wildcards, attempt: get_qos_from_time(attempt, 120, config),
+                    shell:
+                        r"""                
+                        {params.macs_command} callpeak -t {input} -f BEDPE \
+                          --nomodel --shift 37 --extsize 73 --keep-dup all \
+                          --call-submits -n {params.name} --outdir {params.outdir}
+                        """
+            
         elif config["PROJECTS"][project_name]["TYPE"] == "H3K27AC":
             # Narrow peak, need input
             pass
