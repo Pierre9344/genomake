@@ -745,10 +745,19 @@ for sequencing_name, sequencing_data in config["SEQUENCINGS"].items():
 if "PROJECTS" in config:
     from genomake.pipelines.chromake.scripts.snakemake_functions import detect_macs_version
     for project_name in config["PROJECTS"].keys():
+        if "TYPE" not in config["PROJECTS"][project_name]:
+            continue
         peak_calling_data = chr_paths.get_project_paths_for_macs(config, project_name, "macs")
-        
+        if config["PROJECTS"][project_name]["TYPE"] == "ATAC":
+            # broad peaks, don't need input
+            pass
+        elif config["PROJECTS"][project_name]["TYPE"] == "H3K27AC":
+            # Narrow peak, need input
+            pass
+        elif config["PROJECTS"][project_name]["TYPE"] in ["H3K27ME3", "H2AUB"]:
+            # broad peak, need input
+            pass
 
-    
-    
-    
-    
+
+
+
