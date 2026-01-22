@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>pipelines.chromake.scripts.paths.get_project_paths_for_macs3 – genomake</title>
+<title>pipelines.chromake.scripts.paths.get_project_paths_for_macs – genomake</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -3974,7 +3974,7 @@ vertical-align: -.125em;
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#genomake.pipelines.chromake.scripts.paths.get_project_paths_for_macs3" id="toc-genomake.pipelines.chromake.scripts.paths.get_project_paths_for_macs3" class="nav-link active" data-scroll-target="#genomake.pipelines.chromake.scripts.paths.get_project_paths_for_macs3">pipelines.chromake.scripts.paths.get_project_paths_for_macs3</a>
+  <li><a href="#genomake.pipelines.chromake.scripts.paths.get_project_paths_for_macs" id="toc-genomake.pipelines.chromake.scripts.paths.get_project_paths_for_macs" class="nav-link active" data-scroll-target="#genomake.pipelines.chromake.scripts.paths.get_project_paths_for_macs">pipelines.chromake.scripts.paths.get_project_paths_for_macs</a>
   <ul class="collapse">
   <li><a href="#parameters" id="toc-parameters" class="nav-link" data-scroll-target="#parameters">Parameters</a></li>
   <li><a href="#returns" id="toc-returns" class="nav-link" data-scroll-target="#returns">Returns</a></li>
@@ -3988,14 +3988,14 @@ vertical-align: -.125em;
 
 
 
-<section id="genomake.pipelines.chromake.scripts.paths.get_project_paths_for_macs3" class="level1">
-<h1>pipelines.chromake.scripts.paths.get_project_paths_for_macs3</h1>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>pipelines.chromake.scripts.paths.get_project_paths_for_macs3(</span>
+<section id="genomake.pipelines.chromake.scripts.paths.get_project_paths_for_macs" class="level1">
+<h1>pipelines.chromake.scripts.paths.get_project_paths_for_macs</h1>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>pipelines.chromake.scripts.paths.get_project_paths_for_macs(</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    cfg,</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    project_name,</span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    mode,</span>
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Get a dictionary with the files necessary for the macs3 rules of a project.</p>
+<p>Get the files necessary for the macs2/macs3 rules of a project.</p>
 <section id="parameters" class="level2 doc-section doc-section-parameters">
 <h2 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h2>
 <table class="caption-top table">
@@ -4029,7 +4029,7 @@ vertical-align: -.125em;
 <tr class="odd">
 <td>mode</td>
 <td>str</td>
-<td>String indicating the output. Accepted values are: - macs3 (dict with all inputs and the outputs of the macs3 command for all samples associated with the project) - macs3_output (list of all outputs of the macs3 command for the project)</td>
+<td>String indicating the output. Accepted values are: - macs (dict with all inputs and the outputs of the macs3 command for all samples associated with the project) - macs_output (list of all outputs of the macs3 command for the project)</td>
 <td><em>required</em></td>
 </tr>
 </tbody>

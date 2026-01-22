@@ -124,7 +124,7 @@ chr_config.create_config_from_table(
             "CUTADAPT": "-q 20 --pair-filter=any",
             "BOWTIE2_REF": "<path to genome reference build for bowtie2>",
             "BLACKLIST_BED": "<Path to blacklist file in bed format, see https://github.com/Boyle-Lab/Blacklist >",
-            "GENOME": <path to the sequencing genome for bowtie>,
+            "GENOME": "<path to the sequencing genome for bowtie2>",
             "CHROM_SIZE": "<path to file wih the size of chromosome (can be found on UCSC) >"
         }
     },
@@ -135,9 +135,9 @@ chr_config.create_config_from_table(
         "PARAMETERS": {
             "CUTADAPT": "-q 20 --pair-filter=any",
             "BOWTIE2_REF": "<path to genome reference build for bowtie2>",
-            "BLACKLIST_BED": "<Path to blacklist file in bed format, see https://github.com/Boyle-Lab/Blacklist >",
-            "GENOME": <path to the sequencing genome for bowtie>,
-            "CHROM_SIZE": "<path to file wih the size of chromosome (can be found on UCSC) >"
+            "BLACKLIST_BED": "<Path to blacklist file in bed format, see https://github.com/Boyle-Lab/Blacklist>",
+            "GENOME": "<path to the sequencing genome for bowtie2>",
+            "CHROM_SIZE": "<path to file wih the size of chromosome (can be found on UCSC)>"
         }
     },
     "MO211": {
@@ -148,7 +148,7 @@ chr_config.create_config_from_table(
             "CUTADAPT": "-q 20 --pair-filter=any",
             "BOWTIE2_REF": "<path to genome reference build for bowtie2>",
             "BLACKLIST_BED": "<Path to blacklist file in bed format, see https://github.com/Boyle-Lab/Blacklist >",
-            "GENOME": <path to the sequencing genome for bowtie>,
+            "GENOME": "<path to the sequencing genome for bowtie2>",
             "CHROM_SIZE": "<path to file wih the size of chromosome (can be found on UCSC) >"
         }
     }
