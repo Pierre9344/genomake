@@ -754,8 +754,6 @@ if "PROJECTS" in config:
         peak_calling_dict = chr_paths.get_project_paths_for_macs(config, project_name, "macs")
         if len(peak_calling_dict) == 0:
             continue
-            
-        
         if config["PROJECTS"][project_name]["TYPE"] == "ATAC":
             # broad peaks, don't need input
             for peak_calling_data in peak_calling_dict.values():
@@ -785,10 +783,60 @@ if "PROJECTS" in config:
             
         elif config["PROJECTS"][project_name]["TYPE"] == "H3K27AC":
             # Narrow peak, need input
-            pass
+            for peak_calling_data in peak_calling_dict.values():
+                rule:
+                    name:
+                        peak_calling_data["NAME"]
+                    input:
+                        peak_calling_data["SAMPLE"],
+                        peak_calling_data["INPUT"],
+                    output:
+                        peak_calling_data["OUTDIR"] + peak_calling_data["NAME"] + "_peaks.broadPeak"
+                    threads:
+                        1,
+                    params:
+                        outdir=peak_calling_data["OUTDIR"],
+                        macs_command=macs_version,
+                        name=peak_calling_data["NAME"],
+                    resources:
+                        mem_mb=lambda wildcards, attempt: 10000 * attempt,
+                        runtime=lambda wildcards, attempt: attempt * 120,
+                        qos=lambda wildcards, attempt: get_qos_from_time(attempt, 120, config),
+                    shell:
+                        r"""                
+                        {params.macs_command} callpeak -t {input[0]} \
+                          -c {input[1]} -f BEDPE --call-submits \
+                          -n {params.name} --outdir {params.outdir}
+                        """
         elif config["PROJECTS"][project_name]["TYPE"] in ["H3K27ME3", "H2AUB"]:
             # broad peak, need input
-            pass
+            rule:
+                name:
+                    peak_calling_data["NAME"]
+                input:
+                    peak_calling_data["SAMPLE"],
+                    peak_calling_data["INPUT"],
+                output:
+                    peak_calling_data["OUTDIR"] + peak_calling_data["NAME"] + "_peaks.broadPeak"
+                threads:
+                    1,
+                params:
+                    outdir=peak_calling_data["OUTDIR"],
+                    macs_command=macs_version,
+                    name=peak_calling_data["NAME"],
+                resources:
+                    mem_mb=lambda wildcards, attempt: 10000 * attempt,
+                    runtime=lambda wildcards, attempt: attempt * 120,
+                    qos=lambda wildcards, attempt: get_qos_from_time(attempt, 120, config),
+                shell:
+                    r"""                
+                    {params.macs_command} callpeak -t {input[0]} \
+                      -c {input[1]} -f BEDPE --broad \
+                      -n {params.name} --outdir {params.outdir}
+                    """
+        
+        # Filters peaks to keep only those present in N samples and bedtools multicov
+        
 
 
 
