@@ -59,15 +59,16 @@ Each sequencing must have a parameters field to indicates at least:
   - the genome used, either the .fa file of the reference used to build bowtie2 reference (toplevel.fa for ensembl) or a string such as hg38 or mm10 if the genome was configured in homer with configureHomer.pl (GENOME)
   - Adaptor trimming will be realized if the `R1_ADAPTOR` and the `R2_ADAPTOR`fields are present
 
+
 ```{.yaml}
 SEQUENCING:
-  MO211:
+  sequencing_1:
     SAMPLES:
-      PSMD6_F1_Ci:
+      sample_1:
         R1: <PATH_TO_R1_fastq>
         TYPE: H3K27AC
         R2: <PATH_TO_R2_fastq>
-      PSMD6_F1_Fa:
+      sample_2:
         R1: <PATH_TO_R1_fastq>
         TYPE: ATAC
         R2: <PATH_TO_R2_fastq>
@@ -84,7 +85,37 @@ SEQUENCING:
       BLACKLIST_BED: <PATH>/hg38-blacklist.v2.bed 
       GENOME: <PATH>/ensembl/release-99/Homo_sapiens.GRCh38.dna.toplevel.fa
       CHROM_SIZE: <PATH>/hg38.chrom.sizes
+  sequencing_2:
+    SAMPLES:
+      sample_3:
+        R1: <PATH_TO_R1_fastq>
+        TYPE: H3K27AC
+        R2: <PATH_TO_R2_fastq>
+      sample_4:
+        R1: <PATH_TO_R1_fastq>
+        TYPE: ATAC
+        R2: <PATH_TO_R2_fastq>
+    INPUT:
+      Input_Batch2:
+        R1: <PATH_TO_R1_fastq>
+        R2: <PATH_TO_R2_fastq>
+    PATH: <PATH_TO_R1_fastq>
+    R1_ADAPTOR: CTGTCTCTTATACACATCT (modify to the sequence corresponding to your samples or remove this field to not trim)
+    R2_ADAPTOR: CTGTCTCTTATACACATCT (modify to the sequence corresponding to your samples or remove this field to not trim)
+    PARAMETERS:
+      CUTADAPT: -q 20 --pair-filter=any (cutadapt paramters by default, modify or leave empty)
+      BOWTIE2_REF: <PATH>/index-bowtie-2.3.0/Homo_sapiens.GRCh38.dna.toplevel (modify to point to your reference for bowtie2)
+      BLACKLIST_BED: <PATH>/hg38-blacklist.v2.bed 
+      GENOME: <PATH>/ensembl/release-99/Homo_sapiens.GRCh38.dna.toplevel.fa
+      CHROM_SIZE: <PATH>/hg38.chrom.sizes
 ```
+
+Basically a sequencing correspond to the samples that:
+    - share the same trimming adaptor (if you wish to trim the fastq)
+    - were prepared together and share the same input condition (for the ChIP-seq experiment)
+    - they don't necessarily share the same epigenetic information (`TYPE` field) but if they does, they will be rattached to the same project
+
+In the previous the samples 1 and 2 were prepared separatelly from the samples 3 and 4. The samples 1 and 3 are from ChIP-seq experiments and need an input sample to act as background when identifying the peaks. The inputs will be the one for their respective experiments.  However, the 2 sequencings may be part of a single project. Thus we use the `PROJECTS` field to decide which samples will be used to generate the count matrix.
 
 PROJECTS is used to regroup samples of different sequencing when realising peak calling and the minimal number of samples in which a peak is identified to be keep in the final count matrix. To be regrouped, the samples need to shares the same mark. The path of each project indicate where the files resulting of the peak calling will be created. It is recommanded to use different folders for each projects.
     
@@ -116,7 +147,7 @@ PROJECTS:
     - MO203
 ```
 
-The JOBS field is used to indicate the number of cpu to use for multithreadings and the QOS when running jobs on a clusters with an executor like slurm.
+Finally, he JOBS field is used to indicate the number of cpus to use for multithreadings and the QOS when running jobs on a clusters with an executor like slurm.
 
 ```{.yaml}
 JOBS:
