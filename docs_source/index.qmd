@@ -23,17 +23,16 @@ If you wish to install it in a conda environment, you can use a yml containing t
 ```{.yaml}
 name: genomake
 channels:
-  - bioconda
   - conda-forge
-  - anaconda
+  - bioconda
 dependencies:
   - bedtools
   - bowtie2
   - fastqc
   - homer
-  - openssl
+  - openssl=1.1.*
   - picard
-  - python
+  - python>=3.12
   - ucsc-bedgraphtobigwig
   - ucsc-bedtobigbed
   - samtools
@@ -45,6 +44,8 @@ dependencies:
       - multiqc
       - snakemake-executor-plugin-slurm
 ```
+
+The package MACS2/3, cutadapt, deeptools, and multiqc can also be installed directly from conda.
 
 ```{.bash}
 conda create -f genomake.yml -y
