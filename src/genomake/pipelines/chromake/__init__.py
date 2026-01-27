@@ -147,7 +147,7 @@ PROJECTS:
     - MO203
 ```
 
-Finally, he JOBS field is used to indicate the number of cpus to use for multithreadings and the QOS when running jobs on a clusters with an executor like slurm.
+Finally, he JOBS field is used to indicate the number of cpus to use for multithreadings, and the QOS and partitions to request when running jobs on a clusters with an executor like slurm.
 
 ```{.yaml}
 JOBS:
@@ -155,7 +155,7 @@ JOBS:
     FASTQC: 10
     CUTADAPT: 10
     BOWTIE2: 30
-  QOS_INFOS:
+  SCHEDULER_PROFILES:
     short:
       MaxWall: 1440
     medium:

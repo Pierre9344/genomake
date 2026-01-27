@@ -149,7 +149,7 @@ def create_example_config(
                 "TYPE": "ATAC",
                 "MIN_SAMPLES_FOR_PEAKS": 2,
                 "PROJECT_PATH": "/scratch/.../ChIP_ATAC",
-            },
+            }
         },
         "JOBS": {
             "CORES_PER_JOBS": {
@@ -160,13 +160,13 @@ def create_example_config(
                 "MULTIBAMSUMMARY": 5,
                 "BEDTOOLS": 5
             },
-            "QOS_INFOS": {
+            "SCHEDULER_PROFILES": {
                 "default": {"qos_name": "short", "partition_name": "standard"}, # default value
                 "short": {"MaxWall": 24 * 60, "qos_name": "short", "partition_name": "standard"}, # 1 day
                 "medium": {"MaxWall": 3 * 24 * 60, "qos_name": "medium", "partition_name": "standard"}, # 3 days
                 "long": {"MaxWall": 8 * 24 * 60, "qos_name": "long", "partition_name": "standard"}, # 8 days in minutes
-            },
-        },
+            }
+        }
     }
     
     if (os.path.splitext(filename)[1] == ".yaml") & (os.path.splitext(filename)[0] != ""):
@@ -190,7 +190,7 @@ def update_jobs(config_path: str, jobs: dict) -> None:
     
     CORES_PER_JOBS: number of cpu cores to use for each jobs (>=1)
     
-    QOS_INFOS: if using an executor like slurm, indicate the name of the qos (e.g. short), and the associated MaxWall in minutes.
+    SCHEDULER_PROFILES: if using an executor like slurm, indicate the name of the qos (e.g. short), and the associated MaxWall in minutes.
 
     Parameters
     ----------
@@ -213,7 +213,7 @@ def update_jobs(config_path: str, jobs: dict) -> None:
             "MULTIBAMSUMMARY": 5,
             "BEDTOOLS": 5
         },
-        "QOS_INFOS": {
+        "SCHEDULER_PROFILES": {
             "default": {"qos_name": "short", "partition_name": "standard"}, # default value
             "short": {"MaxWall": 24 * 60, "qos_name": "short", "partition_name": "standard"}, # 1 day
             "medium": {"MaxWall": 3 * 24 * 60, "qos_name": "medium", "partition_name": "standard"}, # 3 days
@@ -240,19 +240,19 @@ def update_jobs(config_path: str, jobs: dict) -> None:
                     if "CORES_PER_JOBS" not in config["JOBS"].keys():
                         config["JOBS"]["CORES_PER_JOBS"] = {}
                     config["JOBS"]["CORES_PER_JOBS"][job_name] = job_data
-        if "QOS_INFOS" in jobs.keys():
-            if "QOS_INFOS" in config["JOBS"].keys():
+        if "SCHEDULER_PROFILES" in jobs.keys():
+            if "SCHEDULER_PROFILES" in config["JOBS"].keys():
                 # override all value
-                for k, i in jobs["QOS_INFOS"].items():
+                for k, i in jobs["SCHEDULER_PROFILES"].items():
                     # Second loop to make sure the items are corrects. Currently on use MaxWall.
-                    for j, l in  jobs["QOS_INFOS"][k].items():
+                    for j, l in  jobs["SCHEDULER_PROFILES"][k].items():
                         if j in {"MaxWall"}:
-                            if k not in config["JOBS"]["QOS_INFOS"]:
-                                config["JOBS"]["QOS_INFOS"][k] = {}
-                            config["JOBS"]["QOS_INFOS"][k]["MaxWall"] = l
-                            print("added/overrided config QOS_INFOS " + k + " with " + j)
+                            if k not in config["JOBS"]["SCHEDULER_PROFILES"]:
+                                config["JOBS"]["SCHEDULER_PROFILES"][k] = {}
+                            config["JOBS"]["SCHEDULER_PROFILES"][k]["MaxWall"] = l
+                            print("added/overrided config SCHEDULER_PROFILES " + k + " with " + j)
             else:
-                config["JOBS"]["QOS_INFOS"] = jobs["QOS_INFOS"]
+                config["JOBS"]["SCHEDULER_PROFILES"] = jobs["SCHEDULER_PROFILES"]
 
     config = check_project_and_sequencing(config)
     with open(config_path, "w", encoding="utf-8") as stream:
@@ -571,7 +571,7 @@ def create_config_from_table(
     proj_paths : dict
         Dictionary of project_name -> project_path.
     jobs : dict, optional
-        Default JOBS settings (CORES_PER_JOBS, QOS_INFOS).
+        Default JOBS settings (CORES_PER_JOBS, SCHEDULER_PROFILES).
     sequencings : dict
         Dictionary of sequencings informations (PATH, R1_ADAPTOR, R2_ADAPTOR).
 
@@ -746,17 +746,19 @@ def check_config_format(cfg: dict, raise_error: bool = True):
         print("Jobs field missing from the configuration file. Adding one with the example default value. If you use a computation cluster, please modify it according to your cluster specification.")
         cfg["JOBS"] = {
               "CORES_PER_JOBS": {
-              "FASTQC": 10,
-              "CUTADAPT": 10,
-              "BOWTIE2": 30
-              },
-              "QOS_INFOS": {
+                  "CUTADAPT": 10,
+                  "BOWTIE2": 30,
+                  "SAMTOOLS_QC": 5,
+                  "MULTIBAMSUMMARY": 5,
+                  "BEDTOOLS": 5
+                  },
+              "SCHEDULER_PROFILES": {
                   "default": {"qos_name": "short", "partition_name": "standard"}, # default value
                   "short": {"MaxWall": 24 * 60, "qos_name": "short", "partition_name": "standard"}, # 1 day
                   "medium": {"MaxWall": 3 * 24 * 60, "qos_name": "medium", "partition_name": "standard"}, # 3 days
                   "long": {"MaxWall": 8 * 24 * 60, "qos_name": "long", "partition_name": "standard"}, # 8 days in minutes
+                  }
               }
-        }
     else:
         if "CORES_PER_JOBS" not in cfg["JOBS"]:
             print("Number of cores to use for the jobs is not indicated in the configuration file. Using the pipeline default values")
@@ -787,13 +789,14 @@ def check_config_format(cfg: dict, raise_error: bool = True):
             if "BEDTOOLS" not in cfg["JOBS"]["CORES_PER_JOBS"]:
                 print("Number of cores not indicated for bedtools rule defaulting to 5")
                 cfg["JOBS"]["CORES_PER_JOBS"]["BEDTOOLS"] = 5
-        if "QOS_INFOS" not in cfg["JOBS"]:
-            print("The 'QOS_INFOS' field is missing in the cfg file. Using the example default values to be abble to set the ressources field of the rules. Will be ignored if executor is not set.")
-            cfg["JOBS"]["QOS_INFOS"] = {
-                "short": {"MaxWall": 2000},
-                "medium": {"MaxWall": 5000},
-                "long": {"MaxWall": 15000}
-            }
+        if "SCHEDULER_PROFILES" not in cfg["JOBS"]:
+            print("The 'SCHEDULER_PROFILES' field is missing in the cfg file. Using the example default values to be abble to set the ressources field of the rules. Will be ignored if executor is not set.")
+            cfg["JOBS"]["SCHEDULER_PROFILES"] = {
+                "default": {"qos_name": "short", "partition_name": "standard"}, # default value
+                "short": {"MaxWall": 24 * 60, "qos_name": "short", "partition_name": "standard"}, # 1 day
+                "medium": {"MaxWall": 3 * 24 * 60, "qos_name": "medium", "partition_name": "standard"}, # 3 days
+                "long": {"MaxWall": 8 * 24 * 60, "qos_name": "long", "partition_name": "standard"}, # 8 days in minutes
+                }
     if "SEQUENCINGS" in cfg:
         for sequencing_name, sequencing_data in cfg["SEQUENCINGS"].items():
             if "PATH" not in sequencing_data:

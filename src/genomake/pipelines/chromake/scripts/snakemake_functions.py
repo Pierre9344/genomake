@@ -6,7 +6,7 @@ The snakemake_functions module contains functions called inside the snakefile.
 
 def select_clusters_spec(attempt: int, default_time_min: int, cfg: dict)->str:
     """
-    Identify the name qos and partition from the config file using the time of the job. This function is used when an executor is set.
+    Identify the name qos and partition from the config file using the time of the job. This function is called by the `get_qos_from_time`and `get_partition_from_time` functions.
 
     Parameters
     ----------
@@ -22,16 +22,13 @@ def select_clusters_spec(attempt: int, default_time_min: int, cfg: dict)->str:
     Returns
     -------
     str
-        The name of the qos.
+        The name of the tier (qos, partition) to use depending on the time requested by a rule.
     """
-    
-    if "JOBS" not in cfg or "QOS_INFOS" not in cfg["JOBS"]:
-        return {"qos_name": "short", "partition_name": "standard"}
 
     runtime_minutes = attempt * default_time_min
     selected_tier = None
 
-    for tier_name, tier_info in cfg["JOBS"]["QOS_INFOS"].items():
+    for tier_name, tier_info in cfg["JOBS"]["SCHEDULER_PROFILES"].items():
         if tier_name == "default":
             continue
         
@@ -39,7 +36,7 @@ def select_clusters_spec(attempt: int, default_time_min: int, cfg: dict)->str:
         if maxwall is None:
             continue
         if maxwall >= runtime_minutes:
-            if selected_tier is None or maxwall < cfg["JOBS"]["QOS_INFOS"][selected_tier]["MaxWall"]:
+            if selected_tier is None or maxwall < cfg["JOBS"]["SCHEDULER_PROFILES"][selected_tier]["MaxWall"]:
                 selected_tier = tier_name
 
     # fallback to 'long' if none found
@@ -63,10 +60,11 @@ def get_qos_from_time(attempt: int, default_time_min: int, cfg: dict)->str:
     Returns
     -------
     str
-        The name of the qos.
+        The name of the qos to use for the rule.
     """
+    
     tier = select_clusters_spec(attempt, default_time_min, cfg)
-    return tier.get("qos_name", tier.get("name"))
+    return cfg["JOBS"]["SCHEDULER_PROFILES"][tier]["qos_name"]
 
 def get_partition_from_time(attempt: int, default_time_min: int, cfg: dict)->str:
     """
@@ -86,10 +84,10 @@ def get_partition_from_time(attempt: int, default_time_min: int, cfg: dict)->str
     Returns
     -------
     str
-        The name of the qos.
+        The name of the partition to use for the rule.
     """
     tier = select_clusters_spec(attempt, default_time_min, cfg)
-    return tier.get("partition_name", tier.get("name"))
+    return cfg["JOBS"]["SCHEDULER_PROFILES"][tier]["partition_name"]
 
 
 

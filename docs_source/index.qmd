@@ -110,7 +110,7 @@ chr_config.create_config_from_table(
             "MULTIBAMSUMMARY": 5,
             "BEDTOOLS": 5
         },
-        "QOS_INFOS": {
+        "SCHEDULER_PROFILES": {
             "short": {"MaxWall": 24 * 60}, # 1 day
             "medium": {"MaxWall": 3 * 24 * 60}, # 3 days
             "long": {"MaxWall": 8 * 24 * 60}, # 8 days in minutes
