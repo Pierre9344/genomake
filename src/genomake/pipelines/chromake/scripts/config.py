@@ -161,9 +161,10 @@ def create_example_config(
                 "BEDTOOLS": 5
             },
             "QOS_INFOS": {
-                "short": {"MaxWall": 24 * 60}, # 1 day
-                "medium": {"MaxWall": 3 * 24 * 60}, # 3 days
-                "long": {"MaxWall": 8 * 24 * 60}, # 8 days in minutes
+                "default": {"qos_name": "short", "partition_name": "standard"}, # default value
+                "short": {"MaxWall": 24 * 60, "qos_name": "short", "partition_name": "standard"}, # 1 day
+                "medium": {"MaxWall": 3 * 24 * 60, "qos_name": "medium", "partition_name": "standard"}, # 3 days
+                "long": {"MaxWall": 8 * 24 * 60, "qos_name": "long", "partition_name": "standard"}, # 8 days in minutes
             },
         },
     }
@@ -213,9 +214,10 @@ def update_jobs(config_path: str, jobs: dict) -> None:
             "BEDTOOLS": 5
         },
         "QOS_INFOS": {
-            "short": {"MaxWall": 2000},
-            "medium": {"MaxWall": 5000},
-            "long": {"MaxWall": 15000} 
+            "default": {"qos_name": "short", "partition_name": "standard"}, # default value
+            "short": {"MaxWall": 24 * 60, "qos_name": "short", "partition_name": "standard"}, # 1 day
+            "medium": {"MaxWall": 3 * 24 * 60, "qos_name": "medium", "partition_name": "standard"}, # 3 days
+            "long": {"MaxWall": 8 * 24 * 60, "qos_name": "long", "partition_name": "standard"}, # 8 days in minutes
         }
     }
     update_jobs("config.yaml", jobs_update)
@@ -741,7 +743,7 @@ def check_config_format(cfg: dict, raise_error: bool = True):
     if "PROJECTS" not in cfg:
         print("The configuration file is missing the 'PROJECTS' field! Samples will be aligned but no peak calling will be realized.")
     if "JOBS" not in cfg:
-        print("Jobs field missing from the configuration file. Adding one with the example default value")
+        print("Jobs field missing from the configuration file. Adding one with the example default value. If you use a computation cluster, please modify it according to your cluster specification.")
         cfg["JOBS"] = {
               "CORES_PER_JOBS": {
               "FASTQC": 10,
@@ -749,10 +751,11 @@ def check_config_format(cfg: dict, raise_error: bool = True):
               "BOWTIE2": 30
               },
               "QOS_INFOS": {
-                  "short": {"MaxWall": 2000},
-                  "medium": {"MaxWall": 5000},
-                  "long": {"MaxWall": 15000}
-               }
+                  "default": {"qos_name": "short", "partition_name": "standard"}, # default value
+                  "short": {"MaxWall": 24 * 60, "qos_name": "short", "partition_name": "standard"}, # 1 day
+                  "medium": {"MaxWall": 3 * 24 * 60, "qos_name": "medium", "partition_name": "standard"}, # 3 days
+                  "long": {"MaxWall": 8 * 24 * 60, "qos_name": "long", "partition_name": "standard"}, # 8 days in minutes
+              }
         }
     else:
         if "CORES_PER_JOBS" not in cfg["JOBS"]:

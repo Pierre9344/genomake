@@ -72,6 +72,7 @@ for sequencing_name, sequencing_data in config["SEQUENCINGS"].items():
             mem_mb=lambda wildcards, attempt: 10000 * attempt,
             runtime=lambda wildcards, attempt: attempt * 60,
             qos=lambda wildcards, attempt: get_qos_from_time(attempt, 60, config),
+            partition=lambda wildcards, attempt: get_partition_from_time(attempt, 120, config),
         shell:
             r"""
             fastqc \
@@ -114,6 +115,7 @@ for sequencing_name, sequencing_data in config["SEQUENCINGS"].items():
                     mem_mb=lambda wildcards, attempt: 2000 * attempt,
                     runtime=lambda wildcards, attempt: attempt * 60,
                     qos=lambda wildcards, attempt: get_qos_from_time(attempt, 60, config),
+                    partition=lambda wildcards, attempt: get_partition_from_time(attempt, 120, config),
                 shell:
                     r"""
                     cutadapt -a {params.r1_adaptor} -A {params.r2_adaptor} \
@@ -161,6 +163,7 @@ for sequencing_name, sequencing_data in config["SEQUENCINGS"].items():
                     mem_mb=lambda wildcards, attempt: 60000 * attempt,
                     runtime=lambda wildcards, attempt: attempt * 180,
                     qos=lambda wildcards, attempt: get_qos_from_time(attempt, 180, config),
+                    partition=lambda wildcards, attempt: get_partition_from_time(attempt, 120, config),
                 shell:
                     r"""
                     bowtie2 -p {threads} --local --very-sensitive-local \
@@ -236,6 +239,7 @@ for sequencing_name, sequencing_data in config["SEQUENCINGS"].items():
                     mem_mb=lambda wildcards, attempt: 30000 * attempt,
                     runtime=lambda wildcards, attempt: attempt * 180,
                     qos=lambda wildcards, attempt: get_qos_from_time(attempt, 180, config),
+                    partition=lambda wildcards, attempt: get_partition_from_time(attempt, 120, config),
                 shell:
                     r"""
                     bedtools bamtobed -i {input[0]} -bedpe > {output[0]}
@@ -275,6 +279,7 @@ for sequencing_name, sequencing_data in config["SEQUENCINGS"].items():
                         mem_mb=lambda wildcards, attempt: 10000 * attempt,
                         runtime=lambda wildcards, attempt: attempt * 60,
                         qos=lambda wildcards, attempt: get_qos_from_time(attempt, 60, config),
+                        partition=lambda wildcards, attempt: get_partition_from_time(attempt, 120, config),
                     shell:
                         r"""
                         cutadapt -a {params.r1_adaptor} -A {params.r2_adaptor} \
@@ -323,6 +328,7 @@ for sequencing_name, sequencing_data in config["SEQUENCINGS"].items():
                         mem_mb=lambda wildcards, attempt: 60000 * attempt,
                         runtime=lambda wildcards, attempt: attempt * 180,
                         qos=lambda wildcards, attempt: get_qos_from_time(attempt, 180, config),
+                        partition=lambda wildcards, attempt: get_partition_from_time(attempt, 120, config),
                     shell:
                         r"""
                         bowtie2 -p {threads} --local --very-sensitive-local \
@@ -398,6 +404,7 @@ for sequencing_name, sequencing_data in config["SEQUENCINGS"].items():
                         mem_mb=lambda wildcards, attempt: 30000 * attempt,
                         runtime=lambda wildcards, attempt: attempt * 180,
                         qos=lambda wildcards, attempt: get_qos_from_time(attempt, 180, config),
+                        partition=lambda wildcards, attempt: get_partition_from_time(attempt, 120, config),
                     shell:
                         r"""
                         bedtools bamtobed -i {input[0]} -bedpe > {output[0]}
@@ -433,6 +440,7 @@ for sequencing_name, sequencing_data in config["SEQUENCINGS"].items():
                 mem_mb=lambda wildcards, attempt: 10000 * attempt,
                 runtime=lambda wildcards, attempt: attempt * 60,
                 qos=lambda wildcards, attempt: get_qos_from_time(attempt, 60, config),
+                partition=lambda wildcards, attempt: get_partition_from_time(attempt, 120, config),
             shell:
                 r"""
                 multiqc {params.fastqc_outdir} -o {params.multiqc_outdir} --force -n Trimmed_fastq
@@ -476,6 +484,7 @@ for sequencing_name, sequencing_data in config["SEQUENCINGS"].items():
                     mem_mb=lambda wildcards, attempt: 60000 * attempt,
                     runtime=lambda wildcards, attempt: attempt * 180,
                     qos=lambda wildcards, attempt: get_qos_from_time(attempt, 180, config),
+                    partition=lambda wildcards, attempt: get_partition_from_time(attempt, 120, config),
                 shell:
                     r"""
                     bowtie2 -p {threads} --local --very-sensitive-local \
@@ -551,6 +560,7 @@ for sequencing_name, sequencing_data in config["SEQUENCINGS"].items():
                     mem_mb=lambda wildcards, attempt: 30000 * attempt,
                     runtime=lambda wildcards, attempt: attempt * 180,
                     qos=lambda wildcards, attempt: get_qos_from_time(attempt, 180),
+                    partition=lambda wildcards, attempt: get_partition_from_time(attempt, 120, config),
                 shell:
                     r"""
                     bedtools bamtobed -i {input[0]} -bedpe > {output[0]}
@@ -601,6 +611,7 @@ for sequencing_name, sequencing_data in config["SEQUENCINGS"].items():
                         mem_mb=lambda wildcards, attempt: 60000 * attempt,
                         runtime=lambda wildcards, attempt: attempt * 180,
                         qos=lambda wildcards, attempt: get_qos_from_time(attempt, 180, config),
+                        partition=lambda wildcards, attempt: get_partition_from_time(attempt, 120, config),
                     shell:
                         r"""
                         bowtie2 -p {threads} --local --very-sensitive-local \
@@ -676,6 +687,7 @@ for sequencing_name, sequencing_data in config["SEQUENCINGS"].items():
                         mem_mb=lambda wildcards, attempt: 30000 * attempt,
                         runtime=lambda wildcards, attempt: attempt * 180,
                         qos=lambda wildcards, attempt: get_qos_from_time(attempt, 180, config),
+                        partition=lambda wildcards, attempt: get_partition_from_time(attempt, 120, config),
                     shell:
                         r"""
                         bedtools bamtobed -i {input[0]} -bedpe > {output[0]}
@@ -708,6 +720,7 @@ for sequencing_name, sequencing_data in config["SEQUENCINGS"].items():
                 mem_mb=lambda wildcards, attempt: 10000 * attempt,
                 runtime=lambda wildcards, attempt: attempt * 60,
                 qos=lambda wildcards, attempt: get_qos_from_time(attempt, 60, config),
+                partition=lambda wildcards, attempt: get_partition_from_time(attempt, 120, config),
             shell:
                 r"""
                 multiqc {params.flagstat} {params.stats} -d -o {params.multiqc_outdir} --force -n Bam_report
@@ -732,6 +745,7 @@ for sequencing_name, sequencing_data in config["SEQUENCINGS"].items():
             mem_mb=lambda wildcards, attempt: 10000 * attempt,
             runtime=lambda wildcards, attempt: attempt * 60,
             qos=lambda wildcards, attempt: get_qos_from_time(attempt, 60, config),
+            partition=lambda wildcards, attempt: get_partition_from_time(attempt, 120, config),
         shell:
             r"""                
             multiBamSummary bins -p {threads} --verbose \
@@ -774,6 +788,7 @@ if "PROJECTS" in config:
                         mem_mb=lambda wildcards, attempt: 10000 * attempt,
                         runtime=lambda wildcards, attempt: attempt * 120,
                         qos=lambda wildcards, attempt: get_qos_from_time(attempt, 120, config),
+                        partition=lambda wildcards, attempt: get_partition_from_time(attempt, 120, config),
                     shell:
                         r"""                
                         {params.macs_command} callpeak -t {input} -f BEDPE \
@@ -802,6 +817,7 @@ if "PROJECTS" in config:
                         mem_mb=lambda wildcards, attempt: 10000 * attempt,
                         runtime=lambda wildcards, attempt: attempt * 120,
                         qos=lambda wildcards, attempt: get_qos_from_time(attempt, 120, config),
+                        partition=lambda wildcards, attempt: get_partition_from_time(attempt, 120, config),
                     shell:
                         r"""                
                         {params.macs_command} callpeak -t {input[0]} \
@@ -828,6 +844,7 @@ if "PROJECTS" in config:
                     mem_mb=lambda wildcards, attempt: 10000 * attempt,
                     runtime=lambda wildcards, attempt: attempt * 120,
                     qos=lambda wildcards, attempt: get_qos_from_time(attempt, 120, config),
+                    partition=lambda wildcards, attempt: get_partition_from_time(attempt, 120, config),
                 shell:
                     r"""                
                     {params.macs_command} callpeak -t {input[0]} \

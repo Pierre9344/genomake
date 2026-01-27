@@ -4,9 +4,9 @@ The snakemake_functions module contains functions called inside the snakefile.
 """
 
 
-def get_qos_from_time(attempt: int, default_time_min: int, cfg: dict)->str:
+def select_clusters_spec(attempt: int, default_time_min: int, cfg: dict)->str:
     """
-    Identify the name of the qos from the config file using the time of the job. This function is used when an executor is set.
+    Identify the name qos and partition from the config file using the time of the job. This function is used when an executor is set.
 
     Parameters
     ----------
@@ -26,21 +26,71 @@ def get_qos_from_time(attempt: int, default_time_min: int, cfg: dict)->str:
     """
     
     if "JOBS" not in cfg or "QOS_INFOS" not in cfg["JOBS"]:
-        return "long"
+        return {"qos_name": "short", "partition_name": "standard"}
 
     runtime_minutes = attempt * default_time_min
-    suitable_qos = None
+    selected_tier = None
 
-    for qos_name, qos_info in cfg["JOBS"]["QOS_INFOS"].items():
-        maxwall = qos_info.get("MaxWall")
+    for tier_name, tier_info in cfg["JOBS"]["QOS_INFOS"].items():
+        if tier_name == "default":
+            continue
+        
+        maxwall = tier_info.get("MaxWall")
         if maxwall is None:
             continue
         if maxwall >= runtime_minutes:
-            if suitable_qos is None or maxwall < cfg["JOBS"]["QOS_INFOS"][suitable_qos]["MaxWall"]:
-                suitable_qos = qos_name
+            if selected_tier is None or maxwall < cfg["JOBS"]["QOS_INFOS"][selected_tier]["MaxWall"]:
+                selected_tier = tier_name
 
     # fallback to 'long' if none found
-    return suitable_qos or "long"
+    return selected_tier or "default"
+
+def get_qos_from_time(attempt: int, default_time_min: int, cfg: dict)->str:
+    """
+    Identify the name qos to use from the config file using the time of the job. This function is used when an executor is set.
+
+    Parameters
+    ----------
+    attempt : int
+        Current attempt of the job (set by snakemake)
+        
+    default_time_min: int
+        Time in minute that the job ask to the executor
+        
+    cfg: dict
+        Configuration file of the chromake pipeline
+
+    Returns
+    -------
+    str
+        The name of the qos.
+    """
+    tier = select_clusters_spec(attempt, default_time_min, cfg)
+    return tier.get("qos_name", tier.get("name"))
+
+def get_partition_from_time(attempt: int, default_time_min: int, cfg: dict)->str:
+    """
+    Identify the name qos to use from the config file using the time of the job. This function is used when an executor is set.
+
+    Parameters
+    ----------
+    attempt : int
+        Current attempt of the job (set by snakemake)
+        
+    default_time_min: int
+        Time in minute that the job ask to the executor
+        
+    cfg: dict
+        Configuration file of the chromake pipeline
+
+    Returns
+    -------
+    str
+        The name of the qos.
+    """
+    tier = select_clusters_spec(attempt, default_time_min, cfg)
+    return tier.get("partition_name", tier.get("name"))
+
 
 
 def detect_macs_version():
