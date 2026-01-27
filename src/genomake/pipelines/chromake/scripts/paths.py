@@ -318,7 +318,9 @@ def get_project_paths_for_macs(cfg: dict,
                             "INPUT": path_input_bed,
                             "SAMPLE": str(Path( cfg["SEQUENCINGS"][sequencing_name]["PATH"]) / "BED" / (sample_name + "_sorted.bed")),
                             "OUTDIR": str(Path(cfg["PROJECTS"][project_name]["PROJECT_PATH"]) / "peaks/"),
-                            "NAME": "_".join(["macs",project_name, sequencing_name, sample_name])
+                            "NAME": "_".join(["macs",project_name, sequencing_name, sample_name]),
+                            # coord sorted bam will be used for the multicov rule
+                            "BAM": str(Path(cfg["SEQUENCINGS"][sequencing_name]["PATH"]) / "BAM" / (list(cfg["SEQUENCINGS"][sequencing_name]["INPUT"].keys())[0] + "_filtered.coordsort.bam"))
                             }
             else:
                 # For the ATAC-seq, we don't need input file when identifying the peaks
@@ -327,7 +329,8 @@ def get_project_paths_for_macs(cfg: dict,
                         res["_".join([sequencing_name, sample_name])]={
                             "SAMPLE": str(Path( cfg["SEQUENCINGS"][sequencing_name]["PATH"]) / "BED" / (sample_name + "_sorted.bed")),
                             "OUTDIR": str(Path(cfg["PROJECTS"][project_name]["PROJECT_PATH"]) / "peaks/"),
-                            "NAME": "_".join(["macs",project_name, sequencing_name, sample_name])
+                            "NAME": "_".join(["macs",project_name, sequencing_name, sample_name]),
+                            "BAM": str(Path( cfg["SEQUENCINGS"][sequencing_name]["PATH"]) / "BAM" / (sample_name + "_filtered.coordsort.bam")),
                             }
         if len(res) < 1:
             raise RuntimeError(f"No sample corresponding to the {project_name} project were found! Please check your configuration file")
