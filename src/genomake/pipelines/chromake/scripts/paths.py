@@ -430,7 +430,29 @@ def get_project_paths_for_multicov(cfg: dict,
     return res
     
     
+def get_all_multicov_output(cfg: dict):
+    """
+    Get the files necessary for the multicov rules of a project.
+
+    Parameters
+    ----------
+    cfg : dict
+        Dict representing the configuration of an analysis with the chromake pipeline.
     
+
+    Returns
+    -------
+    :
+        A dictionary of all paths needed for the multicov of the project.
+    """
+    res = []
+    if "PROJECTS" in cfg:
+        for project_name in cfg["PROJECTS"].keys():
+            project_multicov = get_project_paths_for_multicov(cfg, project_name)
+            res.extend(project_multicov["output_peaks"])
+            res.extend(project_multicov["output_countmatrix"])
+    
+    return res
     
     
     
