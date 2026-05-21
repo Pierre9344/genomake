@@ -291,7 +291,7 @@ def get_project_paths_for_macs(cfg: dict,
     Returns
     -------
     :
-        A dictionary of all file paths for the project.
+        A dictionary of all file paths needed for the peak calling of the project.
     """
     
     # Basic checks of the configuration file
@@ -382,6 +382,60 @@ def get_all_project_peaks(cfg: dict):
     return res
     
     
+def get_project_paths_for_multicov(cfg: dict,
+                                   project_name: str,
+                                   ):
+    """
+    Get the files necessary for the multicov rules of a project.
 
+    Parameters
+    ----------
+    cfg : dict
+        Dict representing the configuration of an analysis with the chromake pipeline.
+    
+    project_name: str
+        String representing the name of the project in cfg
 
-
+    Returns
+    -------
+    :
+        A dictionary of all paths needed for the multicov of the project.
+    """
+    # Basic checks of the configuration file
+    if project_name not in cfg["PROJECTS"]:
+        raise RuntimeError(f"The project {project_name} is not in the configuration file")
+    if "SEQUENCINGS" not in cfg["PROJECTS"][project_name] or len(cfg["PROJECTS"][project_name]["SEQUENCINGS"]) < 1:
+        raise RuntimeError(f"The project {project_name} don't indicate any valid sequencing. Please add a sequencing or remove this project.")
+    
+    input_peaks = get_project_paths_for_macs(cfg, project_name, "macs_output")
+    input_bams = []
+    input_names = ["chr", "start", "stop", "interval"]
+    for sequencing_name in cfg["PROJECTS"][project_name]["SEQUENCINGS"]:
+        if sequencing_name not in cfg["SEQUENCINGS"]:
+            raise RuntimeError(f"The project {project_name} list the sequencing {sequencing_name} who is not present in the configuration file.")
+        
+        # For the ATAC-seq, we don't need input file when identifying the peaks
+        for sample_name, sample_data in cfg["SEQUENCINGS"][sequencing_name]["SAMPLES"].items():
+            if sample_data["TYPE"] == cfg["PROJECTS"][project_name]["TYPE"]:
+                input_bams.append(str(Path( cfg["SEQUENCINGS"][sequencing_name]["PATH"]) / "BAM" / (sample_name + "_filtered.coordsort.bam")))
+                input_names.append(f"{sequencing_name}_{sample_name}")    
+    res = {
+        "input_peaks": input_peaks,
+        "input_bams": input_bams,
+        "input_names": input_names,
+        "output_peaks": Path(cfg["PROJECTS"][project_name]["PROJECT_PATH"]) / f'{project_name}_peaks_in_at_least_{cfg["PROJECTS"][project_name]["MIN_SAMPLES_FOR_PEAKS"]}_samples_for_multicov.bed',
+        "output_countmatrix": Path(cfg["PROJECTS"][project_name]["PROJECT_PATH"]) / f"{project_name}_countmatrix.bed"
+    }
+    
+    return res
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    

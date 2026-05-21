@@ -769,7 +769,7 @@ if "PROJECTS" in config:
         if len(peak_calling_dict) == 0:
             continue
         if config["PROJECTS"][project_name]["TYPE"] == "ATAC":
-            # broad peaks, don't need input
+            # broad peaks, don't need input for ATAC-seq
             for peak_calling_data in peak_calling_dict.values():
                 rule:
                     name:
@@ -797,7 +797,7 @@ if "PROJECTS" in config:
                         """
             
         elif config["PROJECTS"][project_name]["TYPE"] == "H3K27AC":
-            # Narrow peak, need input
+            # Narrow peak for H3K27Ac, need input
             for peak_calling_data in peak_calling_dict.values():
                 rule:
                     name:
@@ -825,7 +825,7 @@ if "PROJECTS" in config:
                           -n {params.name} --outdir {params.outdir}
                         """
         elif config["PROJECTS"][project_name]["TYPE"] in ["H3K27ME3", "H2AUB"]:
-            # broad peak, need input
+            # broad peak for H2Aub and H3K27Me3, need input
             rule:
                 name:
                     peak_calling_data["NAME"]
@@ -853,7 +853,42 @@ if "PROJECTS" in config:
                     """
         
         # Filters peaks to keep only those present in N samples and bedtools multicov
-        
+        multicov_data = chr_paths.get_project_paths_for_multicov(config, project_name)
+        rule:
+            name:
+                f"multicov_{project_name}"
+            input:
+                multicov_data["input_peaks"]
+                multicov_data["input_bams"]
+            output:
+                multicov_data["output_peaks"]
+                multicov_data["output_countmatrix"]
+            threads:
+                1,
+            params:
+                min_number_samples=config["PROJECTS"][project_name]["MIN_SAMPLES_FOR_PEAKS"]
+                header="\t".join(multicov_data["input_names"])
+            resources:
+                mem_mb=lambda wildcards, attempt: 10000 * attempt,
+                runtime=lambda wildcards, attempt: attempt * 120,
+                qos=lambda wildcards, attempt: get_qos_from_time(attempt, 120, config),
+                partition=lambda wildcards, attempt: get_partition_from_time(attempt, 120, config),
+            shell:
+                r"""                
+                cat 'input[0]} | \
+                    grep -v "Chromosome"| \
+                    sort -k1,1 -k2,2n | \
+                    mergeBed -i stdin -c 1 -o count | \
+                    awk ' $4 >= {params.min_number_samples} {{ print $0}} ' \
+                    > {output[0]}
+                
+                printf '{params.header}\n' > {output[1]}
+                
+                bedtools multicov \
+                    -bams {input[1]} \
+                    -bed {output[0]} \
+                    >> {output[1]}
+                """
 
 
 
