@@ -45,9 +45,9 @@ rule all:
         *chr_paths.get_all_sequencings_related_paths(config, "bam_filtered_name"),
         *chr_paths.get_all_sequencings_related_paths(config, "bedgraph"),
         *chr_paths.get_all_sequencings_related_paths(config, "bed_sorted"),
-        # remove comment after the macs rule is added
         *chr_paths.get_all_project_peaks(config),
-        *chr_paths.get_project_paths_for_multicov(config)
+        *chr_paths.get_project_paths_for_multicov(config),
+        *chr_paths.get_all_frip_output(config),
 
 
 from genomake.pipelines.chromake.scripts.snakemake_functions import get_qos_from_time
@@ -890,7 +890,62 @@ if "PROJECTS" in config:
                     -bed {output[0]} \
                     >> {output[1]}
                 """
+        
+        
+        # Compute FRiP for all samples of the project
+        frip_data = chr_paths.get_project_paths_for_frip(config, project_name)
+        rule:
+            name:
+                f"frip_{project_name}"
+            input:
+                bams=frip_data["input_bams"],
+                peaks=frip_data["input_peaks"],
+            output:
+                frip=frip_data["output_frip"]
+            threads:
+                1,
+            params:
+                samples=" ".join(frip_data["input_names"])
+            resources:
+                mem_mb=lambda wildcards, attempt: 10000 * attempt,
+                runtime=lambda wildcards, attempt: attempt * 120,
+                qos=lambda wildcards, attempt: get_qos_from_time(attempt, 120, config),
+                partition=lambda wildcards, attempt: get_partition_from_time(attempt, 120, config),
+            shell:
+                r"""
+                printf "Samples\tTotal mapped reads\tMapped reads in peaks\tFRIP\n" > {output.frip}
 
+                bams=({input.bams})
+                peaks=({input.peaks})
+                samples=({params.samples})
 
+                for i in "${{!bams[@]}}"; do
+                    sample="${{samples[$i]}}"
+                    bam="${{bams[$i]}}"
+                    peak="${{peaks[$i]}}"
 
+                    total_mapped=$(samtools view -c -F 4 "$bam")
 
+                    mapped_in_peaks=$(
+                        bedtools intersect \
+                            -u \
+                            -a "$bam" \
+                            -b "$peak" \
+                        | samtools view -c -F 4 -
+                    )
+
+                    if [ "$total_mapped" -gt 0 ]; then
+                        frip=$(awk -v in_peaks="$mapped_in_peaks" -v total="$total_mapped" \
+                            'BEGIN {{ printf "%.6f", in_peaks / total }}')
+                    else
+                        frip="NA"
+                    fi
+
+                    printf "%s\t%s\t%s\t%s\n" \
+                        "$sample" \
+                        "$total_mapped" \
+                        "$mapped_in_peaks" \
+                        "$frip" \
+                        >> {output.frip}
+                done
+                """

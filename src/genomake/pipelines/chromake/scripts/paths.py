@@ -454,9 +454,77 @@ def get_all_multicov_output(cfg: dict):
     
     return res
     
-    
-    
-    
+def get_project_paths_for_frip(cfg: dict, project_name: str):
+    """
+    Get the files necessary to compute FRiP for all samples of a project.
+
+    Returns
+    -------
+    dict
+        Dictionary containing:
+          - input_peaks: MACS peak files, one per project sample
+          - input_bams: coordinate-sorted BAM files, one per project sample
+          - input_names: sample labels
+          - output_frip: project-level FRIP.txt file
+    """
+    if project_name not in cfg["PROJECTS"]:
+        raise RuntimeError(f"The project {project_name} is not in the configuration file")
+
+    if "SEQUENCINGS" not in cfg["PROJECTS"][project_name] or len(cfg["PROJECTS"][project_name]["SEQUENCINGS"]) < 1:
+        raise RuntimeError(
+            f"The project {project_name} don't indicate any valid sequencing. "
+            "Please add a sequencing or remove this project."
+        )
+
+    input_peaks = get_project_paths_for_macs(cfg, project_name, "macs_output")
+    input_bams = []
+    input_names = []
+
+    for sequencing_name in cfg["PROJECTS"][project_name]["SEQUENCINGS"]:
+        if sequencing_name not in cfg["SEQUENCINGS"]:
+            raise RuntimeError(
+                f"The project {project_name} list the sequencing {sequencing_name} "
+                "who is not present in the configuration file."
+            )
+
+        for sample_name, sample_data in cfg["SEQUENCINGS"][sequencing_name]["SAMPLES"].items():
+            if sample_data["TYPE"] == cfg["PROJECTS"][project_name]["TYPE"]:
+                input_bams.append(
+                    str(
+                        Path(cfg["SEQUENCINGS"][sequencing_name]["PATH"])
+                        / "BAM"
+                        / f"{sample_name}_filtered.coordsort.bam"
+                    )
+                )
+                input_names.append(f"{sequencing_name}_{sample_name}")
+
+    if len(input_bams) != len(input_peaks):
+        raise RuntimeError(
+            f"FRiP path mismatch for project {project_name}: "
+            f"{len(input_bams)} BAM files but {len(input_peaks)} peak files."
+        )
+
+    return {
+        "input_peaks": input_peaks,
+        "input_bams": input_bams,
+        "input_names": input_names,
+        "output_frip": str(Path(cfg["PROJECTS"][project_name]["PROJECT_PATH"]) / "FRIP.txt"),
+    }
+
+
+def get_all_frip_output(cfg: dict):
+    """
+    Get all project-level FRIP output files.
+    """
+    res = []
+
+    if "PROJECTS" in cfg:
+        for project_name, project_data in cfg["PROJECTS"].items():
+            if "TYPE" not in project_data:
+                continue
+            res.append(get_project_paths_for_frip(cfg, project_name)["output_frip"])
+
+    return res
     
     
     
