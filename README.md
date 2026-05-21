@@ -7,8 +7,6 @@
 
 Genomake (genomic make) is a python package to analyze genomic data.
 
-This package is a WIP.
-
 Check the [documentation](https://pierre9344.github.io/genomake/) to get started.
 
 # Current pipelines
@@ -32,8 +30,12 @@ Steps realized:
     1. FASTQ trimming using cutadapt
     2. QC (fastqc and multiqc) of raw and trimmed fastq files.
     3. Alignment on genome (using bowtie2).
-    4. Peak calling (using macs2).
-    5. Read count (macs3) /!\ WIP /!\
-    6. Preliminary analysis and report generation (quarto report with PCA, heatmap, and some standard QC) /!\ Not a priority. /!\
+    4. Peak calling (using macs2 or macs3).
+    5. Generation of bedGraph file for UCSC visualization of the peaks.
+    6. Read count and count matrix generation (macs2/3 and bedtools).
+    7. FRIP computation
+
+Preliminary analysis and report generation (quarto report with PCA, heatmap, and some standard QC). May be added in the future but it is not a priority.
     
+Both macs2 and macs3 can be used. It depend of which one you add to your conda environment. We recommand to use macs3 for new project.
 

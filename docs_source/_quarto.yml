@@ -24,6 +24,11 @@ website:
         file: reference/index.qmd
       - text: "Command Line Interface"
         file: cli.qmd
+      - text: "Pipeline graphic representation"
+        menu:
+          - text: "chromake"
+            href: pipeline_graph_chromake.qmd
+        
     right:
       - icon: github
         href: https://github.com/Pierre9344/genomake
