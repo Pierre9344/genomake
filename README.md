@@ -35,7 +35,7 @@ Steps realized:
     6. Read count and count matrix generation (macs2/3 and bedtools).
     7. FRIP computation
 
-Preliminary analysis and report generation (quarto report with PCA, heatmap, and some standard QC). May be added in the future but it is not a priority.
+Secondary (differential analysis) and tertiary (GO, GSEA) analyses and report generation (quarto report with PCA, heatmap, and some standard QC) may be added in the future but it is not a priority.
     
 Both macs2 and macs3 can be used. It depend of which one you add to your conda environment. We recommand to use macs3 for new project.
 
