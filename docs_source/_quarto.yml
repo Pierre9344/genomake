@@ -66,11 +66,9 @@ format:
 quartodoc:
   # the name used to import the package you want to create reference docs for
   package: genomake
-
   # write sidebar and style data
   sidebar: reference/_sidebar.yml
   #css: reference/_styles-quartodoc.css
-
   sections:
     - title: chromake
       desc: A snakemake pipeline to align ChIP-seq and ATAC-seq samples.
@@ -92,7 +90,11 @@ quartodoc:
         - pipelines.chromake.scripts.paths.get_all_sequencings_related_paths
         - pipelines.chromake.scripts.paths.get_sequencings_related_paths
         - pipelines.chromake.scripts.paths.get_project_paths_for_macs
-
+        - pipelines.chromake.scripts.paths.get_all_project_peaks
+        - pipelines.chromake.scripts.paths.get_project_paths_for_multicov
+        - pipelines.chromake.scripts.paths.get_all_multicov_output
+        - pipelines.chromake.scripts.paths.get_project_paths_for_frip
+        - pipelines.chromake.scripts.paths.get_all_frip_output
 
 
 
