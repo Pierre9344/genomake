@@ -12,13 +12,13 @@ This package is a WIP.
 
 # Installation
 
-A Genomake for the chromake pipeline can be installed using pip.
+The Genomake package be installed using pip.
 
 ```{.bash}
 pip install git+https://github.com/Pierre9344/genomake
 ```
 
-If you wish to install it in a conda environment, you can use a yml containing the lineS next.
+If you wish to install it in a conda environment, you can use a yml containing the lines next. This is the recommanded setup on a computational cluster.
 
 ```{.yaml}
 name: genomake
