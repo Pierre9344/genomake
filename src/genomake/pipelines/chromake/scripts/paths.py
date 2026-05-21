@@ -363,7 +363,7 @@ def get_project_paths_for_macs(cfg: dict,
 
 def get_all_project_peaks(cfg: dict):
     """
-    Get the files necessary for the macs3 rules of all projects.
+    Get the files necessary for the peak calling rules of all projects.
 
     Parameters
     ----------
@@ -386,7 +386,7 @@ def get_project_paths_for_multicov(cfg: dict,
                                    project_name: str,
                                    ):
     """
-    Get the files necessary for the multicov rules of a project.
+    Get the files necessary for the multicov rule of a project.
 
     Parameters
     ----------
@@ -449,8 +449,8 @@ def get_all_multicov_output(cfg: dict):
     if "PROJECTS" in cfg:
         for project_name in cfg["PROJECTS"].keys():
             project_multicov = get_project_paths_for_multicov(cfg, project_name)
-            res.extend(project_multicov["output_peaks"])
-            res.extend(project_multicov["output_countmatrix"])
+            res.append(project_multicov["output_peaks"])
+            res.append(project_multicov["output_countmatrix"])
     
     return res
     
