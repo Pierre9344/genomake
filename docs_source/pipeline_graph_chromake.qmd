@@ -359,6 +359,9 @@ Pipeline: "ChIP / ATAC Snakemake workflow" {
     }
 
     SampleSelection -> MACS
+    SampleSelection -> InputsForChIP: "ChIP-seq only" {
+      style.stroke-dash: 4
+    }
     InputsForChIP -> MACS: "ChIP-seq only" {
       style.stroke-dash: 4
     }
