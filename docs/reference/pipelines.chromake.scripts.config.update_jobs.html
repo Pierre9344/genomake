@@ -4167,7 +4167,7 @@ vertical-align: -.125em;
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>pipelines.chromake.scripts.config.update_jobs(config_path, jobs)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Update or add the JOBS section in an existing YAML config.</p>
 <p>CORES_PER_JOBS: number of cpu cores to use for each jobs (&gt;=1)</p>
-<p>QOS_INFOS: if using an executor like slurm, indicate the name of the qos (e.g. short), and the associated MaxWall in minutes.</p>
+<p>SCHEDULER_PROFILES: if using an executor like slurm, indicate the name of the qos (e.g. short), and the associated MaxWall in minutes.</p>
 <section id="parameters" class="level2 doc-section doc-section-parameters">
 <h2 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h2>
 <table class="caption-top table">
@@ -4212,13 +4212,14 @@ vertical-align: -.125em;
 <span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;MULTIBAMSUMMARY&quot;</span>: <span class="dv">5</span>,</span>
 <span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;BEDTOOLS&quot;</span>: <span class="dv">5</span></span>
 <span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    },</span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;QOS_INFOS&quot;</span>: {</span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;short&quot;</span>: {<span class="st">&quot;MaxWall&quot;</span>: <span class="dv">2000</span>},</span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;medium&quot;</span>: {<span class="st">&quot;MaxWall&quot;</span>: <span class="dv">5000</span>},</span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;long&quot;</span>: {<span class="st">&quot;MaxWall&quot;</span>: <span class="dv">15000</span>} </span>
-<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    }</span>
-<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>update_jobs(<span class="st">&quot;config.yaml&quot;</span>, jobs_update)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;SCHEDULER_PROFILES&quot;</span>: {</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;default&quot;</span>: {<span class="st">&quot;qos_name&quot;</span>: <span class="st">&quot;short&quot;</span>, <span class="st">&quot;partition_name&quot;</span>: <span class="st">&quot;standard&quot;</span>}, <span class="co"># default value</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;short&quot;</span>: {<span class="st">&quot;MaxWall&quot;</span>: <span class="dv">24</span> <span class="op">*</span> <span class="dv">60</span>, <span class="st">&quot;qos_name&quot;</span>: <span class="st">&quot;short&quot;</span>, <span class="st">&quot;partition_name&quot;</span>: <span class="st">&quot;standard&quot;</span>}, <span class="co"># 1 day</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;medium&quot;</span>: {<span class="st">&quot;MaxWall&quot;</span>: <span class="dv">3</span> <span class="op">*</span> <span class="dv">24</span> <span class="op">*</span> <span class="dv">60</span>, <span class="st">&quot;qos_name&quot;</span>: <span class="st">&quot;medium&quot;</span>, <span class="st">&quot;partition_name&quot;</span>: <span class="st">&quot;standard&quot;</span>}, <span class="co"># 3 days</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;long&quot;</span>: {<span class="st">&quot;MaxWall&quot;</span>: <span class="dv">8</span> <span class="op">*</span> <span class="dv">24</span> <span class="op">*</span> <span class="dv">60</span>, <span class="st">&quot;qos_name&quot;</span>: <span class="st">&quot;long&quot;</span>, <span class="st">&quot;partition_name&quot;</span>: <span class="st">&quot;standard&quot;</span>}, <span class="co"># 8 days in minutes</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>update_jobs(<span class="st">&quot;config.yaml&quot;</span>, jobs_update)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 
 
 </section>
