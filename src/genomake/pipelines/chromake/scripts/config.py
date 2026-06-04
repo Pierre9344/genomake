@@ -63,6 +63,7 @@ def create_example_config(
                 "PARAMETERS": {
                     "CUTADAPT": "-q 20 --pair-filter=any",
                     "BOWTIE2_REF": "<path to genome reference build for bowtie2>",
+                    "GENOME": "<Used by HOMER to create bedgraph e.g. hg38>",
                     "BLACKLIST_BED": "<Path to blacklist file in bed format, see https://github.com/Boyle-Lab/Blacklist >",
                     "CHROM_SIZE": "<path to file wih the size of chromosome (can be found on UCSC) >"
                 }
@@ -97,6 +98,7 @@ def create_example_config(
                 "PARAMETERS": {
                     "CUTADAPT": "-q 20 --pair-filter=any",
                     "BOWTIE2_REF": "<path to genome reference build for bowtie2>",
+                    "GENOME": "<Used by HOMER to create bedgraph e.g. hg38>",
                     "BLACKLIST_BED": "<Path to blacklist file in bed format, see https://github.com/Boyle-Lab/Blacklist >",
                     "CHROM_SIZE": "<path to file wih the size of chromosome (can be found on UCSC) >"
                 }
@@ -120,6 +122,7 @@ def create_example_config(
                 "PARAMETERS": {
                     "CUTADAPT": "-q 20 --pair-filter=any",
                     "BOWTIE2_REF": "<path to genome reference build for bowtie2>",
+                    "GENOME": "<Used by HOMER to create bedgraph e.g. hg38>",
                     "BLACKLIST_BED": "<Path to blacklist file in bed format, see https://github.com/Boyle-Lab/Blacklist >",
                     "CHROM_SIZE": "<path to file wih the size of chromosome (can be found on UCSC) >"
                 }

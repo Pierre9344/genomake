@@ -859,11 +859,11 @@ if "PROJECTS" in config:
             name:
                 f"multicov_{project_name}"
             input:
-                multicov_data["input_peaks"]
-                multicov_data["input_bams"]
+                multicov_data["input_peaks"],
+                multicov_data["input_bams"],
             output:
-                multicov_data["output_peaks"]
-                multicov_data["output_countmatrix"]
+                multicov_data["output_peaks"],
+                multicov_data["output_countmatrix"],
             threads:
                 1,
             params:
