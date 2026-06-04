@@ -876,7 +876,7 @@ if "PROJECTS" in config:
                 partition=lambda wildcards, attempt: get_partition_from_time(attempt, 120, config),
             shell:
                 r"""                
-                cat 'input[0]} | \
+                cat {input[0]} | \
                     grep -v "Chromosome"| \
                     sort -k1,1 -k2,2n | \
                     mergeBed -i stdin -c 1 -o count | \
