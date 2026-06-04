@@ -300,28 +300,41 @@ def check_project_and_sequencing(config: dict) -> dict:
                         print(f"Sequencing {sequencing_name} contains samples from ChIP-seq experiment but INPUT field is missing. Please check your configuration file.")
     # Now loop through the projects and remove references to empty sequencing projects
     if "PROJECTS" in config:
-        for project_key, project_data in config["PROJECTS"].items():
-            project_mark = project_data.get("TYPE")  # Get the mark associated with the project
-            
-            if isinstance(project_data.get("SEQUENCINGS"), list):
-                # Filter out sequencing projects that no longer have samples for the project mark
-                updated_sequencing_projects = [
-                    seq_proj for seq_proj in project_data["SEQUENCINGS"].items()
-                    if seq_proj in config["SEQUENCINGS"] and 
-                       config["SEQUENCINGS"][seq_proj].get("SAMPLES") and
-                       any(sample_data["TYPE"] == project_mark for sample_data in config["SEQUENCINGS"][seq_proj]["SAMPLES"].values())
-                ]
-                
-                # If the list is empty, remove the sequencing from the project
-                if updated_sequencing_projects != project_data["SEQUENCINGS"]:
-                    project_data["SEQUENCINGS"] = updated_sequencing_projects
-                    print(f"Updated project '{project_key}' to reflect current sequencing projects: {updated_sequencing_projects}")
-                    
-                    # If no valid sequencing projects remain, remove the project
-                    if not updated_sequencing_projects:
-                        del config["PROJECTS"][project_key]
-                        print(f"Removed project '{project_key}' as it has no valid sequencing projects.")
-    
+        for project_key, project_data in list(config["PROJECTS"].items()):
+            project_mark = project_data.get("TYPE")
+            seq_names = project_data.get("SEQUENCINGS", [])
+
+            if not isinstance(seq_names, list):
+                print(
+                    f"Project '{project_key}' has invalid SEQUENCINGS field; "
+                    "expected a list."
+                )
+                continue
+
+            updated_sequencing_projects = [
+                seq_name for seq_name in seq_names
+                if seq_name in config["SEQUENCINGS"]
+                and config["SEQUENCINGS"][seq_name].get("SAMPLES")
+                and any(
+                    sample_data.get("TYPE") == project_mark
+                    for sample_data in config["SEQUENCINGS"][seq_name]["SAMPLES"].values()
+                )
+            ]
+
+            if updated_sequencing_projects != seq_names:
+                project_data["SEQUENCINGS"] = updated_sequencing_projects
+                print(
+                    f"Updated project '{project_key}' to reflect current "
+                    f"sequencing projects: {updated_sequencing_projects}"
+                )
+
+            if not updated_sequencing_projects:
+                del config["PROJECTS"][project_key]
+                print(
+                    f"Removed project '{project_key}' as it has no valid "
+                    "sequencing projects."
+                )
+
     return config
 
 def remove_sequencing(config_path: str, sequencing_name: str) -> None:
