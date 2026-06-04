@@ -50,7 +50,7 @@ rule all:
         *chr_paths.get_all_frip_output(config),
 
 
-from genomake.pipelines.chromake.scripts.snakemake_functions import get_qos_from_time
+from genomake.pipelines.chromake.scripts.snakemake_functions import *
 
 #####################################################
 # SEQUENCING QC, TRIMMING (OPTIONAL), AND ALIGNMENT #
