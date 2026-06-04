@@ -902,7 +902,7 @@ def check_config_format(cfg: dict, raise_error: bool = True):
                         no_sample=True
                         for sample_name, sample_data in cfg["SEQUENCINGS"][sequencing_name]["SAMPLES"].items():
                             if sample_data["TYPE"] == project_data["TYPE"]:
-                                cfg["PROJECTS"][project_name]["SAMPLES"].append(base / "BED" / (sample_name + "_sorted.bed"))
+                                cfg["PROJECTS"][project_name]["SAMPLES"].append(str(base / "BED" / (sample_name + "_sorted.bed")))
                                 no_sample=False
                         if no_sample:
                             if need_error:
