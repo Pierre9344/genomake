@@ -328,7 +328,7 @@ def get_project_paths_for_macs(cfg: dict,
                     if sample_data["TYPE"] == cfg["PROJECTS"][project_name]["TYPE"]:
                         res["_".join([sequencing_name, sample_name])]={
                             "SAMPLE": str(Path( cfg["SEQUENCINGS"][sequencing_name]["PATH"]) / "BED" / (sample_name + "_sorted.bed")),
-                            "OUTDIR": str(Path(cfg["PROJECTS"][project_name]["PROJECT_PATH"]) / "peaks/"),
+                            "OUTDIR": str(Path(cfg["PROJECTS"][project_name]["PROJECT_PATH"]) / "peaks") + "/",
                             "NAME": "_".join(["macs",project_name, sequencing_name, sample_name]),
                             "BAM": str(Path( cfg["SEQUENCINGS"][sequencing_name]["PATH"]) / "BAM" / (sample_name + "_filtered.coordsort.bam")),
                             }
