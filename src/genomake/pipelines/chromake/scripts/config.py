@@ -263,65 +263,94 @@ def update_jobs(config_path: str, jobs: dict) -> None:
 
 def check_project_and_sequencing(config: dict) -> dict:
     """
-    Ensures that projects with no associated sequencing samples are removed from the config, and removes empty sequencing projects, while making sure the mark is considered in the filtering process.
+    Remove empty sequencing entries and update PROJECTS so that each project
+    only references sequencings that still contain samples of the matching TYPE.
 
     Parameters
     ----------
     config : dict
-        Loaded YAML config (as a dictionary).
+        Loaded YAML config.
 
     Returns
-    ------- 
+    -------
     dict
         Updated config dictionary.
     """
+
     if "SEQUENCINGS" not in config:
         return config
-    
-    # Loop through the sequencing section and clean empty sequencing projects
-    for sequencing_name, sequencing_data in config["SEQUENCINGS"].items():
-        # If there are no samples and inputs, remove the sequencing project
-        if not sequencing_data.get("SAMPLES") and not sequencing_data.get("INPUT"):
+
+    # Clean SEQUENCINGS
+    for sequencing_name, sequencing_data in list(config["SEQUENCINGS"].items()):
+
+        samples = sequencing_data.get("SAMPLES", {})
+        inputs = sequencing_data.get("INPUT", {})
+
+        # Remove empty INPUT section
+        if "INPUT" in sequencing_data and len(inputs) == 0:
+            del sequencing_data["INPUT"]
+            inputs = {}
+            print(
+                f"Removed the input field of sequencing project "
+                f"{sequencing_name} as it was empty."
+            )
+
+        # Remove sequencing if it has neither samples nor inputs
+        if not samples and not inputs:
             del config["SEQUENCINGS"][sequencing_name]
-            print(f"Removed sequencing project '{sequencing_name}' as it has no samples or inputs.")
-        else:
-            if sequencing_data.get("INPUT"):
-                if len(sequencing_data.get("INPUT")) == 0:
-                    del config["SEQUENCINGS"][sequencing_name]["INPUT"]
-                    print(f"Removed the input field of sequencing project {sequencing_name} as it was empty.")
-            
-            for sample_name, sample_data in config["SEQUENCINGS"][sequencing_name]["SAMPLES"].items():
-                if (sample_data["TYPE"] in ["H3K27AC", "H3K27ME3", "H2AUB"]):
-                    if "INPUT" in sequencing_data.keys():
-                        for input_name, input_data in sequencing_data["INPUT"].items():
-                            if ("R1" not in input_data.keys()) or ("R1" not in input_data.keys()) or ("R2" not in input_data.keys()):
-                                print(f"Sequencing {sequencing_name} contains samples from ChIP-seq experiment but INPUT field ({input_name}) is not valid. Please check your configuration file.")
-                    else:
-                        print(f"Sequencing {sequencing_name} contains samples from ChIP-seq experiment but INPUT field is missing. Please check your configuration file.")
-    # Now loop through the projects and remove references to empty sequencing projects
+            print(
+                f"Removed sequencing project '{sequencing_name}' "
+                "as it has no samples or inputs."
+            )
+            continue
+
+        # Check that ChIP-seq samples have valid input files
+        for sample_name, sample_data in samples.items():
+            sample_type = sample_data.get("TYPE")
+
+            if sample_type in ["H3K27AC", "H3K27ME3", "H2AUB"]:
+                if "INPUT" not in sequencing_data:
+                    print(
+                        f"Sequencing {sequencing_name} contains ChIP-seq samples "
+                        "but INPUT field is missing. Please check your configuration file."
+                    )
+                else:
+                    for input_name, input_data in sequencing_data["INPUT"].items():
+                        if "R1" not in input_data or "R2" not in input_data:
+                            print(
+                                f"Sequencing {sequencing_name} contains ChIP-seq samples "
+                                f"but INPUT field ({input_name}) is not valid. "
+                                "Please check your configuration file."
+                            )
+
+    # Clean PROJECTS
     if "PROJECTS" in config:
         for project_key, project_data in list(config["PROJECTS"].items()):
             project_mark = project_data.get("TYPE")
-            seq_names = project_data.get("SEQUENCINGS", [])
+            project_sequencings = project_data.get("SEQUENCINGS", [])
 
-            if not isinstance(seq_names, list):
+            if not isinstance(project_sequencings, list):
                 print(
-                    f"Project '{project_key}' has invalid SEQUENCINGS field; "
-                    "expected a list."
+                    f"Project '{project_key}' has an invalid SEQUENCINGS field. "
+                    "Expected a list. Removing this project."
                 )
+                del config["PROJECTS"][project_key]
                 continue
 
             updated_sequencing_projects = [
-                seq_name for seq_name in seq_names
+                seq_name
+                for seq_name in project_sequencings
                 if seq_name in config["SEQUENCINGS"]
                 and config["SEQUENCINGS"][seq_name].get("SAMPLES")
                 and any(
                     sample_data.get("TYPE") == project_mark
-                    for sample_data in config["SEQUENCINGS"][seq_name]["SAMPLES"].values()
+                    for sample_data in config["SEQUENCINGS"][seq_name]
+                    .get("SAMPLES", {})
+                    .values()
                 )
             ]
 
-            if updated_sequencing_projects != seq_names:
+            if updated_sequencing_projects != project_sequencings:
                 project_data["SEQUENCINGS"] = updated_sequencing_projects
                 print(
                     f"Updated project '{project_key}' to reflect current "
