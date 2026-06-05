@@ -2,9 +2,7 @@
 title: "Get started"
 ---
 
-<a href="https://pierre9344.github.io/genomake/">
-    <img src="logo_whitebg.png" align="right" height="138" />
-</a>
+<a href="https://pierre9344.github.io/genomake/"> <img src="logo_whitebg.png" align="right" height="138"/> </a>
 
 The genomake package is a collections of scripts and pipeline written in python to analyze with genomic data.
 
@@ -14,13 +12,13 @@ This package is a WIP.
 
 The Genomake package be installed using pip.
 
-```{.bash}
+``` bash
 pip install git+https://github.com/Pierre9344/genomake
 ```
 
 If you wish to install it in a conda environment, you can use a yml containing the lines next. This is the recommanded setup on a computational cluster.
 
-```{.yaml}
+``` yaml
 name: genomake
 channels:
   - conda-forge
@@ -42,18 +40,18 @@ dependencies:
       - cutadapt
       - deeptools
       - multiqc
-      - snakemake-executor-plugin-slurm
+      - snakemake-executor-plugin-slurm # may be replaced by another executor if needed
 ```
 
 The package MACS2/3, cutadapt, deeptools, and multiqc can also be installed directly from conda.
 
-```{.bash}
+``` bash
 conda create -f genomake.yml -y
 ```
 
 For a simple installation on a local computer to access the functions to create and check the configuration file you can directly use pip:
 
-```{.bash}
+``` bash
 pip install git+https://github.com/Pierre9344/genomake
 ```
 
@@ -63,109 +61,267 @@ pip install git+https://github.com/Pierre9344/genomake
 
 The `chromake` pipeline is a pipeline to analyze ChIP-seq (H3K27ac, H3K27me3, and H2Aub marks), and ATAC-seq samples. It use fastq samples to:
 
-1. Realize an optional adaptor trimming (cutadapt)
-2. Align samples to a genome reference using bowtie2
-3. Identify enriched peaks (macs3)
-4. Realize quality controls (fastqc, samtools stats, samtools flagstat, multiqc)
+1.  Realize an optional adaptor trimming (cutadapt)
+2.  Align samples to a genome reference using bowtie2
+3.  Identify enriched peaks (macs3)
+4.  Realize quality controls (fastqc, samtools stats, samtools flagstat, multiqc)
 
-This pipeline is a WIP. It currently realize the alignment of the samples, and generate UCSC compatible tracks but doesn't realize the peak calling.
+This pipeline is a WIP. It currently performs QC, optional adapter trimming, alignment, filtering of non-standard chromosomes, generation of UCSC-compatible tracks, MACS peak calling, project-level count matrices, and FRiP calculation. Secondary analysis such as PCA, differential analysis, and gene ontology may be added at a later date.
 
 ## Configuration file
 
-To use the pipeline, you need a YAML configuration file. This files must contains 3 fields:
+Chromake is configured with a YAML file passed to Snakemake through the `genomake chromake -c` argument. The file is loaded by Snakemake as the `config` object and checked at runtime by `chromake.scripts.config.check_config_format()`.
 
-- SEQUENCING: informations concerning one or more sequencing (global path, samples fastq, adaptor for trimming, genome for the alignment, ...). The PATH indicated for a sequencing will be used to output the QC and bam files
-- PROJECTS: used to regroup samples of multiple sequencing in a single project for the peak calling. It is recommanded to indicate different paths for different projects.
-- JOBS: information about the number of cores to use for multithreading, and qos (when using an executor like slurm).
+A complete config has three top-level sections:
 
- You can generate an example configuration file with:
+- `SEQUENCINGS`: required. Describes each sequencing run or sequencing folder, the FASTQ files, the optional input controls, the trimming parameters, and the genome-dependent resources used by the rules.
+- `PROJECTS`: optional for FASTQ alignment but required for peak calling and project-level analyses. It groups samples from one or several sequencings by assay/mark and defines the project output directory.
+- `JOBS`: optional but recommended. It controls the number of threads used by each rule and, when using a cluster executor such as Slurm, maps requested runtimes to scheduler partitions and QoS names.
 
-```{.python}
+::: {.callout-important collapse="false" appearance="default" icon="true"}
+## About the SEQUENCINGS section (important)
+
+- A sequencing should only list samples from a same sequencing run. It can list samples from different experiment (e.g. H3K27ac ChIP-seq and ATAC-seq).
+- You may need to split a sequencing in two or more parts if:
+  1.  you configure chromake to realize an adapter trimming with cutadapt, and the samples you sequenced on a single run need to be trimmed for different adapter sequences.
+  2.  your samples don't use the same input sample for the peak calling. It is possible to add multiple samples in the `INPUT` subsection but only the first one will be used during the peak calling step.
+
+:::
+
+### Check the config example template
+
+The fastest way to start is to create the example YAML file and edit it manually:
+
+``` python
 from genomake.pipelines.chromake.scripts import config as chr_config
-chr_config.create_example_config("test_config.yaml")
+
+chr_config.create_example_config("config.yaml")
 ```
-Other functions can be used to convert the configuration file in a samplesheet (excel or csv) or to convert the samplesheet into a configuration file:
 
-```{.python}
-# convert to a samplesheet
-chr_config.create_samplesheet_from_config("test_config.yaml", "test_samplesheet.xlsx", False, True)
+Then edit `config.yaml` to replace the example sample names, FASTQ paths, genome references, blacklist file, chromosome-size file, project paths, and Slurm settings with values for your analysis.
 
-# Convert back to a config file. Sample R1, R2, and Marks can be obtained from the samplesheet.
-# Other informations need to be indicated using the other arguments of the function or to be added manually in the configuration file.
+### Minimal YAML structure
+
+The YAML file uses arbitrary names for sequencings, projects, samples, and input controls. In this example, `MO203` is a sequencing name, `H3K27ac_BAP1` is a biological sample, and `Input_Batch1` is the input control used for ChIP-seq peak calling.
+
+``` yaml
+SEQUENCINGS:
+  MO203:
+    PATH: "/scratch/my_project/MO203/"
+    R1_ADAPTOR: "AGATCGGAAGAGCACACGTCTGAACTCCAGTCA"
+    R2_ADAPTOR: "AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT"
+    SAMPLES:
+      H3K27ac_BAP1:
+        R1: "FASTQ/H3K27ac_BAP1_R1.fastq.gz"
+        R2: "FASTQ/H3K27ac_BAP1_R2.fastq.gz"
+        TYPE: "H3K27AC"
+      ATAC_BAP1:
+        R1: "FASTQ/ATAC_BAP1_R1.fastq.gz"
+        R2: "FASTQ/ATAC_BAP1_R2.fastq.gz"
+        TYPE: "ATAC"
+    INPUT:
+      Input_Batch1:
+        R1: "FASTQ/Input_Batch1_R1.fastq.gz"
+        R2: "FASTQ/Input_Batch1_R2.fastq.gz"
+    PARAMETERS:
+      CUTADAPT: "-q 20 --pair-filter=any"
+      BOWTIE2_REF: "/path/to/bowtie2/index/genome"
+      GENOME: "hg38"
+      BLACKLIST_BED: "/path/to/hg38-blacklist.v2.bed"
+      CHROM_SIZE: "/path/to/hg38.chrom.sizes"
+
+PROJECTS:
+  ChIP_H3K27AC:
+    SEQUENCINGS: ["MO203"]
+    TYPE: "H3K27AC"
+    MIN_SAMPLES_FOR_PEAKS: 1
+    PROJECT_PATH: "/scratch/my_project/ChIP_H3K27AC/"
+  ATAC:
+    SEQUENCINGS: ["MO203"]
+    TYPE: "ATAC"
+    MIN_SAMPLES_FOR_PEAKS: 1
+    PROJECT_PATH: "/scratch/my_project/ATAC/"
+
+JOBS:
+  CORES_PER_JOBS:
+    FASTQC: 10
+    CUTADAPT: 10
+    BOWTIE2: 30
+    SAMTOOLS_QC: 5
+    MULTIBAMSUMMARY: 5
+    BEDTOOLS: 5
+  SCHEDULER_PROFILES:
+    default:
+      qos_name: "short"
+      partition_name: "standard"
+    short:
+      MaxWall: 1440       # 1 day, in minutes
+      qos_name: "short"
+      partition_name: "standard"
+    medium:
+      MaxWall: 4320       # 3 days, in minutes
+      qos_name: "medium"
+      partition_name: "standard"
+    long:
+      MaxWall: 11520      # 8 days, in minutes
+      qos_name: "long"
+      partition_name: "standard"
+```
+
+### `SEQUENCINGS` section
+
+Each entry under `SEQUENCINGS` represents one sequencing batch or one folder containing FASTQ files and pipeline outputs.
+
+| Field | Required | Description |
+|----------------------|---------------------------:|----------------------|
+| `PATH` | yes | Root directory for the sequencing. Relative `R1` and `R2` FASTQ paths are interpreted from this directory. Chromake also writes sequencing-level outputs here, including `BAM`, `BED`, `BEDGRAPH`, `HOMER`, `QC`, and `TRIMMED`. |
+| `SAMPLES` | yes for normal analyses | Dictionary of biological samples. Each sample must contain `R1`, `R2`, and `TYPE`. |
+| `SAMPLES:<sample>:R1` | yes | Path to the read 1 FASTQ file. Prefer a path relative to `PATH`, for example `FASTQ/sample_R1.fastq.gz`. |
+| `SAMPLES:<sample>:R2` | yes | Path to the read 2 FASTQ file. Prefer a path relative to `PATH`. |
+| `SAMPLES:<sample>:TYPE` | yes | Assay or mark analyzed for that sample. Valid values are `ATAC`, `H3K27AC`, `H3K27ME3`, and `H2AUB`. |
+| `INPUT` | required for ChIP-seq peak calling | Dictionary of input/control FASTQ files. It uses the same `R1`/`R2` format as `SAMPLES`, but does not need a `TYPE`. ATAC-seq projects do not need `INPUT`. If several inputs are listed, all are processed, but only the first input is used for MACS peak calling. |
+| `R1_ADAPTOR`, `R2_ADAPTOR` | optional | Adapter sequences passed to cutadapt. If both are present and non-empty, trimming is performed before alignment. Set both to an empty string, or omit them, to align the raw FASTQ files directly. |
+| `PARAMETERS` | yes | Sequencing-specific rule parameters. See the table below. |
+
+The `PARAMETERS` sub-section contains genome and tool options:
+
+| Field | Required | Description |
+|----------------------|---------------------------:|----------------------|
+| `CUTADAPT` | optional | Extra cutadapt arguments, for example `-q 20 --pair-filter=any`. If missing, chromake adds a default empty string. |
+| `BOWTIE2_REF` | yes | Bowtie2 index prefix used for alignment. Give the prefix expected by `bowtie2 -x`, not a FASTA file unless that is how your wrapper expects it. |
+| `GENOME` | yes | Genome passed to HOMER. This can be a HOMER genome name such as `hg38`/`mm10` if configured in HOMER, or a genome FASTA path depending on your HOMER setup. |
+| `BLACKLIST_BED` | yes | BED file of blacklisted regions to remove after alignment. |
+| `CHROM_SIZE` | yes | Chromosome-size file used when creating genome browser tracks. |
+
+### `PROJECTS` section
+
+Projects define which aligned samples are pooled for peak calling and project-level quantification. A project does not list sample names directly. Instead, it lists sequencing names and a `TYPE`; chromake selects all samples from those sequencings whose sample `TYPE` matches the project `TYPE`.
+
+| Field | Required | Description |
+|----------------------|---------------------------:|----------------------|
+| `SEQUENCINGS` | yes | List of sequencing names defined under the top-level `SEQUENCINGS` section. |
+| `TYPE` | yes | Project assay/mark. Must be one of `ATAC`, `H3K27AC`, `H3K27ME3`, or `H2AUB`. Only samples with the same `TYPE` are used in the project. |
+| `MIN_SAMPLES_FOR_PEAKS` | optional | Minimum number of samples in which a peak must be found to be retained in the merged project peak set. If missing, chromake defaults to `1`. |
+| `PROJECT_PATH` | yes | Output directory for project-level files, including MACS peaks, merged peaks, count matrices, and FRiP results. Use a different path for each project. |
+
+For ChIP-seq projects (`H3K27AC`, `H3K27ME3`, `H2AUB`), the associated sequencing must contain at least one `INPUT` entry. For ATAC-seq projects, no input control is required.
+
+### `JOBS` section
+
+`JOBS` controls resources requested by Snakemake rules.
+
+| Field | Required | Description |
+|----------------------|---------------------------:|----------------------|
+| `CORES_PER_JOBS` | optional | Number of threads used by each rule family. Missing values are filled with chromake defaults. Recognized keys are `FASTQC`, `CUTADAPT`, `BOWTIE2`, `SAMTOOLS_QC`, `MULTIBAMSUMMARY`, and `BEDTOOLS`. |
+| `SCHEDULER_PROFILES` | optional | Runtime-to-scheduler mapping used when launching Snakemake with an executor such as Slurm. It is ignored for local runs. |
+| `SCHEDULER_PROFILES:<tier>:MaxWall` | yes for non-default tiers | Maximum runtime for that tier, in minutes. Chromake selects the smallest tier whose `MaxWall` is greater than or equal to the runtime requested by the rule. |
+| `SCHEDULER_PROFILES:<tier>:qos_name` | yes | QoS name passed to the scheduler resource field. |
+| `SCHEDULER_PROFILES:<tier>:partition_name` | yes | Partition name passed to the scheduler resource field. |
+
+The `default` tier is used as a fallback. It does not need `MaxWall`, but it must contain `qos_name` and `partition_name` if you use cluster resources.
+
+### Create a config from a sample sheet
+
+A second workflow is to describe samples in a table and convert it to YAML with `create_config_from_table()`. This is useful when sample metadata are already maintained in Excel or CSV.
+
+The long-format sample sheet must contain these columns:
+
+| Column | Description |
+|------------------------------------|------------------------------------|
+| `SAMPLE` | Sample or input-control name. |
+| `SEQUENCINGS` | Sequencing name. Must match a key in the `sequencings` argument passed to `create_config_from_table()`. |
+| `PROJECT` | Project name for biological samples, or exactly `INPUT` for input controls. |
+| `TYPE` | Assay/mark for biological samples. Use `ATAC`, `H3K27AC`, `H3K27ME3`, or `H2AUB`. Leave empty for `INPUT` rows. |
+| `STRAND` | `R1` or `R2`. Use one row per FASTQ mate. |
+| `PATH` | FASTQ path. Absolute paths are converted to paths relative to the corresponding sequencing `PATH` when possible. |
+
+Example table:
+
+| SAMPLE | SEQUENCINGS | PROJECT | TYPE | STRAND | PATH |
+|------------|------------|------------|------------|------------|------------|
+| H3K27ac_BAP1 | MO203 | ChIP_H3K27AC | H3K27AC | R1 | /scratch/my_project/MO203/FASTQ/H3K27ac_BAP1_R1.fastq.gz |
+| H3K27ac_BAP1 | MO203 | ChIP_H3K27AC | H3K27AC | R2 | /scratch/my_project/MO203/FASTQ/H3K27ac_BAP1_R2.fastq.gz |
+| Input_Batch1 | MO203 | INPUT |  | R1 | /scratch/my_project/MO203/FASTQ/Input_Batch1_R1.fastq.gz |
+| Input_Batch1 | MO203 | INPUT |  | R2 | /scratch/my_project/MO203/FASTQ/Input_Batch1_R2.fastq.gz |
+
+Conversion example:
+
+``` python
+from genomake.pipelines.chromake.scripts import config as chr_config
+
 chr_config.create_config_from_table(
-    "test_samplesheet.xlsx",
-    "test_config2.yaml",
-    proj_paths = {
-        "ChIP_H3K27AC": "/scratch/.../ChIP_H3K27AC",
-        "ChIP_H3K27ME3": "/scratch/.../ChIP_H3K27ME3",
-        "ChIP_H2AUB": "/scratch/.../ChIP_H2AUB",
-        "ChIP_ATAC": "/scratch/.../ChIP_ATAC"
+    table_path="samplesheet.xlsx",
+    output_path="config.yaml",
+    proj_paths={
+        "ChIP_H3K27AC": "/scratch/my_project/ChIP_H3K27AC/",
+        "ATAC": "/scratch/my_project/ATAC/",
     },
-    jobs = {
+    jobs={
         "CORES_PER_JOBS": {
             "FASTQC": 10,
             "CUTADAPT": 10,
             "BOWTIE2": 30,
             "SAMTOOLS_QC": 5,
             "MULTIBAMSUMMARY": 5,
-            "BEDTOOLS": 5
+            "BEDTOOLS": 5,
         },
         "SCHEDULER_PROFILES": {
-            "short": {"MaxWall": 24 * 60}, # 1 day
-            "medium": {"MaxWall": 3 * 24 * 60}, # 3 days
-            "long": {"MaxWall": 8 * 24 * 60}, # 8 days in minutes
+            "default": {"qos_name": "short", "partition_name": "standard"},
+            "short": {"MaxWall": 24 * 60, "qos_name": "short", "partition_name": "standard"},
+            "medium": {"MaxWall": 3 * 24 * 60, "qos_name": "medium", "partition_name": "standard"},
+            "long": {"MaxWall": 8 * 24 * 60, "qos_name": "long", "partition_name": "standard"},
         },
-    }
-    sequencings = {
+    },
+    sequencings={
         "MO203": {
-        "PATH": "/scratch/.../MO203/",
-        "R1_ADAPTOR": "AGATCGGAAGAGCACACGTCTGAACTCCAGTCA",
-        "R2_ADAPTOR": "AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT",
-        "PARAMETERS": {
-            "CUTADAPT": "-q 20 --pair-filter=any",
-            "BOWTIE2_REF": "<path to genome reference build for bowtie2>",
-            "BLACKLIST_BED": "<Path to blacklist file in bed format, see https://github.com/Boyle-Lab/Blacklist >",
-            "GENOME": "<path to the sequencing genome for bowtie2>",
-            "CHROM_SIZE": "<path to file wih the size of chromosome (can be found on UCSC) >"
-        }
+            "PATH": "/scratch/my_project/MO203/",
+            "R1_ADAPTOR": "AGATCGGAAGAGCACACGTCTGAACTCCAGTCA",
+            "R2_ADAPTOR": "AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT",
+            "PARAMETERS": {
+                "CUTADAPT": "-q 20 --pair-filter=any",
+                "BOWTIE2_REF": "/path/to/bowtie2/index/genome",
+                "GENOME": "hg38",
+                "BLACKLIST_BED": "/path/to/hg38-blacklist.v2.bed",
+                "CHROM_SIZE": "/path/to/hg38.chrom.sizes",
+            },
+        },
     },
-    "MO208": {
-        "PATH": "/scratch/.../Pierre_Solomon/MO208/",
-        "R1_ADAPTOR": "AGATCGGAAGAGCACACGTCTGAACTCCAGTCA",
-        "R2_ADAPTOR": "AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT",
-        "PARAMETERS": {
-            "CUTADAPT": "-q 20 --pair-filter=any",
-            "BOWTIE2_REF": "<path to genome reference build for bowtie2>",
-            "BLACKLIST_BED": "<Path to blacklist file in bed format, see https://github.com/Boyle-Lab/Blacklist>",
-            "GENOME": "<path to the sequencing genome for bowtie2>",
-            "CHROM_SIZE": "<path to file wih the size of chromosome (can be found on UCSC)>"
-        }
-    },
-    "MO211": {
-        "PATH": "/scratch/.../MO211/",
-        "R1_ADAPTOR": "CTGTCTCTTATACACATCT",
-        "R2_ADAPTOR": "CTGTCTCTTATACACATCT",
-        "PARAMETERS": {
-            "CUTADAPT": "-q 20 --pair-filter=any",
-            "BOWTIE2_REF": "<path to genome reference build for bowtie2>",
-            "BLACKLIST_BED": "<Path to blacklist file in bed format, see https://github.com/Boyle-Lab/Blacklist >",
-            "GENOME": "<path to the sequencing genome for bowtie2>",
-            "CHROM_SIZE": "<path to file wih the size of chromosome (can be found on UCSC) >"
-        }
-    }
-})
-
-# Check the configuration file
-with open("test_config2.yaml") as stream:
-    config = yaml.safe_load(stream)
-chr_config.check_config_format(config, raise_error=False)
+)
 ```
+
+You can also export a YAML config back to a sample sheet:
+
+``` python
+chr_config.create_samplesheet_from_config(
+    config_path="config.yaml",
+    output_path="samplesheet.xlsx",
+    strand_columns=False,
+    excel=True,
+)
+```
+
+## Validate a config before launching Snakemake
+
+Before running the full pipeline, validate both the config structure and the input FASTQ paths:
+
+``` python
+import yaml
+from genomake.pipelines.chromake.scripts import config as chr_config
+
+with open("config.yaml", encoding="utf-8") as stream:
+    cfg = yaml.safe_load(stream)
+
+chr_config.check_config_format(cfg, raise_error=False)
+chr_config.check_sample_files_exist("config.yaml")
+```
+
+Use `raise_error=True` to stop immediately on invalid mandatory fields. This is the default behavior used at runtime by the Snakefile.
 
 ## Launching the pipeline
 
 Once the configuration file is created, chromake can be launched using the CLI included in genomake:
 
-```{.bash}
+``` bash
 genomake chromake -c ./config.yaml --cores 250 --jobs 10
 ```
 
@@ -179,7 +335,7 @@ If you need to:
 
 Then you can use the `--others-snakemake` argument. Here an example for the slurm executor:
 
-```{.bash}
+``` bash
 genomake chromake -c ./config.yaml --cores 250 --local-cores 1 --jobs 8 \
    --others-snakemake "--executor slurm --default-resources \
    slurm_account=<your_slurm_account> clusters=<name_cluster_for_computation> --slurm-logdir \
@@ -188,6 +344,13 @@ genomake chromake -c ./config.yaml --cores 250 --local-cores 1 --jobs 8 \
 ```
 
 You can check the final command without launching it using the `-p` argument of `genomake chromake`.
+
+::: {.callout-note collapse="false" appearance="default" icon="true"}
+## About executor (note)
+
+- You may replace the slurm executor by another if you don't work with slurm.
+- Please visit the [slurm executor documentation](https://snakemake.github.io/snakemake-plugin-catalog/plugins/executor/slurm.html) for more information about how to use it.
+:::
 
 ## Outputs
 

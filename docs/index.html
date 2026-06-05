@@ -4152,7 +4152,16 @@ vertical-align: -.125em;
   <li><a href="#chromake" id="toc-chromake" class="nav-link" data-scroll-target="#chromake">Chromake</a>
   <ul class="collapse">
   <li><a href="#objectives" id="toc-objectives" class="nav-link" data-scroll-target="#objectives">Objectives</a></li>
-  <li><a href="#configuration-file" id="toc-configuration-file" class="nav-link" data-scroll-target="#configuration-file">Configuration file</a></li>
+  <li><a href="#configuration-file" id="toc-configuration-file" class="nav-link" data-scroll-target="#configuration-file">Configuration file</a>
+  <ul class="collapse">
+  <li><a href="#check-the-config-example-template" id="toc-check-the-config-example-template" class="nav-link" data-scroll-target="#check-the-config-example-template">Check the config example template</a></li>
+  <li><a href="#minimal-yaml-structure" id="toc-minimal-yaml-structure" class="nav-link" data-scroll-target="#minimal-yaml-structure">Minimal YAML structure</a></li>
+  <li><a href="#sequencings-section" id="toc-sequencings-section" class="nav-link" data-scroll-target="#sequencings-section"><code>SEQUENCINGS</code> section</a></li>
+  <li><a href="#projects-section" id="toc-projects-section" class="nav-link" data-scroll-target="#projects-section"><code>PROJECTS</code> section</a></li>
+  <li><a href="#jobs-section" id="toc-jobs-section" class="nav-link" data-scroll-target="#jobs-section"><code>JOBS</code> section</a></li>
+  <li><a href="#create-a-config-from-a-sample-sheet" id="toc-create-a-config-from-a-sample-sheet" class="nav-link" data-scroll-target="#create-a-config-from-a-sample-sheet">Create a config from a sample sheet</a></li>
+  </ul></li>
+  <li><a href="#validate-a-config-before-launching-snakemake" id="toc-validate-a-config-before-launching-snakemake" class="nav-link" data-scroll-target="#validate-a-config-before-launching-snakemake">Validate a config before launching Snakemake</a></li>
   <li><a href="#launching-the-pipeline" id="toc-launching-the-pipeline" class="nav-link" data-scroll-target="#launching-the-pipeline">Launching the pipeline</a></li>
   <li><a href="#outputs" id="toc-outputs" class="nav-link" data-scroll-target="#outputs">Outputs</a></li>
   </ul></li>
@@ -4210,7 +4219,7 @@ vertical-align: -.125em;
 <span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> cutadapt</span></span>
 <span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> deeptools</span></span>
 <span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> multiqc</span></span>
-<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> snakemake-executor-plugin-slurm</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> snakemake-executor-plugin-slurm</span><span class="co"> # may be replaced by another executor if needed</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>The package MACS2/3, cutadapt, deeptools, and multiqc can also be installed directly from conda.</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">conda</span> create <span class="at">-f</span> genomake.yml <span class="at">-y</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>For a simple installation on a local computer to access the functions to create and check the configuration file you can directly use pip:</p>
@@ -4227,97 +4236,466 @@ vertical-align: -.125em;
 <li>Identify enriched peaks (macs3)</li>
 <li>Realize quality controls (fastqc, samtools stats, samtools flagstat, multiqc)</li>
 </ol>
-<p>This pipeline is a WIP. It currently realize the alignment of the samples, and generate UCSC compatible tracks but doesn’t realize the peak calling.</p>
+<p>This pipeline is a WIP. It currently performs QC, optional adapter trimming, alignment, filtering of non-standard chromosomes, generation of UCSC-compatible tracks, MACS peak calling, project-level count matrices, and FRiP calculation. Secondary analysis such as PCA, differential analysis, and gene ontology may be added at a later date.</p>
 </section>
 <section id="configuration-file" class="level2">
 <h2 class="anchored" data-anchor-id="configuration-file">Configuration file</h2>
-<p>To use the pipeline, you need a YAML configuration file. This files must contains 3 fields:</p>
+<p>Chromake is configured with a YAML file passed to Snakemake through the <code>genomake chromake -c</code> argument. The file is loaded by Snakemake as the <code>config</code> object and checked at runtime by <code>chromake.scripts.config.check_config_format()</code>.</p>
+<p>A complete config has three top-level sections:</p>
 <ul>
-<li>SEQUENCING: informations concerning one or more sequencing (global path, samples fastq, adaptor for trimming, genome for the alignment, …). The PATH indicated for a sequencing will be used to output the QC and bam files</li>
-<li>PROJECTS: used to regroup samples of multiple sequencing in a single project for the peak calling. It is recommanded to indicate different paths for different projects.</li>
-<li>JOBS: information about the number of cores to use for multithreading, and qos (when using an executor like slurm).</li>
+<li><code>SEQUENCINGS</code>: required. Describes each sequencing run or sequencing folder, the FASTQ files, the optional input controls, the trimming parameters, and the genome-dependent resources used by the rules.</li>
+<li><code>PROJECTS</code>: optional for FASTQ alignment but required for peak calling and project-level analyses. It groups samples from one or several sequencings by assay/mark and defines the project output directory.</li>
+<li><code>JOBS</code>: optional but recommended. It controls the number of threads used by each rule and, when using a cluster executor such as Slurm, maps requested runtimes to scheduler partitions and QoS names.</li>
 </ul>
-<p>You can generate an example configuration file with:</p>
+<div class="callout callout-style-default callout-important callout-titled">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="true" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span>About the SEQUENCINGS section (important)
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-1" class="callout-1-contents callout-collapse collapse show">
+<div class="callout-body-container callout-body">
+<ul>
+<li>A sequencing should only list samples from a same sequencing run. It can list samples from different experiment (e.g. H3K27ac ChIP-seq and ATAC-seq).</li>
+<li>You may need to split a sequencing in two or more parts if:
+<ol type="1">
+<li>you configure chromake to realize an adapter trimming with cutadapt, and the samples you sequenced on a single run need to be trimmed for different adapter sequences.</li>
+<li>your samples don’t use the same input sample for the peak calling. It is possible to add multiple samples in the <code>INPUT</code> subsection but only the first one will be used during the peak calling step.</li>
+</ol></li>
+</ul>
+</div>
+</div>
+</div>
+<section id="check-the-config-example-template" class="level3">
+<h3 class="anchored" data-anchor-id="check-the-config-example-template">Check the config example template</h3>
+<p>The fastest way to start is to create the example YAML file and edit it manually:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> genomake.pipelines.chromake.scripts <span class="im">import</span> config <span class="im">as</span> chr_config</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>chr_config.create_example_config(<span class="st">&quot;test_config.yaml&quot;</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Other functions can be used to convert the configuration file in a samplesheet (excel or csv) or to convert the samplesheet into a configuration file:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># convert to a samplesheet</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>chr_config.create_samplesheet_from_config(<span class="st">&quot;test_config.yaml&quot;</span>, <span class="st">&quot;test_samplesheet.xlsx&quot;</span>, <span class="va">False</span>, <span class="va">True</span>)</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Convert back to a config file. Sample R1, R2, and Marks can be obtained from the samplesheet.</span></span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Other informations need to be indicated using the other arguments of the function or to be added manually in the configuration file.</span></span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>chr_config.create_config_from_table(</span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;test_samplesheet.xlsx&quot;</span>,</span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;test_config2.yaml&quot;</span>,</span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    proj_paths <span class="op">=</span> {</span>
-<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;ChIP_H3K27AC&quot;</span>: <span class="st">&quot;/scratch/.../ChIP_H3K27AC&quot;</span>,</span>
-<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;ChIP_H3K27ME3&quot;</span>: <span class="st">&quot;/scratch/.../ChIP_H3K27ME3&quot;</span>,</span>
-<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;ChIP_H2AUB&quot;</span>: <span class="st">&quot;/scratch/.../ChIP_H2AUB&quot;</span>,</span>
-<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;ChIP_ATAC&quot;</span>: <span class="st">&quot;/scratch/.../ChIP_ATAC&quot;</span></span>
-<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>    },</span>
-<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>    jobs <span class="op">=</span> {</span>
-<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;CORES_PER_JOBS&quot;</span>: {</span>
-<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;FASTQC&quot;</span>: <span class="dv">10</span>,</span>
-<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;CUTADAPT&quot;</span>: <span class="dv">10</span>,</span>
-<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;BOWTIE2&quot;</span>: <span class="dv">30</span>,</span>
-<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;SAMTOOLS_QC&quot;</span>: <span class="dv">5</span>,</span>
-<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;MULTIBAMSUMMARY&quot;</span>: <span class="dv">5</span>,</span>
-<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;BEDTOOLS&quot;</span>: <span class="dv">5</span></span>
-<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>        },</span>
-<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;SCHEDULER_PROFILES&quot;</span>: {</span>
-<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;short&quot;</span>: {<span class="st">&quot;MaxWall&quot;</span>: <span class="dv">24</span> <span class="op">*</span> <span class="dv">60</span>}, <span class="co"># 1 day</span></span>
-<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;medium&quot;</span>: {<span class="st">&quot;MaxWall&quot;</span>: <span class="dv">3</span> <span class="op">*</span> <span class="dv">24</span> <span class="op">*</span> <span class="dv">60</span>}, <span class="co"># 3 days</span></span>
-<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;long&quot;</span>: {<span class="st">&quot;MaxWall&quot;</span>: <span class="dv">8</span> <span class="op">*</span> <span class="dv">24</span> <span class="op">*</span> <span class="dv">60</span>}, <span class="co"># 8 days in minutes</span></span>
-<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a>        },</span>
-<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a>    }</span>
-<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a>    sequencings <span class="op">=</span> {</span>
-<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;MO203&quot;</span>: {</span>
-<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;PATH&quot;</span>: <span class="st">&quot;/scratch/.../MO203/&quot;</span>,</span>
-<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;R1_ADAPTOR&quot;</span>: <span class="st">&quot;AGATCGGAAGAGCACACGTCTGAACTCCAGTCA&quot;</span>,</span>
-<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;R2_ADAPTOR&quot;</span>: <span class="st">&quot;AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT&quot;</span>,</span>
-<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;PARAMETERS&quot;</span>: {</span>
-<span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;CUTADAPT&quot;</span>: <span class="st">&quot;-q 20 --pair-filter=any&quot;</span>,</span>
-<span id="cb6-37"><a href="#cb6-37" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;BOWTIE2_REF&quot;</span>: <span class="st">&quot;&lt;path to genome reference build for bowtie2&gt;&quot;</span>,</span>
-<span id="cb6-38"><a href="#cb6-38" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;BLACKLIST_BED&quot;</span>: <span class="st">&quot;&lt;Path to blacklist file in bed format, see https://github.com/Boyle-Lab/Blacklist &gt;&quot;</span>,</span>
-<span id="cb6-39"><a href="#cb6-39" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;GENOME&quot;</span>: <span class="st">&quot;&lt;path to the sequencing genome for bowtie2&gt;&quot;</span>,</span>
-<span id="cb6-40"><a href="#cb6-40" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;CHROM_SIZE&quot;</span>: <span class="st">&quot;&lt;path to file wih the size of chromosome (can be found on UCSC) &gt;&quot;</span></span>
-<span id="cb6-41"><a href="#cb6-41" aria-hidden="true" tabindex="-1"></a>        }</span>
-<span id="cb6-42"><a href="#cb6-42" aria-hidden="true" tabindex="-1"></a>    },</span>
-<span id="cb6-43"><a href="#cb6-43" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;MO208&quot;</span>: {</span>
-<span id="cb6-44"><a href="#cb6-44" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;PATH&quot;</span>: <span class="st">&quot;/scratch/.../Pierre_Solomon/MO208/&quot;</span>,</span>
-<span id="cb6-45"><a href="#cb6-45" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;R1_ADAPTOR&quot;</span>: <span class="st">&quot;AGATCGGAAGAGCACACGTCTGAACTCCAGTCA&quot;</span>,</span>
-<span id="cb6-46"><a href="#cb6-46" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;R2_ADAPTOR&quot;</span>: <span class="st">&quot;AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT&quot;</span>,</span>
-<span id="cb6-47"><a href="#cb6-47" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;PARAMETERS&quot;</span>: {</span>
-<span id="cb6-48"><a href="#cb6-48" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;CUTADAPT&quot;</span>: <span class="st">&quot;-q 20 --pair-filter=any&quot;</span>,</span>
-<span id="cb6-49"><a href="#cb6-49" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;BOWTIE2_REF&quot;</span>: <span class="st">&quot;&lt;path to genome reference build for bowtie2&gt;&quot;</span>,</span>
-<span id="cb6-50"><a href="#cb6-50" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;BLACKLIST_BED&quot;</span>: <span class="st">&quot;&lt;Path to blacklist file in bed format, see https://github.com/Boyle-Lab/Blacklist&gt;&quot;</span>,</span>
-<span id="cb6-51"><a href="#cb6-51" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;GENOME&quot;</span>: <span class="st">&quot;&lt;path to the sequencing genome for bowtie2&gt;&quot;</span>,</span>
-<span id="cb6-52"><a href="#cb6-52" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;CHROM_SIZE&quot;</span>: <span class="st">&quot;&lt;path to file wih the size of chromosome (can be found on UCSC)&gt;&quot;</span></span>
-<span id="cb6-53"><a href="#cb6-53" aria-hidden="true" tabindex="-1"></a>        }</span>
-<span id="cb6-54"><a href="#cb6-54" aria-hidden="true" tabindex="-1"></a>    },</span>
-<span id="cb6-55"><a href="#cb6-55" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;MO211&quot;</span>: {</span>
-<span id="cb6-56"><a href="#cb6-56" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;PATH&quot;</span>: <span class="st">&quot;/scratch/.../MO211/&quot;</span>,</span>
-<span id="cb6-57"><a href="#cb6-57" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;R1_ADAPTOR&quot;</span>: <span class="st">&quot;CTGTCTCTTATACACATCT&quot;</span>,</span>
-<span id="cb6-58"><a href="#cb6-58" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;R2_ADAPTOR&quot;</span>: <span class="st">&quot;CTGTCTCTTATACACATCT&quot;</span>,</span>
-<span id="cb6-59"><a href="#cb6-59" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;PARAMETERS&quot;</span>: {</span>
-<span id="cb6-60"><a href="#cb6-60" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;CUTADAPT&quot;</span>: <span class="st">&quot;-q 20 --pair-filter=any&quot;</span>,</span>
-<span id="cb6-61"><a href="#cb6-61" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;BOWTIE2_REF&quot;</span>: <span class="st">&quot;&lt;path to genome reference build for bowtie2&gt;&quot;</span>,</span>
-<span id="cb6-62"><a href="#cb6-62" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;BLACKLIST_BED&quot;</span>: <span class="st">&quot;&lt;Path to blacklist file in bed format, see https://github.com/Boyle-Lab/Blacklist &gt;&quot;</span>,</span>
-<span id="cb6-63"><a href="#cb6-63" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;GENOME&quot;</span>: <span class="st">&quot;&lt;path to the sequencing genome for bowtie2&gt;&quot;</span>,</span>
-<span id="cb6-64"><a href="#cb6-64" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;CHROM_SIZE&quot;</span>: <span class="st">&quot;&lt;path to file wih the size of chromosome (can be found on UCSC) &gt;&quot;</span></span>
-<span id="cb6-65"><a href="#cb6-65" aria-hidden="true" tabindex="-1"></a>        }</span>
-<span id="cb6-66"><a href="#cb6-66" aria-hidden="true" tabindex="-1"></a>    }</span>
-<span id="cb6-67"><a href="#cb6-67" aria-hidden="true" tabindex="-1"></a>})</span>
-<span id="cb6-68"><a href="#cb6-68" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-69"><a href="#cb6-69" aria-hidden="true" tabindex="-1"></a><span class="co"># Check the configuration file</span></span>
-<span id="cb6-70"><a href="#cb6-70" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> <span class="bu">open</span>(<span class="st">&quot;test_config2.yaml&quot;</span>) <span class="im">as</span> stream:</span>
-<span id="cb6-71"><a href="#cb6-71" aria-hidden="true" tabindex="-1"></a>    config <span class="op">=</span> yaml.safe_load(stream)</span>
-<span id="cb6-72"><a href="#cb6-72" aria-hidden="true" tabindex="-1"></a>chr_config.check_config_format(config, raise_error<span class="op">=</span><span class="va">False</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>chr_config.create_example_config(<span class="st">&quot;config.yaml&quot;</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Then edit <code>config.yaml</code> to replace the example sample names, FASTQ paths, genome references, blacklist file, chromosome-size file, project paths, and Slurm settings with values for your analysis.</p>
+</section>
+<section id="minimal-yaml-structure" class="level3">
+<h3 class="anchored" data-anchor-id="minimal-yaml-structure">Minimal YAML structure</h3>
+<p>The YAML file uses arbitrary names for sequencings, projects, samples, and input controls. In this example, <code>MO203</code> is a sequencing name, <code>H3K27ac_BAP1</code> is a biological sample, and <code>Input_Batch1</code> is the input control used for ChIP-seq peak calling.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">SEQUENCINGS</span><span class="kw">:</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">MO203</span><span class="kw">:</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">PATH</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;/scratch/my_project/MO203/&quot;</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">R1_ADAPTOR</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;AGATCGGAAGAGCACACGTCTGAACTCCAGTCA&quot;</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">R2_ADAPTOR</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT&quot;</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">SAMPLES</span><span class="kw">:</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">H3K27ac_BAP1</span><span class="kw">:</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">R1</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;FASTQ/H3K27ac_BAP1_R1.fastq.gz&quot;</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">R2</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;FASTQ/H3K27ac_BAP1_R2.fastq.gz&quot;</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">TYPE</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;H3K27AC&quot;</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">ATAC_BAP1</span><span class="kw">:</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">R1</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;FASTQ/ATAC_BAP1_R1.fastq.gz&quot;</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">R2</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;FASTQ/ATAC_BAP1_R2.fastq.gz&quot;</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">TYPE</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;ATAC&quot;</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">INPUT</span><span class="kw">:</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">Input_Batch1</span><span class="kw">:</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">R1</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;FASTQ/Input_Batch1_R1.fastq.gz&quot;</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">R2</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;FASTQ/Input_Batch1_R2.fastq.gz&quot;</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">PARAMETERS</span><span class="kw">:</span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">CUTADAPT</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;-q 20 --pair-filter=any&quot;</span></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">BOWTIE2_REF</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;/path/to/bowtie2/index/genome&quot;</span></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">GENOME</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;hg38&quot;</span></span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">BLACKLIST_BED</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;/path/to/hg38-blacklist.v2.bed&quot;</span></span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">CHROM_SIZE</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;/path/to/hg38.chrom.sizes&quot;</span></span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a><span class="fu">PROJECTS</span><span class="kw">:</span></span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">ChIP_H3K27AC</span><span class="kw">:</span></span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">SEQUENCINGS</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;MO203&quot;</span><span class="kw">]</span></span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">TYPE</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;H3K27AC&quot;</span></span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">MIN_SAMPLES_FOR_PEAKS</span><span class="kw">:</span><span class="at"> </span><span class="dv">1</span></span>
+<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">PROJECT_PATH</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;/scratch/my_project/ChIP_H3K27AC/&quot;</span></span>
+<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">ATAC</span><span class="kw">:</span></span>
+<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">SEQUENCINGS</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;MO203&quot;</span><span class="kw">]</span></span>
+<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">TYPE</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;ATAC&quot;</span></span>
+<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">MIN_SAMPLES_FOR_PEAKS</span><span class="kw">:</span><span class="at"> </span><span class="dv">1</span></span>
+<span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">PROJECT_PATH</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;/scratch/my_project/ATAC/&quot;</span></span>
+<span id="cb6-37"><a href="#cb6-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-38"><a href="#cb6-38" aria-hidden="true" tabindex="-1"></a><span class="fu">JOBS</span><span class="kw">:</span></span>
+<span id="cb6-39"><a href="#cb6-39" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">CORES_PER_JOBS</span><span class="kw">:</span></span>
+<span id="cb6-40"><a href="#cb6-40" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">FASTQC</span><span class="kw">:</span><span class="at"> </span><span class="dv">10</span></span>
+<span id="cb6-41"><a href="#cb6-41" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">CUTADAPT</span><span class="kw">:</span><span class="at"> </span><span class="dv">10</span></span>
+<span id="cb6-42"><a href="#cb6-42" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">BOWTIE2</span><span class="kw">:</span><span class="at"> </span><span class="dv">30</span></span>
+<span id="cb6-43"><a href="#cb6-43" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">SAMTOOLS_QC</span><span class="kw">:</span><span class="at"> </span><span class="dv">5</span></span>
+<span id="cb6-44"><a href="#cb6-44" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">MULTIBAMSUMMARY</span><span class="kw">:</span><span class="at"> </span><span class="dv">5</span></span>
+<span id="cb6-45"><a href="#cb6-45" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">BEDTOOLS</span><span class="kw">:</span><span class="at"> </span><span class="dv">5</span></span>
+<span id="cb6-46"><a href="#cb6-46" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">SCHEDULER_PROFILES</span><span class="kw">:</span></span>
+<span id="cb6-47"><a href="#cb6-47" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">default</span><span class="kw">:</span></span>
+<span id="cb6-48"><a href="#cb6-48" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">qos_name</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;short&quot;</span></span>
+<span id="cb6-49"><a href="#cb6-49" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">partition_name</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;standard&quot;</span></span>
+<span id="cb6-50"><a href="#cb6-50" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">short</span><span class="kw">:</span></span>
+<span id="cb6-51"><a href="#cb6-51" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">MaxWall</span><span class="kw">:</span><span class="at"> </span><span class="dv">1440</span><span class="co">       # 1 day, in minutes</span></span>
+<span id="cb6-52"><a href="#cb6-52" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">qos_name</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;short&quot;</span></span>
+<span id="cb6-53"><a href="#cb6-53" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">partition_name</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;standard&quot;</span></span>
+<span id="cb6-54"><a href="#cb6-54" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">medium</span><span class="kw">:</span></span>
+<span id="cb6-55"><a href="#cb6-55" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">MaxWall</span><span class="kw">:</span><span class="at"> </span><span class="dv">4320</span><span class="co">       # 3 days, in minutes</span></span>
+<span id="cb6-56"><a href="#cb6-56" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">qos_name</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;medium&quot;</span></span>
+<span id="cb6-57"><a href="#cb6-57" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">partition_name</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;standard&quot;</span></span>
+<span id="cb6-58"><a href="#cb6-58" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">long</span><span class="kw">:</span></span>
+<span id="cb6-59"><a href="#cb6-59" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">MaxWall</span><span class="kw">:</span><span class="at"> </span><span class="dv">11520</span><span class="co">      # 8 days, in minutes</span></span>
+<span id="cb6-60"><a href="#cb6-60" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">qos_name</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;long&quot;</span></span>
+<span id="cb6-61"><a href="#cb6-61" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">partition_name</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;standard&quot;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="sequencings-section" class="level3">
+<h3 class="anchored" data-anchor-id="sequencings-section"><code>SEQUENCINGS</code> section</h3>
+<p>Each entry under <code>SEQUENCINGS</code> represents one sequencing batch or one folder containing FASTQ files and pipeline outputs.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 30%">
+<col style="width: 38%">
+<col style="width: 30%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Field</th>
+<th style="text-align: right;">Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>PATH</code></td>
+<td style="text-align: right;">yes</td>
+<td>Root directory for the sequencing. Relative <code>R1</code> and <code>R2</code> FASTQ paths are interpreted from this directory. Chromake also writes sequencing-level outputs here, including <code>BAM</code>, <code>BED</code>, <code>BEDGRAPH</code>, <code>HOMER</code>, <code>QC</code>, and <code>TRIMMED</code>.</td>
+</tr>
+<tr class="even">
+<td><code>SAMPLES</code></td>
+<td style="text-align: right;">yes for normal analyses</td>
+<td>Dictionary of biological samples. Each sample must contain <code>R1</code>, <code>R2</code>, and <code>TYPE</code>.</td>
+</tr>
+<tr class="odd">
+<td><code>SAMPLES:&lt;sample&gt;:R1</code></td>
+<td style="text-align: right;">yes</td>
+<td>Path to the read 1 FASTQ file. Prefer a path relative to <code>PATH</code>, for example <code>FASTQ/sample_R1.fastq.gz</code>.</td>
+</tr>
+<tr class="even">
+<td><code>SAMPLES:&lt;sample&gt;:R2</code></td>
+<td style="text-align: right;">yes</td>
+<td>Path to the read 2 FASTQ file. Prefer a path relative to <code>PATH</code>.</td>
+</tr>
+<tr class="odd">
+<td><code>SAMPLES:&lt;sample&gt;:TYPE</code></td>
+<td style="text-align: right;">yes</td>
+<td>Assay or mark analyzed for that sample. Valid values are <code>ATAC</code>, <code>H3K27AC</code>, <code>H3K27ME3</code>, and <code>H2AUB</code>.</td>
+</tr>
+<tr class="even">
+<td><code>INPUT</code></td>
+<td style="text-align: right;">required for ChIP-seq peak calling</td>
+<td>Dictionary of input/control FASTQ files. It uses the same <code>R1</code>/<code>R2</code> format as <code>SAMPLES</code>, but does not need a <code>TYPE</code>. ATAC-seq projects do not need <code>INPUT</code>. If several inputs are listed, all are processed, but only the first input is used for MACS peak calling.</td>
+</tr>
+<tr class="odd">
+<td><code>R1_ADAPTOR</code>, <code>R2_ADAPTOR</code></td>
+<td style="text-align: right;">optional</td>
+<td>Adapter sequences passed to cutadapt. If both are present and non-empty, trimming is performed before alignment. Set both to an empty string, or omit them, to align the raw FASTQ files directly.</td>
+</tr>
+<tr class="even">
+<td><code>PARAMETERS</code></td>
+<td style="text-align: right;">yes</td>
+<td>Sequencing-specific rule parameters. See the table below.</td>
+</tr>
+</tbody>
+</table>
+<p>The <code>PARAMETERS</code> sub-section contains genome and tool options:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 30%">
+<col style="width: 38%">
+<col style="width: 30%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Field</th>
+<th style="text-align: right;">Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>CUTADAPT</code></td>
+<td style="text-align: right;">optional</td>
+<td>Extra cutadapt arguments, for example <code>-q 20 --pair-filter=any</code>. If missing, chromake adds a default empty string.</td>
+</tr>
+<tr class="even">
+<td><code>BOWTIE2_REF</code></td>
+<td style="text-align: right;">yes</td>
+<td>Bowtie2 index prefix used for alignment. Give the prefix expected by <code>bowtie2 -x</code>, not a FASTA file unless that is how your wrapper expects it.</td>
+</tr>
+<tr class="odd">
+<td><code>GENOME</code></td>
+<td style="text-align: right;">yes</td>
+<td>Genome passed to HOMER. This can be a HOMER genome name such as <code>hg38</code>/<code>mm10</code> if configured in HOMER, or a genome FASTA path depending on your HOMER setup.</td>
+</tr>
+<tr class="even">
+<td><code>BLACKLIST_BED</code></td>
+<td style="text-align: right;">yes</td>
+<td>BED file of blacklisted regions to remove after alignment.</td>
+</tr>
+<tr class="odd">
+<td><code>CHROM_SIZE</code></td>
+<td style="text-align: right;">yes</td>
+<td>Chromosome-size file used when creating genome browser tracks.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="projects-section" class="level3">
+<h3 class="anchored" data-anchor-id="projects-section"><code>PROJECTS</code> section</h3>
+<p>Projects define which aligned samples are pooled for peak calling and project-level quantification. A project does not list sample names directly. Instead, it lists sequencing names and a <code>TYPE</code>; chromake selects all samples from those sequencings whose sample <code>TYPE</code> matches the project <code>TYPE</code>.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 30%">
+<col style="width: 38%">
+<col style="width: 30%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Field</th>
+<th style="text-align: right;">Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>SEQUENCINGS</code></td>
+<td style="text-align: right;">yes</td>
+<td>List of sequencing names defined under the top-level <code>SEQUENCINGS</code> section.</td>
+</tr>
+<tr class="even">
+<td><code>TYPE</code></td>
+<td style="text-align: right;">yes</td>
+<td>Project assay/mark. Must be one of <code>ATAC</code>, <code>H3K27AC</code>, <code>H3K27ME3</code>, or <code>H2AUB</code>. Only samples with the same <code>TYPE</code> are used in the project.</td>
+</tr>
+<tr class="odd">
+<td><code>MIN_SAMPLES_FOR_PEAKS</code></td>
+<td style="text-align: right;">optional</td>
+<td>Minimum number of samples in which a peak must be found to be retained in the merged project peak set. If missing, chromake defaults to <code>1</code>.</td>
+</tr>
+<tr class="even">
+<td><code>PROJECT_PATH</code></td>
+<td style="text-align: right;">yes</td>
+<td>Output directory for project-level files, including MACS peaks, merged peaks, count matrices, and FRiP results. Use a different path for each project.</td>
+</tr>
+</tbody>
+</table>
+<p>For ChIP-seq projects (<code>H3K27AC</code>, <code>H3K27ME3</code>, <code>H2AUB</code>), the associated sequencing must contain at least one <code>INPUT</code> entry. For ATAC-seq projects, no input control is required.</p>
+</section>
+<section id="jobs-section" class="level3">
+<h3 class="anchored" data-anchor-id="jobs-section"><code>JOBS</code> section</h3>
+<p><code>JOBS</code> controls resources requested by Snakemake rules.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 30%">
+<col style="width: 38%">
+<col style="width: 30%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Field</th>
+<th style="text-align: right;">Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>CORES_PER_JOBS</code></td>
+<td style="text-align: right;">optional</td>
+<td>Number of threads used by each rule family. Missing values are filled with chromake defaults. Recognized keys are <code>FASTQC</code>, <code>CUTADAPT</code>, <code>BOWTIE2</code>, <code>SAMTOOLS_QC</code>, <code>MULTIBAMSUMMARY</code>, and <code>BEDTOOLS</code>.</td>
+</tr>
+<tr class="even">
+<td><code>SCHEDULER_PROFILES</code></td>
+<td style="text-align: right;">optional</td>
+<td>Runtime-to-scheduler mapping used when launching Snakemake with an executor such as Slurm. It is ignored for local runs.</td>
+</tr>
+<tr class="odd">
+<td><code>SCHEDULER_PROFILES:&lt;tier&gt;:MaxWall</code></td>
+<td style="text-align: right;">yes for non-default tiers</td>
+<td>Maximum runtime for that tier, in minutes. Chromake selects the smallest tier whose <code>MaxWall</code> is greater than or equal to the runtime requested by the rule.</td>
+</tr>
+<tr class="even">
+<td><code>SCHEDULER_PROFILES:&lt;tier&gt;:qos_name</code></td>
+<td style="text-align: right;">yes</td>
+<td>QoS name passed to the scheduler resource field.</td>
+</tr>
+<tr class="odd">
+<td><code>SCHEDULER_PROFILES:&lt;tier&gt;:partition_name</code></td>
+<td style="text-align: right;">yes</td>
+<td>Partition name passed to the scheduler resource field.</td>
+</tr>
+</tbody>
+</table>
+<p>The <code>default</code> tier is used as a fallback. It does not need <code>MaxWall</code>, but it must contain <code>qos_name</code> and <code>partition_name</code> if you use cluster resources.</p>
+</section>
+<section id="create-a-config-from-a-sample-sheet" class="level3">
+<h3 class="anchored" data-anchor-id="create-a-config-from-a-sample-sheet">Create a config from a sample sheet</h3>
+<p>A second workflow is to describe samples in a table and convert it to YAML with <code>create_config_from_table()</code>. This is useful when sample metadata are already maintained in Excel or CSV.</p>
+<p>The long-format sample sheet must contain these columns:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Column</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>SAMPLE</code></td>
+<td>Sample or input-control name.</td>
+</tr>
+<tr class="even">
+<td><code>SEQUENCINGS</code></td>
+<td>Sequencing name. Must match a key in the <code>sequencings</code> argument passed to <code>create_config_from_table()</code>.</td>
+</tr>
+<tr class="odd">
+<td><code>PROJECT</code></td>
+<td>Project name for biological samples, or exactly <code>INPUT</code> for input controls.</td>
+</tr>
+<tr class="even">
+<td><code>TYPE</code></td>
+<td>Assay/mark for biological samples. Use <code>ATAC</code>, <code>H3K27AC</code>, <code>H3K27ME3</code>, or <code>H2AUB</code>. Leave empty for <code>INPUT</code> rows.</td>
+</tr>
+<tr class="odd">
+<td><code>STRAND</code></td>
+<td><code>R1</code> or <code>R2</code>. Use one row per FASTQ mate.</td>
+</tr>
+<tr class="even">
+<td><code>PATH</code></td>
+<td>FASTQ path. Absolute paths are converted to paths relative to the corresponding sequencing <code>PATH</code> when possible.</td>
+</tr>
+</tbody>
+</table>
+<p>Example table:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 16%">
+<col style="width: 16%">
+<col style="width: 16%">
+<col style="width: 16%">
+<col style="width: 16%">
+<col style="width: 16%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>SAMPLE</th>
+<th>SEQUENCINGS</th>
+<th>PROJECT</th>
+<th>TYPE</th>
+<th>STRAND</th>
+<th>PATH</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>H3K27ac_BAP1</td>
+<td>MO203</td>
+<td>ChIP_H3K27AC</td>
+<td>H3K27AC</td>
+<td>R1</td>
+<td>/scratch/my_project/MO203/FASTQ/H3K27ac_BAP1_R1.fastq.gz</td>
+</tr>
+<tr class="even">
+<td>H3K27ac_BAP1</td>
+<td>MO203</td>
+<td>ChIP_H3K27AC</td>
+<td>H3K27AC</td>
+<td>R2</td>
+<td>/scratch/my_project/MO203/FASTQ/H3K27ac_BAP1_R2.fastq.gz</td>
+</tr>
+<tr class="odd">
+<td>Input_Batch1</td>
+<td>MO203</td>
+<td>INPUT</td>
+<td></td>
+<td>R1</td>
+<td>/scratch/my_project/MO203/FASTQ/Input_Batch1_R1.fastq.gz</td>
+</tr>
+<tr class="even">
+<td>Input_Batch1</td>
+<td>MO203</td>
+<td>INPUT</td>
+<td></td>
+<td>R2</td>
+<td>/scratch/my_project/MO203/FASTQ/Input_Batch1_R2.fastq.gz</td>
+</tr>
+</tbody>
+</table>
+<p>Conversion example:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> genomake.pipelines.chromake.scripts <span class="im">import</span> config <span class="im">as</span> chr_config</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>chr_config.create_config_from_table(</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    table_path<span class="op">=</span><span class="st">&quot;samplesheet.xlsx&quot;</span>,</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    output_path<span class="op">=</span><span class="st">&quot;config.yaml&quot;</span>,</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    proj_paths<span class="op">=</span>{</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;ChIP_H3K27AC&quot;</span>: <span class="st">&quot;/scratch/my_project/ChIP_H3K27AC/&quot;</span>,</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;ATAC&quot;</span>: <span class="st">&quot;/scratch/my_project/ATAC/&quot;</span>,</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>    },</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>    jobs<span class="op">=</span>{</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;CORES_PER_JOBS&quot;</span>: {</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;FASTQC&quot;</span>: <span class="dv">10</span>,</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;CUTADAPT&quot;</span>: <span class="dv">10</span>,</span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;BOWTIE2&quot;</span>: <span class="dv">30</span>,</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;SAMTOOLS_QC&quot;</span>: <span class="dv">5</span>,</span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;MULTIBAMSUMMARY&quot;</span>: <span class="dv">5</span>,</span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;BEDTOOLS&quot;</span>: <span class="dv">5</span>,</span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>        },</span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;SCHEDULER_PROFILES&quot;</span>: {</span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;default&quot;</span>: {<span class="st">&quot;qos_name&quot;</span>: <span class="st">&quot;short&quot;</span>, <span class="st">&quot;partition_name&quot;</span>: <span class="st">&quot;standard&quot;</span>},</span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;short&quot;</span>: {<span class="st">&quot;MaxWall&quot;</span>: <span class="dv">24</span> <span class="op">*</span> <span class="dv">60</span>, <span class="st">&quot;qos_name&quot;</span>: <span class="st">&quot;short&quot;</span>, <span class="st">&quot;partition_name&quot;</span>: <span class="st">&quot;standard&quot;</span>},</span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;medium&quot;</span>: {<span class="st">&quot;MaxWall&quot;</span>: <span class="dv">3</span> <span class="op">*</span> <span class="dv">24</span> <span class="op">*</span> <span class="dv">60</span>, <span class="st">&quot;qos_name&quot;</span>: <span class="st">&quot;medium&quot;</span>, <span class="st">&quot;partition_name&quot;</span>: <span class="st">&quot;standard&quot;</span>},</span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;long&quot;</span>: {<span class="st">&quot;MaxWall&quot;</span>: <span class="dv">8</span> <span class="op">*</span> <span class="dv">24</span> <span class="op">*</span> <span class="dv">60</span>, <span class="st">&quot;qos_name&quot;</span>: <span class="st">&quot;long&quot;</span>, <span class="st">&quot;partition_name&quot;</span>: <span class="st">&quot;standard&quot;</span>},</span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>        },</span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a>    },</span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a>    sequencings<span class="op">=</span>{</span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;MO203&quot;</span>: {</span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;PATH&quot;</span>: <span class="st">&quot;/scratch/my_project/MO203/&quot;</span>,</span>
+<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;R1_ADAPTOR&quot;</span>: <span class="st">&quot;AGATCGGAAGAGCACACGTCTGAACTCCAGTCA&quot;</span>,</span>
+<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;R2_ADAPTOR&quot;</span>: <span class="st">&quot;AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT&quot;</span>,</span>
+<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;PARAMETERS&quot;</span>: {</span>
+<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a>                <span class="st">&quot;CUTADAPT&quot;</span>: <span class="st">&quot;-q 20 --pair-filter=any&quot;</span>,</span>
+<span id="cb7-33"><a href="#cb7-33" aria-hidden="true" tabindex="-1"></a>                <span class="st">&quot;BOWTIE2_REF&quot;</span>: <span class="st">&quot;/path/to/bowtie2/index/genome&quot;</span>,</span>
+<span id="cb7-34"><a href="#cb7-34" aria-hidden="true" tabindex="-1"></a>                <span class="st">&quot;GENOME&quot;</span>: <span class="st">&quot;hg38&quot;</span>,</span>
+<span id="cb7-35"><a href="#cb7-35" aria-hidden="true" tabindex="-1"></a>                <span class="st">&quot;BLACKLIST_BED&quot;</span>: <span class="st">&quot;/path/to/hg38-blacklist.v2.bed&quot;</span>,</span>
+<span id="cb7-36"><a href="#cb7-36" aria-hidden="true" tabindex="-1"></a>                <span class="st">&quot;CHROM_SIZE&quot;</span>: <span class="st">&quot;/path/to/hg38.chrom.sizes&quot;</span>,</span>
+<span id="cb7-37"><a href="#cb7-37" aria-hidden="true" tabindex="-1"></a>            },</span>
+<span id="cb7-38"><a href="#cb7-38" aria-hidden="true" tabindex="-1"></a>        },</span>
+<span id="cb7-39"><a href="#cb7-39" aria-hidden="true" tabindex="-1"></a>    },</span>
+<span id="cb7-40"><a href="#cb7-40" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>You can also export a YAML config back to a sample sheet:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>chr_config.create_samplesheet_from_config(</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    config_path<span class="op">=</span><span class="st">&quot;config.yaml&quot;</span>,</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    output_path<span class="op">=</span><span class="st">&quot;samplesheet.xlsx&quot;</span>,</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    strand_columns<span class="op">=</span><span class="va">False</span>,</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    excel<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+</section>
+<section id="validate-a-config-before-launching-snakemake" class="level2">
+<h2 class="anchored" data-anchor-id="validate-a-config-before-launching-snakemake">Validate a config before launching Snakemake</h2>
+<p>Before running the full pipeline, validate both the config structure and the input FASTQ paths:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> yaml</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> genomake.pipelines.chromake.scripts <span class="im">import</span> config <span class="im">as</span> chr_config</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> <span class="bu">open</span>(<span class="st">&quot;config.yaml&quot;</span>, encoding<span class="op">=</span><span class="st">&quot;utf-8&quot;</span>) <span class="im">as</span> stream:</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    cfg <span class="op">=</span> yaml.safe_load(stream)</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>chr_config.check_config_format(cfg, raise_error<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>chr_config.check_sample_files_exist(<span class="st">&quot;config.yaml&quot;</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Use <code>raise_error=True</code> to stop immediately on invalid mandatory fields. This is the default behavior used at runtime by the Snakefile.</p>
 </section>
 <section id="launching-the-pipeline" class="level2">
 <h2 class="anchored" data-anchor-id="launching-the-pipeline">Launching the pipeline</h2>
 <p>Once the configuration file is created, chromake can be launched using the CLI included in genomake:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">genomake</span> chromake <span class="at">-c</span> ./config.yaml <span class="at">--cores</span> 250 <span class="at">--jobs</span> 10</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">genomake</span> chromake <span class="at">-c</span> ./config.yaml <span class="at">--cores</span> 250 <span class="at">--jobs</span> 10</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>If you need to:</p>
 <ul>
 <li><p>use an executor</p></li>
@@ -4325,12 +4703,31 @@ vertical-align: -.125em;
 <li><p>unlock the directory</p></li>
 </ul>
 <p>Then you can use the <code>--others-snakemake</code> argument. Here an example for the slurm executor:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">genomake</span> chromake <span class="at">-c</span> ./config.yaml <span class="at">--cores</span> 250 <span class="at">--local-cores</span> 1 <span class="at">--jobs</span> 8 <span class="dt">\</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>   <span class="at">--others-snakemake</span> <span class="st">&quot;--executor slurm --default-resources </span><span class="dt">\</span></span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="st">   slurm_account=&lt;your_slurm_account&gt; clusters=&lt;name_cluster_for_computation&gt; --slurm-logdir </span><span class="dt">\</span></span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="st">   ./logs --slurm-keep-successful-logs --slurm-delete-logfiles-older-than 0 </span><span class="dt">\</span></span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="st">   --rerun-incomplete&quot;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">genomake</span> chromake <span class="at">-c</span> ./config.yaml <span class="at">--cores</span> 250 <span class="at">--local-cores</span> 1 <span class="at">--jobs</span> 8 <span class="dt">\</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>   <span class="at">--others-snakemake</span> <span class="st">&quot;--executor slurm --default-resources </span><span class="dt">\</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="st">   slurm_account=&lt;your_slurm_account&gt; clusters=&lt;name_cluster_for_computation&gt; --slurm-logdir </span><span class="dt">\</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="st">   ./logs --slurm-keep-successful-logs --slurm-delete-logfiles-older-than 0 </span><span class="dt">\</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="st">   --rerun-incomplete&quot;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>You can check the final command without launching it using the <code>-p</code> argument of <code>genomake chromake</code>.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-2-contents" aria-controls="callout-2" aria-expanded="true" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>About executor (note)
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-2" class="callout-2-contents callout-collapse collapse show">
+<div class="callout-body-container callout-body">
+<ul>
+<li>You may replace the slurm executor by another if you don’t work with slurm.</li>
+<li>Please visit the <a href="https://snakemake.github.io/snakemake-plugin-catalog/plugins/executor/slurm.html">slurm executor documentation</a> for more information about how to use it.</li>
+</ul>
+</div>
+</div>
+</div>
 </section>
 <section id="outputs" class="level2">
 <h2 class="anchored" data-anchor-id="outputs">Outputs</h2>

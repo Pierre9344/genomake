@@ -4165,7 +4165,7 @@ vertical-align: -.125em;
 <section id="genomake.pipelines.chromake.scripts.config.check_project_and_sequencing" class="level1">
 <h1>pipelines.chromake.scripts.config.check_project_and_sequencing</h1>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>pipelines.chromake.scripts.config.check_project_and_sequencing(config)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Ensures that projects with no associated sequencing samples are removed from the config, and removes empty sequencing projects, while making sure the mark is considered in the filtering process.</p>
+<p>Remove empty sequencing entries and update PROJECTS so that each project only references sequencings that still contain samples of the matching TYPE.</p>
 <section id="parameters" class="level2 doc-section doc-section-parameters">
 <h2 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h2>
 <table class="caption-top table">
@@ -4181,7 +4181,7 @@ vertical-align: -.125em;
 <tr class="odd">
 <td>config</td>
 <td>dict</td>
-<td>Loaded YAML config (as a dictionary).</td>
+<td>Loaded YAML config.</td>
 <td><em>required</em></td>
 </tr>
 </tbody>
