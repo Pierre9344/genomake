@@ -193,14 +193,14 @@ for sequencing_name, sequencing_data in config["SEQUENCINGS"].items():
                     samtools view -b {output[1]} chr{{1..22}} chrX chrY > {output[2]}
                     samtools index {output[2]}
                     # sort by name for bamtobed conversion
-                    samtools sort -n {output[2]} > {output[3]}
+                    samtools sort -n -@ {threads} -o {output[4]} > {output[2]}
                     
                     # Remove TMP files
                     rm {params.sam_output} {params.filtered_sam} {params.filtered2_sam} {params.bowtie_bam}
                     
                     # HOMER track for UCSC
-                    makeTagDirectory {output[4]} {output[2]} -genome {params.genome} -checkGC
-                    makeUCSCfile {output[4]} -o {params.homer_output} -norm 1e7
+                    makeTagDirectory {output[5]} {output[2]} -genome {params.genome} -checkGC
+                    makeUCSCfile {output[5]} -o {params.homer_output} -norm 1e7
                     gunzip {params.homer_output2}
                     awk '
                     BEGIN {{
@@ -209,11 +209,11 @@ for sequencing_name, sequencing_data in config["SEQUENCINGS"].items():
                     }}
                     NR == 1 {{ print; next }}
                     ($1 in chr) {{ print }}
-                    ' {params.homer_output} > {output[5]}
+                    ' {params.homer_output} > {output[6]}
                     
                     # samtools QC
-                    samtools flagstat {output[2]} > {output[6]}
-                    samtools stats {output[2]} > {output[7]}
+                    samtools flagstat {output[2]} > {output[7]}
+                    samtools stats {output[2]} > {output[8]}
                     """
             
             rule:
@@ -514,14 +514,14 @@ for sequencing_name, sequencing_data in config["SEQUENCINGS"].items():
                     samtools view -b {output[1]} chr{{1..22}} chrX chrY > {output[2]}
                     samtools index {output[2]}
                     # sort by name for bamtobed conversion
-                    samtools sort -n {output[2]} > {output[3]}
+                    samtools sort -n -@ {threads} -o {output[4]} > {output[2]}
                     
                     # Remove TMP files
                     rm {params.sam_output} {params.filtered_sam} {params.filtered2_sam} {params.bowtie_bam}
                     
                     # HOMER track for UCSC
-                    makeTagDirectory {output[4]} {output[2]} -genome {params.genome} -checkGC
-                    makeUCSCfile {output[4]} -o {params.homer_output} -norm 1e7
+                    makeTagDirectory {output[5]} {output[2]} -genome {params.genome} -checkGC
+                    makeUCSCfile {output[5]} -o {params.homer_output} -norm 1e7
                     gunzip {params.homer_output2}
                     awk '
                     BEGIN {{
@@ -530,11 +530,11 @@ for sequencing_name, sequencing_data in config["SEQUENCINGS"].items():
                     }}
                     NR == 1 {{ print; next }}
                     ($1 in chr) {{ print }}
-                    ' {params.homer_output} > {output[5]}
+                    ' {params.homer_output} > {output[6]}
                     
                     # samtools QC
-                    samtools flagstat {output[2]} > {output[6]}
-                    samtools stats {output[2]} > {output[7]}
+                    samtools flagstat {output[2]} > {output[7]}
+                    samtools stats {output[2]} > {output[8]}
                     """
             
             rule:
