@@ -15,4 +15,3 @@ from .pipelines import chromake
 # from <this_package> import *
 __all__ = ["chromake"]
 
-version = "1.0.0"

@@ -1,6 +1,6 @@
 [project]
 name = "genomake"
-version = "1.0.0"
+version = "1.1.0"
 description = "Python package to analyze of genomic data."
 authors = [
     {name = "Pierre Solomon",email = "pierre.solomon3@gmail.com"}
