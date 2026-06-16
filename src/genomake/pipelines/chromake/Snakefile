@@ -587,7 +587,7 @@ for sequencing_name, sequencing_data in config["SEQUENCINGS"].items():
                 resources:
                     mem_mb=lambda wildcards, attempt: 30000 * attempt,
                     runtime=lambda wildcards, attempt: attempt * 180,
-                    qos=lambda wildcards, attempt: get_qos_from_time(attempt, 180),
+                    qos=lambda wildcards, attempt: get_qos_from_time(attempt, 180, config),
                     partition=lambda wildcards, attempt: get_partition_from_time(attempt, 120, config),
                 shell:
                     r"""
