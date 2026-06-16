@@ -810,6 +810,7 @@ if "PROJECTS" in config:
             continue
         if config["PROJECTS"][project_name]["TYPE"] == "ATAC":
             # broad peaks, don't need input for ATAC-seq
+            # command based on encode3 pipeline
             for peak_calling_data in peak_calling_dict.values():
                 rule:
                     name:
@@ -830,7 +831,7 @@ if "PROJECTS" in config:
                         qos=lambda wildcards, attempt: get_qos_from_time(attempt, 120, config),
                         partition=lambda wildcards, attempt: get_partition_from_time(attempt, 120, config),
                     shell:
-                        r"""                
+                        r"""
                         {params.macs_command} callpeak -t {input} -f BEDPE \
                           --nomodel --shift 37 --extsize 73 --keep-dup all \
                           --broad -n {params.name} --outdir {params.outdir}
