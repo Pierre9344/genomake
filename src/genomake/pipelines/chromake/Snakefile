@@ -373,7 +373,7 @@ for sequencing_name, sequencing_data in config["SEQUENCINGS"].items():
                         samtools index {output.coordsort}
                         
                         # sort by name for bamtobed conversion
-                        samtools sort -n {output.coordsort} {output.namesort}
+                        samtools sort -n -@ {threads} -o {output.namesort} {output.coordsort}
                         
                         # Remove TMP files
                         rm {params.sam_output} {params.filtered_sam} {params.filtered2_sam} {params.bowtie_bam}
@@ -677,7 +677,7 @@ for sequencing_name, sequencing_data in config["SEQUENCINGS"].items():
                         samtools index {output.coordsort}
                         
                         # sort by name for bamtobed conversion
-                        samtools sort -n {output.coordsort} {output.namesort}
+                        samtools sort -n -@ {threads} -o {output.namesort} {output.coordsort}
                         
                         # Remove TMP files
                         rm {params.sam_output} {params.filtered_sam} {params.filtered2_sam} {params.bowtie_bam}
