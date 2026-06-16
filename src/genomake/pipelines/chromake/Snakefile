@@ -833,7 +833,7 @@ if "PROJECTS" in config:
                         r"""                
                         {params.macs_command} callpeak -t {input} -f BEDPE \
                           --nomodel --shift 37 --extsize 73 --keep-dup all \
-                          --call-summits -n {params.name} --outdir {params.outdir}
+                          --broad -n {params.name} --outdir {params.outdir}
                         """
             
         elif config["PROJECTS"][project_name]["TYPE"] == "H3K27AC":
@@ -846,7 +846,7 @@ if "PROJECTS" in config:
                         peak_calling_data["SAMPLE"],
                         peak_calling_data["INPUT"],
                     output:
-                        peak_calling_data["OUTDIR"] + peak_calling_data["NAME"] + "_peaks.broadPeak"
+                        peak_calling_data["OUTDIR"] + peak_calling_data["NAME"] + "_peaks.narrowPeak"
                     threads:
                         1,
                     params:
