@@ -899,11 +899,11 @@ if "PROJECTS" in config:
             name:
                 f"multicov_{project_name}"
             input:
-                multicov_data["input_peaks"],
-                multicov_data["input_bams"],
+                peaks=multicov_data["input_peaks"],
+                bams=multicov_data["input_bams"],
             output:
-                multicov_data["output_peaks"],
-                multicov_data["output_countmatrix"],
+                final_peaks=multicov_data["output_peaks"],
+                count_matrix=multicov_data["output_countmatrix"],
             threads:
                 1,
             params:
@@ -916,19 +916,19 @@ if "PROJECTS" in config:
                 partition=lambda wildcards, attempt: get_partition_from_time(attempt, 120, config),
             shell:
                 r"""                
-                cat {input[0]} | \
+                cat {input.peaks} | \
                     grep -v "Chromosome"| \
                     sort -k1,1 -k2,2n | \
                     mergeBed -i stdin -c 1 -o count | \
                     awk ' $4 >= {params.min_number_samples} {{ print $0}} ' \
-                    > {output[0]}
+                    > {output.final_peaks}
                 
                 printf '{params.header}\n' > {output[1]}
                 
                 bedtools multicov \
-                    -bams {input[1]} \
-                    -bed {output[0]} \
-                    >> {output[1]}
+                    -bams {input.bams} \
+                    -bed {output.final_peaks} \
+                    >> {output.count_matrix}
                 """
         
         
